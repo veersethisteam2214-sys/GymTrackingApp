@@ -6,18 +6,22 @@ export function ChallengePreview({ challenges }: { challenges: Challenge[] }) {
   const active = challenges[0];
 
   return (
-    <section className="mt-5 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
+    <section className="app-surface mt-5 rounded-[2rem] p-5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-leaf">Group challenge</p>
-          <h2 className="mt-1 truncate text-xl font-semibold text-ink">{active ? active.title : "No active challenge"}</h2>
-          <p className="mt-1 text-sm text-ink/55">
+          <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
+            Group challenge
+          </p>
+          <h2 className="mt-1 truncate text-2xl font-extrabold text-app">
+            {active ? active.title : "No active challenge"}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
             {active ? "Shared target for everyone in the group." : "Create one simple target for the whole group."}
           </p>
         </div>
         <Link
           href="/challenges"
-          className="app-button flex min-h-11 shrink-0 items-center gap-2 rounded-2xl bg-ink px-4 text-sm font-bold text-white shadow-sm hover:bg-leaf focus:outline-none focus-visible:ring-4 focus-visible:ring-leaf/20"
+          className="app-button brand-gradient flex min-h-11 shrink-0 items-center gap-2 rounded-2xl px-4 text-sm font-extrabold text-black shadow-sm focus:outline-none focus-visible:ring-4"
         >
           Open
           <ArrowRight className="size-4" aria-hidden />
@@ -40,11 +44,10 @@ export function ChallengePreview({ challenges }: { challenges: Challenge[] }) {
 
 function Mini({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-paper p-3">
-      <div className="text-leaf">{icon}</div>
-      <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-ink/42">{label}</p>
-      <p className="truncate text-xs font-bold capitalize text-ink">{value}</p>
+    <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
+      <div style={{ color: "var(--brand)" }}>{icon}</div>
+      <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{label}</p>
+      <p className="truncate text-xs font-extrabold capitalize text-app">{value}</p>
     </div>
   );
 }
-
