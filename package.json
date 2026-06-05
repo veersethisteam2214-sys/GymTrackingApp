@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.6",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",

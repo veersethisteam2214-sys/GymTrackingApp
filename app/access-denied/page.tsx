@@ -10,11 +10,10 @@ export default function AccessDeniedPage() {
         </div>
         <h1 className="text-2xl font-semibold text-ink">Access denied</h1>
         <p className="mt-3 text-sm leading-6 text-ink/65">
-          This tracker is private. Sign in with one of the two emails listed in
-          <span className="font-medium text-ink"> ALLOWED_EMAILS</span>.
+          This tracker is private. Enter the shared app password to continue.
         </p>
         <Link
-          href="/login"
+          href="/access"
           className="app-button mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-ink px-5 text-sm font-semibold text-white shadow-soft hover:bg-leaf focus:outline-none focus:ring-4 focus:ring-leaf/20"
         >
           Back to login
@@ -23,4 +22,3 @@ export default function AccessDeniedPage() {
     </main>
   );
 }
-

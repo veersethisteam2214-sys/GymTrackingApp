@@ -1,32 +1,16 @@
-import { cookies } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { getSupabaseEnv } from "@/lib/env";
+import { createClient } from "@supabase/supabase-js";
 
-export async function createServerSupabase() {
-  const { url, anonKey } = getSupabaseEnv();
-  if (!url || !anonKey) return null;
+export function createAdminSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const cookieStore = await cookies();
+  if (!url || !serviceRoleKey) return null;
 
-  return createServerClient(url, anonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch {
-          // Server Components cannot set cookies. Middleware/API routes handle refresh writes.
-        }
-      },
-      remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: "", ...options });
-        } catch {
-          // Server Components cannot set cookies. Middleware/API routes handle refresh writes.
-        }
-      }
+  return createClient(url, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
     }
   });
 }
+

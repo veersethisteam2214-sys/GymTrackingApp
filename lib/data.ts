@@ -1,30 +1,10 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
 import { getLocalDateString, getMonthRange, getWeekRange } from "@/lib/dates";
 import { calculateDailyStatus, getCurrentStreak, getStats } from "@/lib/status";
 import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
 type Client = SupabaseClient<any>;
-
-export async function ensureProfile(supabase: Client, user: User) {
-  const email = user.email ?? "";
-  const fallbackName = email.split("@")[0] || "Training partner";
-
-  const { data } = await supabase
-    .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        email,
-        display_name: user.user_metadata?.display_name ?? fallbackName
-      },
-      { onConflict: "id" }
-    )
-    .select("*")
-    .single();
-
-  return data as Profile | null;
-}
 
 export async function getSignedUrl(supabase: Client, storagePath?: string | null) {
   if (!storagePath) return null;
@@ -33,12 +13,10 @@ export async function getSignedUrl(supabase: Client, storagePath?: string | null
   return data?.signedUrl ?? null;
 }
 
-export async function fetchDashboardData(supabase: Client, user: User) {
+export async function fetchDashboardData(supabase: Client, profileId: string) {
   const today = getLocalDateString();
   const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();
-
-  await ensureProfile(supabase, user);
 
   const [{ data: profiles }, { data: todayCheckins }, { data: monthCheckins }, { data: items }, { data: weights }] =
     await Promise.all([
@@ -55,7 +33,7 @@ export async function fetchDashboardData(supabase: Client, user: User) {
         .select("*")
         .gte("created_at", `${monthStart}T00:00:00`)
         .lte("created_at", `${monthEnd}T23:59:59`),
-      supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(20)
+      supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(40)
     ]);
 
   const people = ((profiles ?? []) as Profile[]).map((profile) => {
@@ -82,21 +60,20 @@ export async function fetchDashboardData(supabase: Client, user: User) {
   });
 
   return {
-    currentUserId: user.id,
+    currentUserId: profileId,
     today,
     people,
     monthCheckins: (monthCheckins ?? []) as DailyCheckIn[]
   };
 }
 
-export async function fetchTodayData(supabase: Client, user: User) {
+export async function ensureTodayCheckin(supabase: Client, profileId: string) {
   const today = getLocalDateString();
-  const profile = await ensureProfile(supabase, user);
   const { data: checkin } = await supabase
     .from("daily_checkins")
     .upsert(
       {
-        user_id: user.id,
+        user_id: profileId,
         checkin_date: today
       },
       { onConflict: "user_id,checkin_date" }
@@ -111,13 +88,19 @@ export async function fetchTodayData(supabase: Client, user: User) {
       supabase.from("checkin_items").upsert(
         {
           checkin_id: dailyCheckin.id,
-          user_id: user.id,
+          user_id: profileId,
           category
         },
         { onConflict: "checkin_id,category" }
       )
     )
   );
+
+  return dailyCheckin;
+}
+
+export async function fetchTodayData(supabase: Client, profile: Profile) {
+  const dailyCheckin = await ensureTodayCheckin(supabase, profile.id);
 
   const [{ data: items }, { data: weightEntries }, { data: cardioEntries }] = await Promise.all([
     supabase.from("checkin_items").select("*").eq("checkin_id", dailyCheckin.id),

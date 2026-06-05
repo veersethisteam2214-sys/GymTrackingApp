@@ -2,16 +2,15 @@ import { Activity, Dumbbell, GlassWater, Timer } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CompletionBars, WeightTrend } from "@/components/AnalyticsCharts";
 import { SetupMissing } from "@/components/SetupMissing";
-import { requireAllowedUser } from "@/lib/auth";
+import { requireAppProfile } from "@/lib/auth";
 import { fetchAnalyticsData } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage() {
-  const session = await requireAllowedUser();
-  if (session.setupMissing || !session.supabase || !session.user) return <SetupMissing />;
+  const session = await requireAppProfile();
+  if (session.setupMissing || !session.supabase || !session.profile) return <SetupMissing />;
   const data = await fetchAnalyticsData(session.supabase);
-  const profile = data.profiles.find((item) => item.id === session.user.id) ?? null;
 
   const gymUploads = data.items.filter((item) => item.category === "progress_photo" && item.status === "uploaded").length;
   const cardioUploads = data.items.filter((item) => item.category === "treadmill_photo" && item.status === "uploaded").length;
@@ -19,7 +18,7 @@ export default async function AnalyticsPage() {
   const cardioMinutes = data.cardio.reduce((sum, entry) => sum + Number(entry.treadmill_minutes ?? 0), 0);
 
   return (
-    <AppShell title="Analytics" subtitle="Neutral weekly and monthly stats" profile={profile}>
+    <AppShell title="Analytics" subtitle="Neutral weekly and monthly stats" profile={session.profile}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Metric icon={<Dumbbell className="size-5" />} label="Gym uploads" value={gymUploads} />
         <Metric icon={<Timer className="size-5" />} label="Cardio uploads" value={cardioUploads} />
@@ -47,4 +46,3 @@ function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; 
     </section>
   );
 }
-

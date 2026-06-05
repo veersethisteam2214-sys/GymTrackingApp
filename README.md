@@ -1,97 +1,82 @@
 # Private Gym & Cardio Discipline Tracker
 
-A private, mobile-first accountability app for two approved users. It tracks daily proof uploads for gym progress, cardio, weight, and protein shake completion, with neutral status language and private Supabase Storage.
+A private, mobile-first accountability app protected by one shared app password. After entering the password, each person creates an app profile with their name, current weight, gym routine, and cardio routine.
 
 ## Stack
 
 - Next.js App Router
 - TypeScript
 - Tailwind CSS
-- Supabase Auth, Postgres, Storage, and RLS
+- Supabase Postgres and private Storage
 - Recharts for lightweight analytics
 - Vercel deployment
 
 ## Environment Variables
 
-Create `.env.local` for local development and add the same values in Vercel:
+Add these in Vercel and in `.env.local` for local development:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 APP_ACCESS_PASSWORD=
-ALLOWED_EMAILS=user1@example.com,user2@example.com
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is reserved for server-side maintenance tasks. Do not expose it to the browser and do not commit real values.
+Optional local alias:
+
+```env
+SUPABASE_URL=
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` must stay secret. It is only used by server-side API routes.
 
 ## Supabase Setup
 
 1. Create a Supabase project.
-2. Run `supabase/migrations/0001_private_gym_tracker.sql` in the Supabase SQL editor or through the Supabase CLI.
-3. Insert the two approved emails into `public.allowed_emails`:
+2. Run `supabase/migrations/0001_private_gym_tracker.sql` in Supabase SQL Editor.
+3. Confirm the private `checkin-uploads` bucket exists.
+4. No Supabase Auth setup is needed.
+5. No allowed-email setup is needed.
 
-```sql
-insert into public.allowed_emails (email)
-values ('user1@example.com'), ('user2@example.com')
-on conflict do nothing;
+## Vercel Setup
+
+Add these environment variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-secret-service-role-key
+APP_ACCESS_PASSWORD=choose-a-private-password
 ```
 
-4. Add the same two emails to the `ALLOWED_EMAILS` environment variable.
-5. Confirm the private `checkin-uploads` bucket exists. The migration creates it with a 10 MB image limit and private access.
-6. In Supabase Auth, enable email/password sign-in.
+Redeploy after saving the variables.
 
-## Local Development
+## App Flow
 
-```bash
-npm install
-npm run dev
-```
-
-Open `http://localhost:3000`.
+1. Visitor opens the Vercel app.
+2. Visitor enters the shared app password.
+3. Visitor fills out profile setup:
+   - name
+   - current weight
+   - gym routine
+   - cardio routine
+4. Visitor presses Save profile.
+5. The app saves a private profile cookie and opens the dashboard.
 
 ## Routes
 
-- `/access` shared app password gate
-- `/login` Supabase Auth login/sign-up
-- `/dashboard` today's two-person dashboard and month preview
-- `/today` current user's daily upload flow
-- `/calendar` current month status grid with day detail modal
-- `/analytics` weekly/monthly stats and charts
+- `/access` shared password gate
+- `/profile-setup` profile setup form
+- `/dashboard` today's dashboard and month preview
+- `/today` daily upload flow
+- `/calendar` current month status grid
+- `/analytics` stats and charts
 - `/user/[userId]` per-user progress dashboard
-- `/settings` account and sign-out controls
+- `/settings` edit profile and sign out
 
-## Privacy and Access Control
+## Privacy
 
-The app has four layers:
-
-1. Optional shared password gate using `APP_ACCESS_PASSWORD`
-2. Supabase Auth email/password login
-3. App allowlist using `ALLOWED_EMAILS`
-4. Supabase RLS using `public.allowed_emails`
-
-Uploads are stored in the private `checkin-uploads` bucket under:
-
-```txt
-{user_id}/{yyyy-mm-dd}/{category}/{timestamp}-{filename}
-```
-
-Only the owner can upload, replace, or delete files in their own folder. Both allowlisted users can view private images through signed URLs inside the authenticated app.
-
-## Deployment
-
-The repository is intended to deploy on Vercel. After pushing to GitHub, Vercel should automatically build and deploy if the GitHub repository is linked.
-
-Use these build settings:
-
-- Framework preset: Next.js
-- Build command: `npm run build`
-- Install command: `npm install`
-- Output directory: Next.js default
+Supabase tables have Row Level Security enabled and no public table policies. The app uses server-side routes with the service role key after the shared password gate. Uploaded images are stored in the private `checkin-uploads` bucket and displayed using signed URLs.
 
 ## Data Reset
-
-For a full reset, delete rows from the app tables and remove objects from `checkin-uploads`. Keep `allowed_emails` unless you also want to reset access.
 
 ```sql
 delete from public.cardio_entries;

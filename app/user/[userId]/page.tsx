@@ -3,7 +3,7 @@ import { ArrowLeft, Flame, Scale, Timer } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { WeightTrend } from "@/components/AnalyticsCharts";
 import { SetupMissing } from "@/components/SetupMissing";
-import { requireAllowedUser } from "@/lib/auth";
+import { requireAppProfile } from "@/lib/auth";
 import { fetchAnalyticsData } from "@/lib/data";
 import { getCurrentStreak, getLongestStreak, getStats } from "@/lib/status";
 
@@ -11,15 +11,14 @@ export const dynamic = "force-dynamic";
 
 export default async function UserPage({ params }: { params: Promise<{ userId: string }> }) {
   const routeParams = await params;
-  const session = await requireAllowedUser();
-  if (session.setupMissing || !session.supabase || !session.user) return <SetupMissing />;
+  const session = await requireAppProfile();
+  if (session.setupMissing || !session.supabase || !session.profile) return <SetupMissing />;
   const data = await fetchAnalyticsData(session.supabase);
   const profile = data.profiles.find((item) => item.id === routeParams.userId);
-  const currentProfile = data.profiles.find((item) => item.id === session.user.id) ?? null;
 
   if (!profile) {
     return (
-      <AppShell title="Profile" subtitle="No matching user" profile={currentProfile}>
+      <AppShell title="Profile" subtitle="No matching user" profile={session.profile}>
         <Link href="/dashboard" className="font-semibold text-leaf">Back to dashboard</Link>
       </AppShell>
     );
@@ -33,7 +32,7 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
     .reduce((sum, item) => sum + Number(item.treadmill_minutes ?? 0), 0);
 
   return (
-    <AppShell title={profile.display_name} subtitle={profile.email} profile={currentProfile}>
+    <AppShell title={profile.display_name} subtitle="Profile progress" profile={session.profile}>
       <Link
         href="/dashboard"
         className="app-button mb-4 inline-flex min-h-11 items-center gap-2 rounded-2xl bg-white px-4 text-sm font-semibold text-ink shadow-sm hover:bg-mint"
@@ -47,6 +46,19 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
         <Stat icon={<Scale className="size-5" />} label="Latest weight" value={weights.at(-1)?.weight_value ?? "--"} />
         <Stat icon={<Timer className="size-5" />} label="Cardio minutes" value={cardioMinutes} />
       </div>
+      <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
+        <h2 className="text-xl font-semibold text-ink">Routine</h2>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          <div className="rounded-2xl bg-paper p-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Gym</p>
+            <p className="mt-1 text-sm leading-6 text-ink/70">{profile.gym_routine}</p>
+          </div>
+          <div className="rounded-2xl bg-paper p-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Cardio</p>
+            <p className="mt-1 text-sm leading-6 text-ink/70">{profile.cardio_routine}</p>
+          </div>
+        </div>
+      </section>
       <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
         <h2 className="text-xl font-semibold text-ink">Month summary</h2>
         <div className="mt-3 grid grid-cols-4 gap-2">

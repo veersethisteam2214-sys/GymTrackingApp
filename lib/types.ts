@@ -9,10 +9,14 @@ export type DailyStatus = "missing" | "partial" | "complete" | "excused";
 
 export type Profile = {
   id: string;
-  email: string;
   display_name: string;
+  starting_weight: number | null;
+  weight_unit: string;
+  gym_routine: string | null;
+  cardio_routine: string | null;
   avatar_url: string | null;
   created_at: string;
+  updated_at: string;
 };
 
 export type DailyCheckIn = {
@@ -69,4 +73,3 @@ export type CategoryMeta = {
   helper: string;
   accent: string;
 };
-

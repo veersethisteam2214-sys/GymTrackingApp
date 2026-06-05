@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Camera, Check, ImagePlus, Loader2, ShieldCheck, Trash2, X } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { calculateDailyStatus } from "@/lib/status";
-import { createBrowserSupabase } from "@/lib/supabase/browser";
 import type { CardioEntry, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -21,7 +20,6 @@ export function TodayClient({
   initialWeight: WeightEntry | null;
   initialCardio: CardioEntry | null;
 }) {
-  const supabase = useMemo(() => createBrowserSupabase(), []);
   const [items, setItems] = useState(initialItems);
   const [restDay, setRestDay] = useState(checkin.is_rest_day);
   const [reason, setReason] = useState(checkin.rest_day_reason ?? "");
@@ -33,156 +31,88 @@ export function TodayClient({
 
   const completionCount = items.filter((item) => item.status === "uploaded" || item.status === "excused").length;
 
-  async function refreshItems(nextItems?: CheckInItem[]) {
-    if (!supabase) return;
-    const sourceItems = nextItems ?? items;
-    const overall = calculateDailyStatus(sourceItems, restDay);
-    await supabase.from("daily_checkins").update({ overall_status: overall, updated_at: new Date().toISOString() }).eq("id", checkin.id);
-  }
-
   async function upload(category: CheckInItem["category"], file: File, note: string) {
-    if (!supabase) return setToast("Supabase is not configured.");
     if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
     if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
 
     setBusyKey(category);
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) return setBusyKey(null);
+    const formData = new FormData();
+    formData.set("category", category);
+    formData.set("note", note);
+    formData.set("file", file);
+    formData.set("weight", weight);
+    formData.set("minutes", minutes);
+    formData.set("distance", distance);
 
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-    const path = `${user.id}/${checkin.checkin_date}/${category}/${Date.now()}-${safeName}`;
-    const { error: uploadError } = await supabase.storage.from("checkin-uploads").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false
+    const response = await fetch("/api/today/upload", {
+      method: "POST",
+      body: formData
     });
+    const payload = await response.json().catch(() => ({}));
 
-    if (uploadError) {
-      setToast(uploadError.message);
-      setBusyKey(null);
-      return;
-    }
-
-    const { data: signed } = await supabase.storage.from("checkin-uploads").createSignedUrl(path, 60 * 60);
-    const { data, error } = await supabase
-      .from("checkin_items")
-      .update({
-        status: "uploaded",
-        storage_path: `checkin-uploads/${path}`,
-        original_filename: file.name,
-        mime_type: file.type,
-        file_size_bytes: file.size,
-        uploaded_at: new Date().toISOString(),
-        note,
-        updated_at: new Date().toISOString()
-      })
-      .eq("checkin_id", checkin.id)
-      .eq("category", category)
-      .select("*")
-      .single();
-
-    if (error) {
-      setToast(error.message);
+    if (!response.ok) {
+      setToast(payload.error ?? "Upload failed.");
       setBusyKey(null);
       return;
     }
 
     const nextItems = items.map((item) =>
-      item.category === category ? ({ ...(data as CheckInItem), signedUrl: signed?.signedUrl ?? null } as CheckInItem) : item
+      item.category === category ? (payload.item as CheckInItem) : item
     );
     setItems(nextItems);
-    await saveMetric(category);
-    await refreshItems(nextItems);
     setToast("Saved.");
     setBusyKey(null);
   }
 
-  async function saveMetric(category: CheckInItem["category"]) {
-    if (!supabase) return;
-    const base = { user_id: checkin.user_id, checkin_id: checkin.id };
-    if (category === "weight_scale_photo" && weight) {
-      await supabase.from("weight_entries").upsert(
-        {
-          ...base,
-          weight_value: Number(weight),
-          weight_unit: "kg",
-          measured_at: new Date().toISOString()
-        },
-        { onConflict: "user_id,checkin_id" }
-      );
-    }
-    if (category === "treadmill_photo" && (minutes || distance)) {
-      await supabase.from("cardio_entries").upsert(
-        {
-          ...base,
-          treadmill_minutes: minutes ? Number(minutes) : null,
-          treadmill_distance: distance ? Number(distance) : null,
-          distance_unit: "km"
-        },
-        { onConflict: "user_id,checkin_id" }
-      );
-    }
-  }
-
   async function markExcused(category: CheckInItem["category"]) {
-    if (!supabase) return;
     setBusyKey(category);
-    const { data } = await supabase
-      .from("checkin_items")
-      .update({ status: "excused", updated_at: new Date().toISOString() })
-      .eq("checkin_id", checkin.id)
-      .eq("category", category)
-      .select("*")
-      .single();
-    const nextItems = items.map((item) => (item.category === category ? (data as CheckInItem) : item));
+    const response = await fetch("/api/today/item", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category, action: "excuse" })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setToast(payload.error ?? "Could not update item.");
+      setBusyKey(null);
+      return;
+    }
+    const nextItems = items.map((item) => (item.category === category ? (payload.item as CheckInItem) : item));
     setItems(nextItems);
-    await refreshItems(nextItems);
     setToast("Marked excused.");
     setBusyKey(null);
   }
 
   async function remove(category: CheckInItem["category"]) {
-    if (!supabase) return;
     setBusyKey(category);
-    const current = items.find((item) => item.category === category);
-    if (current?.storage_path) {
-      await supabase.storage.from("checkin-uploads").remove([current.storage_path.replace(/^checkin-uploads\//, "")]);
+    const response = await fetch("/api/today/item", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category, action: "clear" })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setToast(payload.error ?? "Could not clear item.");
+      setBusyKey(null);
+      return;
     }
-    const { data } = await supabase
-      .from("checkin_items")
-      .update({
-        status: "missing",
-        storage_path: null,
-        original_filename: null,
-        mime_type: null,
-        file_size_bytes: null,
-        uploaded_at: null,
-        updated_at: new Date().toISOString()
-      })
-      .eq("checkin_id", checkin.id)
-      .eq("category", category)
-      .select("*")
-      .single();
-    const nextItems = items.map((item) => (item.category === category ? (data as CheckInItem) : item));
+    const nextItems = items.map((item) => (item.category === category ? (payload.item as CheckInItem) : item));
     setItems(nextItems);
-    await refreshItems(nextItems);
     setToast("Removed.");
     setBusyKey(null);
   }
 
   async function setRestDayState(next: boolean, nextReason = reason) {
-    if (!supabase) return;
     setRestDay(next);
-    await supabase
-      .from("daily_checkins")
-      .update({
+    await fetch("/api/today/rest", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         is_rest_day: next,
         rest_day_reason: next ? nextReason : null,
-        overall_status: calculateDailyStatus(items, next),
-        updated_at: new Date().toISOString()
+        overall_status: calculateDailyStatus(items, next)
       })
-      .eq("id", checkin.id);
+    });
   }
 
   return (

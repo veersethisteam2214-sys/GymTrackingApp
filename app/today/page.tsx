@@ -1,17 +1,17 @@
 import { AppShell } from "@/components/AppShell";
 import { SetupMissing } from "@/components/SetupMissing";
 import { TodayClient } from "@/components/TodayClient";
-import { requireAllowedUser } from "@/lib/auth";
+import { requireAppProfile } from "@/lib/auth";
 import { fetchTodayData } from "@/lib/data";
 import { formatDisplayDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
-  const session = await requireAllowedUser();
-  if (session.setupMissing || !session.supabase || !session.user) return <SetupMissing />;
+  const session = await requireAppProfile();
+  if (session.setupMissing || !session.supabase || !session.profile) return <SetupMissing />;
 
-  const data = await fetchTodayData(session.supabase, session.user);
+  const data = await fetchTodayData(session.supabase, session.profile);
 
   return (
     <AppShell title="Upload proof" subtitle={formatDisplayDate(data.checkin.checkin_date)} profile={data.profile}>
@@ -24,4 +24,3 @@ export default async function TodayPage() {
     </AppShell>
   );
 }
-

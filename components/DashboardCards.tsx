@@ -22,7 +22,7 @@ export function DashboardCards({ people, currentUserId }: { people: Person[]; cu
       <section className="rounded-[2rem] border border-white/70 bg-white/88 p-5 shadow-soft">
         <h2 className="text-xl font-semibold text-ink">No profiles yet</h2>
         <p className="mt-2 text-sm leading-6 text-ink/60">
-          Sign in with each allowlisted email once to create both private profile rows.
+          Enter the shared app password, then save a profile to start tracking.
         </p>
       </section>
     );
@@ -110,4 +110,3 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
     </div>
   );
 }
-

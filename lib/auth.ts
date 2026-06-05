@@ -1,26 +1,31 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createServerSupabase } from "@/lib/supabase/server";
-import { isEmailAllowed } from "@/lib/env";
+import { createAdminSupabase } from "@/lib/supabase/server";
+import type { Profile } from "@/lib/types";
 
-export async function requireAllowedUser() {
-  const supabase = await createServerSupabase();
+export async function getProfileIdFromCookie() {
+  const cookieStore = await cookies();
+  return cookieStore.get("gym_profile_id")?.value ?? null;
+}
+
+export async function requireAppProfile() {
+  const supabase = createAdminSupabase();
 
   if (!supabase) {
-    return { supabase: null, user: null, setupMissing: true as const };
+    return { supabase: null, profile: null, setupMissing: true as const };
   }
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
+  const profileId = await getProfileIdFromCookie();
+  if (!profileId) {
+    redirect("/profile-setup");
   }
 
-  if (!isEmailAllowed(user.email)) {
-    await supabase.auth.signOut();
-    redirect("/access-denied");
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", profileId).single();
+
+  if (!profile) {
+    redirect("/profile-setup");
   }
 
-  return { supabase, user, setupMissing: false as const };
+  return { supabase, profile: profile as Profile, setupMissing: false as const };
 }
+

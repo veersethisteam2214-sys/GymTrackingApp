@@ -10,8 +10,10 @@ export function proxy(request: NextRequest) {
   const isPublic =
     pathname === "/access" ||
     pathname === "/access-denied" ||
+    pathname === "/profile-setup" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/access") ||
+    pathname.startsWith("/api/profile") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     PUBLIC_FILE.test(pathname);
@@ -23,10 +25,21 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const needsProfile =
+    passedAccess &&
+    !request.cookies.get("gym_profile_id")?.value &&
+    !isPublic &&
+    pathname !== "/profile-setup";
+
+  if (needsProfile) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/profile-setup";
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image).*)"]
 };
-
