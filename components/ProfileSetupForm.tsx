@@ -26,6 +26,22 @@ Friday -
 Saturday -
 Sunday -`;
 
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+function parseGymRoutine(routine?: string | null) {
+  return WEEKDAYS.reduce<Record<string, string>>((days, day) => {
+    const line = routine
+      ?.split(/\r?\n/)
+      .find((entry) => entry.trim().toLowerCase().startsWith(day.toLowerCase()));
+    days[day] = line?.split("-").slice(1).join("-").trim() ?? "";
+    return days;
+  }, {});
+}
+
+function serializeGymRoutine(days: Record<string, string>) {
+  return WEEKDAYS.map((day) => `${day} - ${days[day] ?? ""}`).join("\n");
+}
+
 export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
@@ -33,7 +49,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const [targetWeight, setTargetWeight] = useState(profile?.target_weight?.toString() ?? "");
   const [targetDate, setTargetDate] = useState(profile?.target_date ?? "");
   const [goalMode, setGoalMode] = useState<"cutting" | "bulking">(profile?.goal_mode ?? "cutting");
-  const [gymRoutine, setGymRoutine] = useState(profile?.gym_routine ?? WEEKLY_GYM_TEMPLATE);
+  const [gymDays, setGymDays] = useState(() => parseGymRoutine(profile?.gym_routine ?? WEEKLY_GYM_TEMPLATE));
   const [cardioRoutine, setCardioRoutine] = useState(profile?.cardio_routine ?? "");
   const [currentBookTitle, setCurrentBookTitle] = useState(profile?.current_book_title ?? "");
   const [currentBookTotalPages, setCurrentBookTotalPages] = useState(profile?.current_book_total_pages?.toString() ?? "");
@@ -53,7 +69,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
     formData.set("target_weight", targetWeight);
     formData.set("target_date", targetDate);
     formData.set("goal_mode", goalMode);
-    formData.set("gym_routine", gymRoutine);
+    formData.set("gym_routine", serializeGymRoutine(gymDays));
     formData.set("cardio_routine", cardioRoutine);
     formData.set("current_book_title", currentBookTitle);
     formData.set("current_book_total_pages", currentBookTotalPages);
@@ -161,12 +177,11 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
             />
           </div>
         </div>
-        <TextArea
+        <WeeklyRoutineInput
           icon={<Dumbbell className="size-5" />}
           label="Gym routine"
-          value={gymRoutine}
-          onChange={setGymRoutine}
-          placeholder={WEEKLY_GYM_TEMPLATE}
+          days={gymDays}
+          onChange={(day, value) => setGymDays((current) => ({ ...current, [day]: value }))}
         />
         <TextArea
           icon={<Timer className="size-5" />}
@@ -286,5 +301,45 @@ function TextArea({
         />
       </div>
     </label>
+  );
+}
+
+function WeeklyRoutineInput({
+  icon,
+  label,
+  days,
+  onChange
+}: {
+  icon: React.ReactNode;
+  label: string;
+  days: Record<string, string>;
+  onChange: (day: string, value: string) => void;
+}) {
+  return (
+    <div className="block">
+      <span className="mb-2 block text-sm font-bold text-app">{label}</span>
+      <div className="rounded-2xl border p-3" style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}>
+        <div className="mb-3 flex items-center gap-3 text-muted">
+          <span className="grid size-7 place-items-center">{icon}</span>
+          <p className="text-sm font-bold">Weekdays are locked. Fill in the plan beside each day.</p>
+        </div>
+        <div className="grid gap-2">
+          {WEEKDAYS.map((day) => (
+            <label key={day} className="grid gap-2 sm:grid-cols-[7.5rem_1fr] sm:items-center">
+              <span className="rounded-xl px-3 py-2 text-sm font-extrabold text-app" style={{ background: "var(--surface-soft)" }}>
+                {day} -
+              </span>
+              <input
+                value={days[day] ?? ""}
+                onChange={(event) => onChange(day, event.target.value)}
+                placeholder="Rest, Chest, Legs..."
+                className="min-h-11 rounded-xl border bg-transparent px-3 text-sm text-app outline-none placeholder:text-muted focus:ring-4"
+                style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

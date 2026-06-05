@@ -56,8 +56,23 @@ export async function POST(request: Request) {
   }
 
   const currentProfileId = cookieStore.get("gym_profile_id")?.value;
+  let shouldInsert = !currentProfileId;
 
-  if (!currentProfileId) {
+  if (currentProfileId) {
+    const { data: existingProfile, error: existingError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", currentProfileId)
+      .maybeSingle();
+
+    if (existingError) {
+      return NextResponse.json({ error: existingError.message }, { status: 500 });
+    }
+
+    shouldInsert = !existingProfile;
+  }
+
+  if (shouldInsert) {
     const { count, error: countError } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true });
@@ -85,7 +100,7 @@ export async function POST(request: Request) {
     updated_at: new Date().toISOString()
   };
 
-  const query = currentProfileId
+  const query = !shouldInsert && currentProfileId
     ? supabase.from("profiles").update(values).eq("id", currentProfileId).select("*").single()
     : supabase.from("profiles").insert(values).select("*").single();
 
