@@ -34,9 +34,10 @@ SUPABASE_URL=
 1. Create a Supabase project.
 2. Run `supabase/migrations/0001_private_gym_tracker.sql` in Supabase SQL Editor for a fresh setup.
 3. If you already ran the original setup before target goals existed, also run `supabase/migrations/0002_profile_goals_and_weight_entry.sql`.
-4. Confirm the private `checkin-uploads` bucket exists.
-5. No Supabase Auth setup is needed.
-6. No allowed-email setup is needed.
+4. Run `supabase/migrations/0003_challenges.sql` to add the shared challenges board.
+5. Confirm the private `checkin-uploads` bucket exists.
+6. No Supabase Auth setup is needed.
+7. No allowed-email setup is needed.
 
 ## Vercel Setup
 
@@ -72,6 +73,7 @@ Redeploy after saving the variables.
 - `/today` daily upload flow
 - `/calendar` current month status grid
 - `/analytics` stats and charts
+- `/challenges` shared group challenges
 - `/user/[userId]` per-user progress dashboard
 - `/settings` edit profile and sign out
 

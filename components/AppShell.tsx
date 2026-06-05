@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Dumbbell, Home, LineChart, Settings, UploadCloud } from "lucide-react";
+import { CalendarDays, Dumbbell, Home, LineChart, Settings, Trophy, UploadCloud } from "lucide-react";
 import type { Profile } from "@/lib/types";
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { href: "/today", label: "Today", icon: UploadCloud },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/analytics", label: "Stats", icon: LineChart },
+  { href: "/challenges", label: "Challenges", icon: Trophy },
   { href: "/settings", label: "Settings", icon: Settings }
 ];
 
@@ -23,6 +24,9 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
+      <a href="#main-content" className="skip-link">
+        Skip To Content
+      </a>
       <header className="sticky top-0 z-20 border-b border-white/60 bg-paper/84 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -53,16 +57,18 @@ export function AppShell({
           ) : null}
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
+      <main id="main-content" className="mx-auto max-w-7xl scroll-mt-20 px-4 py-5">
+        {children}
+      </main>
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-ink/8 bg-white/92 px-2 pt-2 shadow-[0_-12px_30px_rgba(21,35,30,0.08)] backdrop-blur-xl lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+        <div className="mx-auto grid max-w-lg grid-cols-6 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="app-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold text-ink/58 hover:bg-mint hover:text-leaf focus:outline-none focus:ring-4 focus:ring-leaf/15"
+                className="app-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-semibold text-ink/58 hover:bg-mint hover:text-leaf focus:outline-none focus-visible:ring-4 focus-visible:ring-leaf/15"
               >
                 <Icon className="size-5" aria-hidden />
                 <span>{item.label}</span>

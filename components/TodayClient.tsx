@@ -228,6 +228,7 @@ export function TodayClient({
       {toast ? (
         <button
           onClick={() => setToast("")}
+          aria-live="polite"
           className="app-button fixed bottom-24 left-4 right-4 z-40 mx-auto min-h-12 max-w-md rounded-2xl bg-ink px-4 text-sm font-semibold text-white shadow-soft"
         >
           {toast}

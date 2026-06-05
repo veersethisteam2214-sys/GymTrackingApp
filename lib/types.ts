@@ -76,3 +76,16 @@ export type CategoryMeta = {
   helper: string;
   accent: string;
 };
+
+export type Challenge = {
+  id: string;
+  title: string;
+  description: string | null;
+  challenge_type: string;
+  target_value: number | null;
+  target_unit: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_by_profile_id: string | null;
+  created_at: string;
+};

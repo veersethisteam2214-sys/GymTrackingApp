@@ -81,6 +81,19 @@ create table if not exists public.audit_log (
   created_at timestamptz default now()
 );
 
+create table if not exists public.challenges (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text null,
+  challenge_type text not null default 'consistency',
+  target_value numeric null,
+  target_unit text null,
+  start_date date null,
+  end_date date null,
+  created_by_profile_id uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now()
+);
+
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -112,6 +125,7 @@ alter table public.checkin_items enable row level security;
 alter table public.weight_entries enable row level security;
 alter table public.cardio_entries enable row level security;
 alter table public.audit_log enable row level security;
+alter table public.challenges enable row level security;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

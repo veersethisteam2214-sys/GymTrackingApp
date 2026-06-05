@@ -131,7 +131,11 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
           onChange={setCardioRoutine}
           placeholder="Example: Treadmill 25 min after lifting"
         />
-        {error ? <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm font-medium text-clay">{error}</p> : null}
+        {error ? (
+          <p aria-live="polite" className="rounded-2xl bg-clay/10 px-4 py-3 text-sm font-medium text-clay">
+            {error}
+          </p>
+        ) : null}
         <button
           disabled={busy}
           className="app-button flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink px-5 text-sm font-semibold text-white shadow-soft hover:bg-leaf disabled:cursor-not-allowed disabled:opacity-60"
@@ -185,4 +189,3 @@ function TextArea({
     </label>
   );
 }
-

@@ -152,22 +152,6 @@ function PersonOverview({ person, isMe }: { person: Person; isMe: boolean }) {
         ))}
       </div>
 
-      <div className="mt-4 space-y-2">
-        {proofItems.map(({ category, item }) => (
-          <div key={category.id} className="flex min-h-11 items-center justify-between rounded-2xl bg-white/7 px-3">
-            <div className="flex min-w-0 items-center gap-2 text-white">
-              <span className={`flex size-7 items-center justify-center rounded-xl ${category.accent}`}>
-                {categoryIcons[category.id]}
-              </span>
-              <span className="truncate text-sm font-semibold">{category.label}</span>
-            </div>
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold capitalize text-white/70">
-              {item?.status ?? "missing"}
-            </span>
-          </div>
-        ))}
-      </div>
-
       <div className="mt-4 flex gap-2">
         {isMe ? (
           <Link
@@ -235,4 +219,3 @@ function Signal({ icon, label, value }: { icon: React.ReactNode; label: string; 
     </div>
   );
 }
-

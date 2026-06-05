@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
 import { getLocalDateString, getMonthRange, getWeekRange } from "@/lib/dates";
 import { calculateDailyStatus, getCurrentStreak, getStats } from "@/lib/status";
-import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
+import type { CardioEntry, Challenge, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
 type Client = SupabaseClient<any>;
 
@@ -200,4 +200,9 @@ export async function fetchAnalyticsData(supabase: Client) {
     weights: (weights ?? []) as WeightEntry[],
     cardio: (cardio ?? []) as CardioEntry[]
   };
+}
+
+export async function fetchChallenges(supabase: Client) {
+  const { data } = await supabase.from("challenges").select("*").order("created_at", { ascending: false }).limit(20);
+  return (data ?? []) as Challenge[];
 }
