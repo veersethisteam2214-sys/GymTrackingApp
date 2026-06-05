@@ -9,16 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#15231e",
-        leaf: "#2e7d55",
-        mint: "#dff4e9",
-        sun: "#f5bd4f",
-        clay: "#d9654f",
-        sky: "#5c8fd8",
-        paper: "#fbfaf7"
+        ink: "var(--text)",
+        leaf: "var(--brand-2)",
+        mint: "color-mix(in srgb, var(--brand) 18%, transparent)",
+        sun: "var(--accent)",
+        clay: "var(--danger)",
+        sky: "#4ea7ff",
+        paper: "var(--surface)"
       },
       boxShadow: {
-        soft: "0 18px 50px rgba(21, 35, 30, 0.12)"
+        soft: "var(--shadow)"
       }
     }
   },
@@ -26,4 +26,3 @@ const config: Config = {
 };
 
 export default config;
-

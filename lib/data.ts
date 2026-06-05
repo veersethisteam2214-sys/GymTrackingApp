@@ -242,8 +242,11 @@ export async function fetchRecommendations(supabase: Client) {
   ]);
   const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
 
-  return ((recommendations ?? []) as Recommendation[]).map((recommendation) => ({
-    ...recommendation,
-    profile: signedProfiles.find((profile) => profile.id === recommendation.created_by_profile_id) ?? null
-  }));
+  return Promise.all(
+    ((recommendations ?? []) as Recommendation[]).map(async (recommendation) => ({
+      ...recommendation,
+      signedUrl: await getSignedUrl(supabase, recommendation.storage_path),
+      profile: signedProfiles.find((profile) => profile.id === recommendation.created_by_profile_id) ?? null
+    }))
+  );
 }

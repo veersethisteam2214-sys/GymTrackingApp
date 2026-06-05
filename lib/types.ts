@@ -117,7 +117,11 @@ export type Recommendation = {
   id: string;
   created_by_profile_id: string | null;
   title: string;
+  category: string | null;
   note: string | null;
+  link_url: string | null;
+  storage_path: string | null;
+  signedUrl?: string | null;
   created_at: string;
   profile?: Pick<Profile, "display_name" | "avatarSignedUrl"> | null;
 };

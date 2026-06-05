@@ -1,9 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  color-scheme: dark;
+  --bg: #070907;
+  --bg-grid: rgba(196, 255, 92, 0.055);
+  --surface: rgba(18, 24, 19, 0.86);
+  --surface-strong: rgba(27, 36, 29, 0.94);
+  --surface-soft: rgba(255, 255, 255, 0.055);
+  --text: #f4f7ee;
+  --muted: rgba(244, 247, 238, 0.62);
+  --faint: rgba(244, 247, 238, 0.12);
+  --brand: #c8ff3d;
+  --brand-2: #36e28a;
+  --accent: #ffb020;
+  --danger: #ff6a4f;
+  --shadow: 0 24px 90px rgba(0, 0, 0, 0.36);
+}
+
+:root[data-theme="light"] {
   color-scheme: light;
+  --bg: #f4f1e8;
+  --bg-grid: rgba(7, 9, 7, 0.055);
+  --surface: rgba(255, 255, 250, 0.88);
+  --surface-strong: rgba(255, 255, 250, 0.96);
+  --surface-soft: rgba(7, 9, 7, 0.055);
+  --text: #10150f;
+  --muted: rgba(16, 21, 15, 0.62);
+  --faint: rgba(16, 21, 15, 0.12);
+  --brand: #2f8d4f;
+  --brand-2: #135f38;
+  --accent: #e18b00;
+  --danger: #d84b35;
+  --shadow: 0 24px 80px rgba(38, 48, 32, 0.18);
 }
 
 * {
@@ -17,11 +49,14 @@ html {
 body {
   min-height: 100vh;
   background:
-    linear-gradient(rgba(21, 35, 30, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(21, 35, 30, 0.035) 1px, transparent 1px),
-    linear-gradient(180deg, #fbfaf7 0%, #eef5ef 48%, #edf4f5 100%);
-  background-size: 28px 28px, 28px 28px, auto;
-  color: #15231e;
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand) 24%, transparent) 0, transparent 34rem),
+    radial-gradient(circle at 80% 15%, color-mix(in srgb, var(--accent) 16%, transparent) 0, transparent 28rem),
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px),
+    var(--bg);
+  background-size: auto, auto, 32px 32px, 32px 32px, auto;
+  color: var(--text);
+  font-family: "Manrope", "Segoe UI", sans-serif;
 }
 
 button,
@@ -34,8 +69,8 @@ select {
 }
 
 .app-button {
-  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease,
-    border-color 160ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease,
+    border-color 180ms ease, color 180ms ease, opacity 180ms ease;
 }
 
 .app-button:active {
@@ -46,6 +81,58 @@ select {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
+.display-font {
+  font-family: "Barlow Condensed", Impact, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.app-surface {
+  border: 1px solid var(--faint);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+}
+
+.app-surface-strong {
+  border: 1px solid var(--faint);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.text-app {
+  color: var(--text);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+}
+
+.completion-ring {
+  background:
+    radial-gradient(circle at center, var(--surface-strong) 57%, transparent 58%),
+    conic-gradient(var(--brand) var(--ring-value), var(--surface-soft) 0);
+}
+
+.reveal-in {
+  animation: reveal-in 520ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .skip-link {
   position: fixed;
   left: 1rem;
@@ -53,8 +140,8 @@ select {
   z-index: 60;
   transform: translateY(-150%);
   border-radius: 999px;
-  background: #15231e;
-  color: white;
+  background: var(--text);
+  color: var(--bg);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   font-weight: 700;
@@ -71,7 +158,9 @@ select {
   }
 
   .app-button,
-  .skip-link {
+  .skip-link,
+  .reveal-in {
     transition: none;
+    animation: none;
   }
 }

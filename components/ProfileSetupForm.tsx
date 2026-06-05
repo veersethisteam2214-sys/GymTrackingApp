@@ -18,6 +18,14 @@ import {
 } from "lucide-react";
 import type { Profile } from "@/lib/types";
 
+const WEEKLY_GYM_TEMPLATE = `Monday -
+Tuesday -
+Wednesday -
+Thursday -
+Friday -
+Saturday -
+Sunday -`;
+
 export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
@@ -25,7 +33,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const [targetWeight, setTargetWeight] = useState(profile?.target_weight?.toString() ?? "");
   const [targetDate, setTargetDate] = useState(profile?.target_date ?? "");
   const [goalMode, setGoalMode] = useState<"cutting" | "bulking">(profile?.goal_mode ?? "cutting");
-  const [gymRoutine, setGymRoutine] = useState(profile?.gym_routine ?? "");
+  const [gymRoutine, setGymRoutine] = useState(profile?.gym_routine ?? WEEKLY_GYM_TEMPLATE);
   const [cardioRoutine, setCardioRoutine] = useState(profile?.cardio_routine ?? "");
   const [currentBookTitle, setCurrentBookTitle] = useState(profile?.current_book_title ?? "");
   const [currentBookTotalPages, setCurrentBookTotalPages] = useState(profile?.current_book_total_pages?.toString() ?? "");
@@ -74,16 +82,16 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   }
 
   return (
-    <section className="w-full max-w-2xl rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-soft backdrop-blur">
+    <section className="app-surface-strong w-full max-w-2xl rounded-[2rem] p-5">
       <div className="mb-5">
-        <label className="app-button relative mb-4 flex size-20 cursor-pointer items-center justify-center overflow-hidden rounded-[1.75rem] bg-ink text-white shadow-soft hover:bg-leaf">
+        <label className="app-button relative mb-4 grid size-24 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] brand-gradient text-black shadow-soft hover:scale-[1.02]">
           {avatarPreview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatarPreview} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <UserRound className="size-8" aria-hidden />
           )}
-          <span className="absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-xl bg-white text-ink shadow-sm">
+          <span className="absolute bottom-1 right-1 grid size-8 place-items-center rounded-xl bg-black text-white shadow-sm">
             <ImagePlus className="size-4" aria-hidden />
           </span>
           <input
@@ -93,9 +101,9 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
             onChange={(event) => selectAvatar(event.target.files?.[0])}
           />
         </label>
-        <h1 className="text-3xl font-semibold text-ink">Set up your profile</h1>
-        <p className="mt-2 text-sm leading-6 text-ink/62">
-          Save your photo, current weight, goal, and training routines for the shared dashboard.
+        <h1 className="display-font text-5xl font-extrabold text-app">Set up your profile</h1>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          Add your avatar, training plan, goal, and reading target. Friends see this after they tap your profile.
         </p>
       </div>
       <form onSubmit={submit} className="space-y-4">
@@ -104,7 +112,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             required
-            className="w-full bg-transparent text-base outline-none"
+            className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
             placeholder="Your name"
           />
         </Field>
@@ -114,7 +122,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
               value={startingWeight}
               onChange={(event) => setStartingWeight(event.target.value)}
               inputMode="decimal"
-              className="w-full bg-transparent text-base outline-none"
+              className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
               placeholder="82.5"
             />
           </Field>
@@ -123,7 +131,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
               value={targetWeight}
               onChange={(event) => setTargetWeight(event.target.value)}
               inputMode="decimal"
-              className="w-full bg-transparent text-base outline-none"
+              className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
               placeholder="78"
             />
           </Field>
@@ -133,11 +141,11 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
             value={targetDate}
             onChange={(event) => setTargetDate(event.target.value)}
             type="date"
-            className="w-full bg-transparent text-base outline-none"
+            className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
           />
         </Field>
         <div>
-          <span className="mb-2 block text-sm font-medium text-ink">Goal type</span>
+          <span className="mb-2 block text-sm font-bold text-app">Goal type</span>
           <div className="grid grid-cols-2 gap-2">
             <ModeButton
               active={goalMode === "cutting"}
@@ -158,7 +166,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
           label="Gym routine"
           value={gymRoutine}
           onChange={setGymRoutine}
-          placeholder="Example: Push/pull/legs, 5 days a week"
+          placeholder={WEEKLY_GYM_TEMPLATE}
         />
         <TextArea
           icon={<Timer className="size-5" />}
@@ -167,10 +175,10 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
           onChange={setCardioRoutine}
           placeholder="Example: Treadmill 25 min after lifting"
         />
-        <div className="rounded-3xl bg-paper p-3">
+        <div className="rounded-3xl p-3" style={{ background: "var(--surface-soft)" }}>
           <div className="mb-3 flex items-center gap-2">
             <BookOpen className="size-5 text-leaf" aria-hidden />
-            <h2 className="font-semibold text-ink">Reading target</h2>
+            <h2 className="font-semibold text-app">Reading target</h2>
           </div>
           <div className="grid gap-2 sm:grid-cols-[1fr_9rem]">
             <Field icon={<BookOpen className="size-5" />} label="Current book">
@@ -178,7 +186,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
                 value={currentBookTitle}
                 onChange={(event) => setCurrentBookTitle(event.target.value)}
                 required
-                className="w-full bg-transparent text-base outline-none"
+                className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
                 placeholder="Atomic Habits"
               />
             </Field>
@@ -188,20 +196,20 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
                 onChange={(event) => setCurrentBookTotalPages(event.target.value)}
                 inputMode="numeric"
                 required
-                className="w-full bg-transparent text-base outline-none"
+                className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
                 placeholder="320"
               />
             </Field>
           </div>
         </div>
         {error ? (
-          <p aria-live="polite" className="rounded-2xl bg-clay/10 px-4 py-3 text-sm font-medium text-clay">
+          <p aria-live="polite" className="rounded-2xl px-4 py-3 text-sm font-bold" style={{ background: "color-mix(in srgb, var(--danger) 14%, transparent)", color: "var(--danger)" }}>
             {error}
           </p>
         ) : null}
         <button
           disabled={busy}
-          className="app-button flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ink px-5 text-sm font-semibold text-white shadow-soft hover:bg-leaf disabled:cursor-not-allowed disabled:opacity-60"
+          className="app-button brand-gradient flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-black shadow-soft hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           Save profile
@@ -226,11 +234,12 @@ function ModeButton({
     <button
       type="button"
       onClick={onClick}
-      className={`app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-bold ${
-        active
-          ? "border-ink bg-ink text-white shadow-soft"
-          : "border-ink/10 bg-white text-ink/62 hover:border-leaf/35 hover:bg-mint"
-      }`}
+      className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-extrabold"
+      style={{
+        borderColor: active ? "var(--brand)" : "var(--faint)",
+        background: active ? "linear-gradient(135deg, var(--brand), var(--brand-2))" : "var(--surface-soft)",
+        color: active ? "var(--bg)" : "var(--muted)"
+      }}
     >
       {icon}
       {label}
@@ -241,9 +250,9 @@ function ModeButton({
 function Field({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-ink">{label}</span>
-      <div className="flex min-h-12 items-center gap-3 rounded-2xl border border-ink/10 bg-white px-4 focus-within:border-leaf focus-within:ring-4 focus-within:ring-leaf/15">
-        <span className="text-ink/40">{icon}</span>
+      <span className="mb-2 block text-sm font-bold text-app">{label}</span>
+      <div className="flex min-h-12 items-center gap-3 rounded-2xl border px-4 focus-within:ring-4" style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}>
+        <span className="grid size-7 place-items-center text-muted">{icon}</span>
         {children}
       </div>
     </label>
@@ -265,14 +274,14 @@ function TextArea({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-ink">{label}</span>
-      <div className="flex gap-3 rounded-2xl border border-ink/10 bg-white px-4 py-3 focus-within:border-leaf focus-within:ring-4 focus-within:ring-leaf/15">
-        <span className="mt-1 text-ink/40">{icon}</span>
+      <span className="mb-2 block text-sm font-bold text-app">{label}</span>
+      <div className="flex gap-3 rounded-2xl border px-4 py-3 focus-within:ring-4" style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}>
+        <span className="mt-1 grid size-7 place-items-center text-muted">{icon}</span>
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
           required
-          className="min-h-20 w-full resize-none bg-transparent text-base outline-none"
+          className="min-h-32 w-full resize-none bg-transparent text-base text-app outline-none placeholder:text-muted"
           placeholder={placeholder}
         />
       </div>

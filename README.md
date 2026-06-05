@@ -36,9 +36,10 @@ SUPABASE_URL=
 3. If you already ran the original setup before target goals existed, also run `supabase/migrations/0002_profile_goals_and_weight_entry.sql`.
 4. Run `supabase/migrations/0003_challenges.sql` to add the shared challenges board.
 5. Run `supabase/migrations/0004_reading_recommendations_and_group_limit.sql` to add reading proof, completed books, recommendations, and max-10 profile support.
-6. Confirm the private `checkin-uploads` bucket exists.
-7. No Supabase Auth setup is needed.
-8. No allowed-email setup is needed.
+6. Run `supabase/migrations/0005_general_recommendations.sql` if your recommendations table was created before category/link/photo support.
+7. Confirm the private `checkin-uploads` bucket exists.
+8. No Supabase Auth setup is needed.
+9. No allowed-email setup is needed.
 
 ## Vercel Setup
 
@@ -73,13 +74,22 @@ Redeploy after saving the variables.
 
 - `/access` shared password gate
 - `/profile-setup` profile setup form
-- `/dashboard` today's dashboard and month preview
+- `/dashboard` profile cards, today split, task completion, calendar entry, recommendations
 - `/today` daily upload flow
 - `/calendar` current month status grid
 - `/analytics` stats and charts
 - `/challenges` shared group challenges
 - `/user/[userId]` per-user progress dashboard
 - `/settings` edit profile and sign out
+
+## Design / UX
+
+- Top navigation, no bottom taskbar
+- Dark/light theme toggle in Settings
+- Main page shows profile cards first; detailed data opens after tapping a profile
+- Daily proof photos stay hidden until a specific data point is opened
+- Calendar opens from its own route with all-user or per-user filtering
+- Recommendations can be anything: books, gear, videos, links, supplements, or ideas
 
 ## Daily Criteria
 

@@ -123,7 +123,10 @@ create table if not exists public.recommendations (
   id uuid primary key default gen_random_uuid(),
   created_by_profile_id uuid references public.profiles(id) on delete set null,
   title text not null,
+  category text null,
   note text null,
+  link_url text null,
+  storage_path text null,
   created_at timestamptz default now()
 );
 

@@ -1,7 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { ChallengePreview } from "@/components/ChallengePreview";
 import { DashboardCards } from "@/components/DashboardCards";
-import { MonthPreview } from "@/components/MonthPreview";
 import { RecommendationBoard } from "@/components/RecommendationBoard";
 import { SetupMissing } from "@/components/SetupMissing";
 import { requireAppProfile } from "@/lib/auth";
@@ -22,10 +21,9 @@ export default async function DashboardPage() {
 
   return (
     <AppShell title="Today" subtitle={formatDisplayDate(data.today)} profile={session.profile}>
-      <DashboardCards people={data.people} currentUserId={data.currentUserId} />
+      <DashboardCards people={data.people} currentUserId={data.currentUserId} today={data.today} />
       <ChallengePreview challenges={challenges} />
       <RecommendationBoard initialRecommendations={recommendations} currentProfile={session.profile} />
-      <MonthPreview checkins={data.monthCheckins} profiles={data.people.map((person) => person.profile)} />
     </AppShell>
   );
 }
