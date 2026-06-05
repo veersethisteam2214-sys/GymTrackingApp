@@ -17,8 +17,10 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 16% 0%, rgba(46, 125, 85, 0.12), transparent 28rem),
-    linear-gradient(180deg, #fbfaf7 0%, #f1f5ef 48%, #edf4f5 100%);
+    linear-gradient(rgba(21, 35, 30, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 35, 30, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, #fbfaf7 0%, #eef5ef 48%, #edf4f5 100%);
+  background-size: 28px 28px, 28px 28px, auto;
   color: #15231e;
 }
 
@@ -42,4 +44,3 @@ select {
 .safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
-

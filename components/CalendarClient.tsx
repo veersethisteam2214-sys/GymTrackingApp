@@ -85,13 +85,21 @@ export function CalendarClient({
                         {checkin?.overall_status ?? "missing"}
                       </span>
                     </div>
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 grid grid-cols-4 gap-2">
                       {CATEGORIES.map((category) => {
                         const item = checkinItems.find((entry) => entry.category === category.id);
                         return (
-                          <div key={category.id} className="flex items-center justify-between rounded-2xl bg-white px-3 py-2">
-                            <span className="text-sm font-semibold text-ink">{category.shortLabel}</span>
-                            <span className="text-xs font-bold capitalize text-ink/55">{item?.status ?? "missing"}</span>
+                          <div key={category.id} className="overflow-hidden rounded-2xl bg-white">
+                            <div className="relative aspect-square bg-ink/5">
+                              {item?.signedUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={item.signedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                              ) : null}
+                            </div>
+                            <div className="px-2 py-2">
+                              <span className="block truncate text-[11px] font-bold text-ink">{category.shortLabel}</span>
+                              <span className="text-[10px] font-bold capitalize text-ink/45">{item?.status ?? "missing"}</span>
+                            </div>
                           </div>
                         );
                       })}
@@ -106,4 +114,3 @@ export function CalendarClient({
     </>
   );
 }
-

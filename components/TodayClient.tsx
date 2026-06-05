@@ -1,13 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Check, ImagePlus, Loader2, ShieldCheck, Trash2, X } from "lucide-react";
+import { Activity, Camera, Check, Dumbbell, GlassWater, ImagePlus, Loader2, Scale, ShieldCheck, Trash2, X } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { calculateDailyStatus } from "@/lib/status";
-import type { CardioEntry, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
+import type { CardioEntry, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
+  progress_photo: <Dumbbell className="size-5" />,
+  treadmill_photo: <Activity className="size-5" />,
+  weight_scale_photo: <Scale className="size-5" />,
+  protein_shake_photo: <GlassWater className="size-5" />
+};
 
 export function TodayClient({
   checkin,
@@ -28,8 +34,13 @@ export function TodayClient({
   const [distance, setDistance] = useState(initialCardio?.treadmill_distance?.toString() ?? "");
   const [toast, setToast] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CheckInCategory>(
+    items.find((item) => item.status === "missing")?.category ?? CATEGORIES[0].id
+  );
 
   const completionCount = items.filter((item) => item.status === "uploaded" || item.status === "excused").length;
+  const selectedMeta = CATEGORIES.find((category) => category.id === selectedCategory) ?? CATEGORIES[0];
+  const selectedItem = items.find((entry) => entry.category === selectedCategory);
 
   async function upload(category: CheckInItem["category"], file: File, note: string) {
     if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
@@ -117,53 +128,99 @@ export function TodayClient({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-[2rem] bg-ink p-4 text-white shadow-soft">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-white/62">Today progress</p>
-            <h2 className="text-3xl font-semibold">{completionCount}/4</h2>
+      <section className="overflow-hidden rounded-[2rem] bg-ink text-white shadow-soft">
+        <div className="border-b border-white/10 p-4">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-mint/75">Today upload deck</p>
+          <div className="mt-3 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-white/62">Completion</p>
+              <h2 className="text-4xl font-semibold">{completionCount}/4</h2>
+            </div>
+            <button
+              onClick={() => setRestDayState(!restDay)}
+              className={`app-button flex min-h-12 items-center gap-2 rounded-2xl px-4 text-sm font-semibold ${
+                restDay ? "bg-sky text-white" : "bg-white/12 text-white hover:bg-white/18"
+              }`}
+            >
+              <ShieldCheck className="size-4" aria-hidden />
+              Rest day
+            </button>
           </div>
-          <button
-            onClick={() => setRestDayState(!restDay)}
-            className={`app-button flex min-h-12 items-center gap-2 rounded-2xl px-4 text-sm font-semibold ${
-              restDay ? "bg-sky text-white" : "bg-white/12 text-white hover:bg-white/18"
-            }`}
-          >
-            <ShieldCheck className="size-4" aria-hidden />
-            Rest day
-          </button>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/12">
+            <div className="h-full rounded-full bg-mint" style={{ width: `${(completionCount / 4) * 100}%` }} />
+          </div>
+          {restDay ? (
+            <input
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              onBlur={() => setRestDayState(true, reason)}
+              placeholder="Optional reason"
+              className="mt-3 min-h-11 w-full rounded-2xl border border-white/12 bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/45"
+            />
+          ) : null}
         </div>
-        {restDay ? (
-          <input
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            onBlur={() => setRestDayState(true, reason)}
-            placeholder="Optional reason"
-            className="mt-3 min-h-11 w-full rounded-2xl border border-white/12 bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/45"
-          />
-        ) : null}
+        <div className="grid grid-cols-4 gap-px bg-white/10">
+          {CATEGORIES.map((category) => {
+            const item = items.find((entry) => entry.category === category.id);
+            const isSelected = category.id === selectedCategory;
+            return (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`app-button min-h-24 bg-ink p-2 text-left hover:bg-white/8 ${
+                  isSelected ? "ring-2 ring-inset ring-mint" : ""
+                }`}
+              >
+                <span className={`mb-2 flex size-9 items-center justify-center rounded-2xl ${category.accent}`}>
+                  {categoryIcons[category.id]}
+                </span>
+                <span className="block truncate text-xs font-bold text-white">{category.shortLabel}</span>
+                <span className="mt-1 block text-[10px] font-bold capitalize text-white/42">{item?.status ?? "missing"}</span>
+              </button>
+            );
+          })}
+        </div>
       </section>
 
-      {CATEGORIES.map((category) => {
-        const item = items.find((entry) => entry.category === category.id);
-        return (
-          <UploadPanel
-            key={category.id}
-            item={item}
-            category={category}
-            busy={busyKey === category.id}
-            weight={weight}
-            minutes={minutes}
-            distance={distance}
-            onWeight={setWeight}
-            onMinutes={setMinutes}
-            onDistance={setDistance}
-            onUpload={upload}
-            onExcuse={markExcused}
-            onDelete={remove}
-          />
-        );
-      })}
+      <UploadPanel
+        key={selectedCategory}
+        item={selectedItem}
+        category={selectedMeta}
+        busy={busyKey === selectedCategory}
+        weight={weight}
+        minutes={minutes}
+        distance={distance}
+        onWeight={setWeight}
+        onMinutes={setMinutes}
+        onDistance={setDistance}
+        onUpload={upload}
+        onExcuse={markExcused}
+        onDelete={remove}
+      />
+
+      <section className="rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
+        <h3 className="text-lg font-semibold text-ink">All criteria</h3>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {CATEGORIES.map((category) => {
+            const item = items.find((entry) => entry.category === category.id);
+            return (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className="app-button flex min-h-14 items-center justify-between rounded-2xl bg-paper px-3 text-left hover:bg-mint/60"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl text-white ${category.accent}`}>
+                    {categoryIcons[category.id]}
+                  </span>
+                  <span className="truncate text-sm font-bold text-ink">{category.shortLabel}</span>
+                </span>
+                <span className="text-xs font-bold capitalize text-ink/45">{item?.status ?? "missing"}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {toast ? (
         <button
@@ -220,7 +277,9 @@ function UploadPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className={`size-3 rounded-full ${category.accent}`} />
+            <span className={`flex size-10 items-center justify-center rounded-2xl text-white ${category.accent}`}>
+              {categoryIcons[category.id]}
+            </span>
             <h3 className="text-lg font-semibold text-ink">{category.label}</h3>
           </div>
           <p className="mt-1 text-sm leading-5 text-ink/55">{category.helper}</p>

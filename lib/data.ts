@@ -36,11 +36,18 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
       supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(40)
     ]);
 
+  const signedMonthItems = await Promise.all(
+    ((items ?? []) as CheckInItem[]).map(async (item) => ({
+      ...item,
+      signedUrl: await getSignedUrl(supabase, item.storage_path)
+    }))
+  );
+
   const people = ((profiles ?? []) as Profile[]).map((profile) => {
     const checkinsForUser = ((monthCheckins ?? []) as DailyCheckIn[]).filter((item) => item.user_id === profile.id);
     const todayCheckin = ((todayCheckins ?? []) as DailyCheckIn[]).find((item) => item.user_id === profile.id) ?? null;
     const todayItems = todayCheckin
-      ? ((items ?? []) as CheckInItem[]).filter((item) => item.checkin_id === todayCheckin.id)
+      ? signedMonthItems.filter((item) => item.checkin_id === todayCheckin.id)
       : [];
     const latestWeight = ((weights ?? []) as WeightEntry[]).find((item) => item.user_id === profile.id);
     const weekCheckins = checkinsForUser.filter(
@@ -135,13 +142,20 @@ export async function fetchCalendarData(supabase: Client) {
       .gte("checkin_date", startDate)
       .lte("checkin_date", endDate)
       .order("checkin_date", { ascending: true }),
-    supabase.from("checkin_items").select("*").not("storage_path", "is", null).limit(80)
+    supabase.from("checkin_items").select("*").not("storage_path", "is", null).limit(120)
   ]);
+
+  const signedItems = await Promise.all(
+    ((items ?? []) as CheckInItem[]).map(async (item) => ({
+      ...item,
+      signedUrl: await getSignedUrl(supabase, item.storage_path)
+    }))
+  );
 
   return {
     profiles: (profiles ?? []) as Profile[],
     checkins: (checkins ?? []) as DailyCheckIn[],
-    items: (items ?? []) as CheckInItem[]
+    items: signedItems
   };
 }
 
@@ -174,4 +188,3 @@ export async function fetchAnalyticsData(supabase: Client) {
     cardio: (cardio ?? []) as CardioEntry[]
   };
 }
-
