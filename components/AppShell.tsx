@@ -24,7 +24,7 @@ export function AppShell({
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="brand-gradient grid size-12 shrink-0 place-items-center rounded-2xl text-black shadow-[0_12px_36px_rgba(200,255,61,.22)]">
+              <div className="brand-gradient grid size-12 shrink-0 place-items-center rounded-2xl text-black shadow-[0_12px_36px_rgba(125,183,255,.28)]">
                 <Dumbbell className="size-5" aria-hidden />
               </div>
               <div className="min-w-0">
@@ -61,10 +61,10 @@ function ProfileButton({ profile }: { profile?: Profile | null }) {
 
   return (
     <Link
-      href={`/user/${profile.id}`}
+      href="/settings"
       className="app-button relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl border text-sm font-black shadow-sm"
       style={{ borderColor: "var(--faint)", background: "var(--surface-soft)", color: "var(--text)" }}
-      title={profile.display_name}
+      title="Open settings"
     >
       {profile.avatarSignedUrl ? (
         // eslint-disable-next-line @next/next/no-img-element

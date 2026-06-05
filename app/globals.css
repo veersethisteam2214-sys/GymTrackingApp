@@ -111,6 +111,25 @@ select {
   background: linear-gradient(135deg, var(--brand), var(--brand-2));
 }
 
+.bg-white {
+  background-color: var(--surface-strong) !important;
+}
+
+.border-white\/70,
+.border-white\/60,
+.border-white\/10,
+.border-white\/12 {
+  border-color: var(--faint) !important;
+}
+
+.bg-ink {
+  background-color: #071222 !important;
+}
+
+:root[data-theme="light"] .bg-ink {
+  background-color: #081426 !important;
+}
+
 .completion-ring {
   background:
     radial-gradient(circle at center, var(--surface-strong) 57%, transparent 58%),

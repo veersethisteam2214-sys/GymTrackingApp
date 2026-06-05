@@ -3,6 +3,8 @@
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
+const palette = ["#7db7ff", "#8ee6ff", "#ffb020", "#ff6a4f", "#b9a7ff", "#5ff0c5", "#ff8ad8", "#9fd86b", "#77a8ff", "#d5e7ff"];
+
 export function CompletionBars({ profiles, checkins }: { profiles: Profile[]; checkins: DailyCheckIn[] }) {
   const data = profiles.map((profile) => {
     const mine = checkins.filter((checkin) => checkin.user_id === profile.id);
@@ -18,13 +20,13 @@ export function CompletionBars({ profiles, checkins }: { profiles: Profile[]; ch
     <div className="h-64 w-full">
       <ResponsiveContainer>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#dce8de" />
-          <XAxis dataKey="name" tick={{ fill: "#15231e", fontSize: 12 }} />
-          <YAxis allowDecimals={false} tick={{ fill: "#15231e", fontSize: 12 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(125,183,255,.18)" />
+          <XAxis dataKey="name" tick={{ fill: "var(--muted)", fontSize: 12 }} />
+          <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip />
-          <Bar dataKey="Complete" fill="#2e7d55" radius={[8, 8, 0, 0]} />
-          <Bar dataKey="Partial" fill="#f5bd4f" radius={[8, 8, 0, 0]} />
-          <Bar dataKey="Excused" fill="#5c8fd8" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="Complete" fill="#7db7ff" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="Partial" fill="#ffb020" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="Excused" fill="#8ee6ff" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -32,24 +34,41 @@ export function CompletionBars({ profiles, checkins }: { profiles: Profile[]; ch
 }
 
 export function WeightTrend({ profiles, weights }: { profiles: Profile[]; weights: WeightEntry[] }) {
-  const data = weights.slice(-20).map((entry) => ({
-    date: entry.measured_at.slice(5, 10),
-    value: Number(entry.weight_value),
-    person: profiles.find((profile) => profile.id === entry.user_id)?.display_name ?? "User"
-  }));
+  const selectedIds = new Set(profiles.map((profile) => profile.id));
+  const selectedWeights = weights.filter((entry) => selectedIds.has(entry.user_id)).slice(-80);
+  const dates = Array.from(new Set(selectedWeights.map((entry) => entry.measured_at.slice(5, 10))));
+  const data = dates.map((date) => {
+    const row: Record<string, string | number | null> = { date };
+    profiles.forEach((profile) => {
+      const match = selectedWeights
+        .filter((entry) => entry.user_id === profile.id && entry.measured_at.slice(5, 10) === date)
+        .at(-1);
+      row[profile.display_name] = match ? Number(match.weight_value) : null;
+    });
+    return row;
+  });
 
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#dce8de" />
-          <XAxis dataKey="date" tick={{ fill: "#15231e", fontSize: 12 }} />
-          <YAxis tick={{ fill: "#15231e", fontSize: 12 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(125,183,255,.18)" />
+          <XAxis dataKey="date" tick={{ fill: "var(--muted)", fontSize: 12 }} />
+          <YAxis tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip />
-          <Line type="monotone" dataKey="value" stroke="#2e7d55" strokeWidth={3} dot={{ r: 4 }} />
+          {profiles.map((profile, index) => (
+            <Line
+              key={profile.id}
+              type="monotone"
+              dataKey={profile.display_name}
+              stroke={palette[index % palette.length]}
+              strokeWidth={3}
+              connectNulls
+              dot={{ r: 4 }}
+            />
+          ))}
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
-

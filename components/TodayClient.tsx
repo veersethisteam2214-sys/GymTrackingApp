@@ -149,28 +149,30 @@ export function TodayClient({
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-[2rem] bg-ink text-white shadow-soft">
-        <div className="border-b border-white/10 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-mint/75">Today upload deck</p>
+      <section className="app-surface-strong overflow-hidden rounded-[2rem]">
+        <div className="p-4" style={{ borderBottom: "1px solid var(--faint)" }}>
+          <p className="display-font text-sm font-extrabold uppercase tracking-[0.22em]" style={{ color: "var(--brand)" }}>Today upload deck</p>
           <div className="mt-3 flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-white/62">Completion</p>
-              <h2 className="text-4xl font-semibold">
+              <p className="text-sm text-muted">Completion</p>
+              <h2 className="display-font text-5xl font-extrabold text-app">
                 {completionCount}/{CATEGORIES.length}
               </h2>
             </div>
             <button
               onClick={() => setRestDayState(!restDay)}
-              className={`app-button flex min-h-12 items-center gap-2 rounded-2xl px-4 text-sm font-semibold ${
-                restDay ? "bg-sky text-white" : "bg-white/12 text-white hover:bg-white/18"
-              }`}
+              className="app-button flex min-h-12 items-center gap-2 rounded-2xl px-4 text-sm font-extrabold"
+              style={{
+                background: restDay ? "linear-gradient(135deg, var(--brand), var(--brand-2))" : "var(--surface-soft)",
+                color: restDay ? "var(--bg)" : "var(--text)"
+              }}
             >
               <ShieldCheck className="size-4" aria-hidden />
               Rest day
             </button>
           </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/12">
-            <div className="h-full rounded-full bg-mint" style={{ width: `${(completionCount / CATEGORIES.length) * 100}%` }} />
+          <div className="mt-4 h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-soft)" }}>
+            <div className="h-full rounded-full brand-gradient" style={{ width: `${(completionCount / CATEGORIES.length) * 100}%` }} />
           </div>
           {restDay ? (
             <input
@@ -178,11 +180,12 @@ export function TodayClient({
               onChange={(event) => setReason(event.target.value)}
               onBlur={() => setRestDayState(true, reason)}
               placeholder="Optional reason"
-              className="mt-3 min-h-11 w-full rounded-2xl border border-white/12 bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/45"
+              className="mt-3 min-h-11 w-full rounded-2xl border px-4 text-sm text-app outline-none placeholder:text-muted"
+              style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
             />
           ) : null}
         </div>
-        <div className="grid grid-cols-5 gap-px bg-white/10">
+        <div className="grid grid-cols-5 gap-px" style={{ background: "var(--faint)" }}>
           {CATEGORIES.map((category) => {
             const item = items.find((entry) => entry.category === category.id);
             const isSelected = category.id === selectedCategory;
@@ -190,15 +193,17 @@ export function TodayClient({
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`app-button min-h-24 bg-ink p-2 text-left hover:bg-white/8 ${
-                  isSelected ? "ring-2 ring-inset ring-mint" : ""
-                }`}
+                className="app-button min-h-24 p-2 text-left"
+                style={{
+                  background: isSelected ? "color-mix(in srgb, var(--brand) 12%, var(--surface-strong))" : "var(--surface-strong)",
+                  boxShadow: isSelected ? "inset 0 0 0 2px var(--brand)" : "none"
+                }}
               >
                 <span className={`mb-2 flex size-9 items-center justify-center rounded-2xl ${category.accent}`}>
                   {categoryIcons[category.id]}
                 </span>
-                <span className="block truncate text-xs font-bold text-white">{category.shortLabel}</span>
-                <span className="mt-1 block text-[10px] font-bold capitalize text-white/42">{item?.status ?? "missing"}</span>
+                <span className="block truncate text-xs font-bold text-app">{category.shortLabel}</span>
+                <span className="mt-1 block text-[10px] font-bold capitalize text-muted">{item?.status ?? "missing"}</span>
               </button>
             );
           })}
@@ -223,8 +228,8 @@ export function TodayClient({
         onDelete={remove}
       />
 
-      <section className="rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
-        <h3 className="text-lg font-semibold text-ink">All criteria</h3>
+      <section className="app-surface rounded-[2rem] p-4">
+        <h3 className="text-lg font-extrabold text-app">All criteria</h3>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {CATEGORIES.map((category) => {
             const item = items.find((entry) => entry.category === category.id);
@@ -232,15 +237,16 @@ export function TodayClient({
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className="app-button flex min-h-14 items-center justify-between rounded-2xl bg-paper px-3 text-left hover:bg-mint/60"
+                className="app-button flex min-h-14 items-center justify-between rounded-2xl px-3 text-left"
+                style={{ background: "var(--surface-soft)" }}
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl text-white ${category.accent}`}>
                     {categoryIcons[category.id]}
                   </span>
-                  <span className="truncate text-sm font-bold text-ink">{category.shortLabel}</span>
+                  <span className="truncate text-sm font-bold text-app">{category.shortLabel}</span>
                 </span>
-                <span className="text-xs font-bold capitalize text-ink/45">{item?.status ?? "missing"}</span>
+                <span className="text-xs font-bold capitalize text-muted">{item?.status ?? "missing"}</span>
               </button>
             );
           })}
@@ -251,7 +257,8 @@ export function TodayClient({
         <button
           onClick={() => setToast("")}
           aria-live="polite"
-          className="app-button fixed bottom-24 left-4 right-4 z-40 mx-auto min-h-12 max-w-md rounded-2xl bg-ink px-4 text-sm font-semibold text-white shadow-soft"
+          className="app-button fixed bottom-6 left-4 right-4 z-40 mx-auto min-h-12 max-w-md rounded-2xl px-4 text-sm font-extrabold shadow-soft"
+          style={{ background: "var(--text)", color: "var(--bg)" }}
         >
           {toast}
         </button>
@@ -305,18 +312,18 @@ function UploadPanel({
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
+    <section className="app-surface rounded-[2rem] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <span className={`flex size-10 items-center justify-center rounded-2xl text-white ${category.accent}`}>
               {categoryIcons[category.id]}
             </span>
-            <h3 className="text-lg font-semibold text-ink">{category.label}</h3>
+            <h3 className="text-lg font-extrabold text-app">{category.label}</h3>
           </div>
-          <p className="mt-1 text-sm leading-5 text-ink/55">{category.helper}</p>
+          <p className="mt-1 text-sm leading-5 text-muted">{category.helper}</p>
         </div>
-        <span className="rounded-full bg-paper px-3 py-1 text-xs font-bold capitalize text-ink/60">
+        <span className="rounded-full px-3 py-1 text-xs font-bold capitalize text-muted" style={{ background: "var(--surface-soft)" }}>
           {item?.status ?? "missing"}
         </span>
       </div>
@@ -327,15 +334,16 @@ function UploadPanel({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed border-ink/18 bg-paper hover:border-leaf/50 hover:bg-mint/50"
+          className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed"
+          style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
         >
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <div className="text-center">
-              <ImagePlus className="mx-auto size-9 text-ink/35" aria-hidden />
-              <p className="mt-2 text-sm font-semibold text-ink">Tap to add image</p>
+              <ImagePlus className="mx-auto size-9 text-muted" aria-hidden />
+              <p className="mt-2 text-sm font-extrabold text-app">Tap to add image</p>
             </div>
           )}
           <input
@@ -348,7 +356,7 @@ function UploadPanel({
         </button>
       )}
       {isWeightEntry ? (
-        <div className="mt-3 rounded-2xl bg-mint/55 px-4 py-3 text-sm font-semibold text-ink/70">
+        <div className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold text-muted" style={{ background: "var(--surface-soft)" }}>
           Weight is saved as a number entry. No photo needed.
         </div>
       ) : null}
@@ -361,7 +369,7 @@ function UploadPanel({
       {isReadingEntry ? (
         <div className="mt-3">
           <MetricInput label="Current page" value={readingPage} onChange={onReadingPage} />
-          <div className="mt-3 rounded-2xl bg-violet-100 px-4 py-3 text-sm font-semibold text-ink/70">
+          <div className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold text-muted" style={{ background: "var(--surface-soft)" }}>
             Read at least 10 pages. Add the page number you reached and upload a proof photo.
           </div>
         </div>
@@ -370,13 +378,14 @@ function UploadPanel({
         value={note}
         onChange={(event) => setNote(event.target.value)}
         placeholder="Optional note"
-        className="mt-3 min-h-20 w-full resize-none rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-leaf/15"
+        className="mt-3 min-h-20 w-full resize-none rounded-2xl border px-4 py-3 text-sm text-app outline-none placeholder:text-muted focus:ring-4"
+        style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
       />
       <div className="mt-3 grid grid-cols-3 gap-2">
         <button
           onClick={() => onUpload(category.id, file, note)}
           disabled={(!file && !isWeightEntry) || busy}
-          className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-leaf px-3 text-sm font-semibold text-white hover:bg-ink disabled:cursor-not-allowed disabled:opacity-45"
+          className="app-button brand-gradient flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:opacity-45"
         >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
           {isWeightEntry ? "Save" : "Save"}
@@ -384,7 +393,8 @@ function UploadPanel({
         <button
           onClick={() => onExcuse(category.id)}
           disabled={busy}
-          className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-sky/30 bg-sky/10 px-3 text-sm font-semibold text-sky hover:bg-sky hover:text-white"
+          className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border px-3 text-sm font-extrabold"
+          style={{ borderColor: "var(--faint)", background: "var(--surface-soft)", color: "var(--text)" }}
         >
           <Check className="size-4" />
           Excuse
@@ -392,7 +402,8 @@ function UploadPanel({
         <button
           onClick={() => onDelete(category.id)}
           disabled={busy}
-          className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-clay/20 bg-clay/8 px-3 text-sm font-semibold text-clay hover:bg-clay hover:text-white"
+          className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border px-3 text-sm font-extrabold"
+          style={{ borderColor: "color-mix(in srgb, var(--danger) 34%, transparent)", background: "color-mix(in srgb, var(--danger) 10%, transparent)", color: "var(--danger)" }}
         >
           {item?.storage_path ? <Trash2 className="size-4" /> : <X className="size-4" />}
           Clear
@@ -413,12 +424,13 @@ function MetricInput({
 }) {
   return (
     <label className="mt-3 block">
-      <span className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-ink/45">{label}</span>
+      <span className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-muted">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         inputMode="decimal"
-        className="min-h-11 w-full rounded-2xl border border-ink/10 bg-white px-4 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-leaf/15"
+        className="min-h-11 w-full rounded-2xl border px-4 text-sm text-app outline-none focus:ring-4"
+        style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
       />
     </label>
   );
