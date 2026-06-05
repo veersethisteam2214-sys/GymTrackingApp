@@ -1,4 +1,4 @@
-import { Activity, Dumbbell, GlassWater, Timer } from "lucide-react";
+import { Activity, BookOpen, Dumbbell, GlassWater, Timer } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CompletionBars, WeightTrend } from "@/components/AnalyticsCharts";
 import { SetupMissing } from "@/components/SetupMissing";
@@ -15,14 +15,16 @@ export default async function AnalyticsPage() {
   const gymUploads = data.items.filter((item) => item.category === "progress_photo" && item.status === "uploaded").length;
   const cardioUploads = data.items.filter((item) => item.category === "treadmill_photo" && item.status === "uploaded").length;
   const proteinUploads = data.items.filter((item) => item.category === "protein_shake_photo" && item.status === "uploaded").length;
+  const readingUploads = data.items.filter((item) => item.category === "reading_proof" && item.status === "uploaded").length;
   const cardioMinutes = data.cardio.reduce((sum, entry) => sum + Number(entry.treadmill_minutes ?? 0), 0);
 
   return (
     <AppShell title="Analytics" subtitle="Neutral weekly and monthly stats" profile={session.profile}>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Metric icon={<Dumbbell className="size-5" />} label="Gym uploads" value={gymUploads} />
         <Metric icon={<Timer className="size-5" />} label="Cardio uploads" value={cardioUploads} />
         <Metric icon={<GlassWater className="size-5" />} label="Protein uploads" value={proteinUploads} />
+        <Metric icon={<BookOpen className="size-5" />} label="Reading proofs" value={readingUploads} />
         <Metric icon={<Activity className="size-5" />} label="Cardio minutes" value={cardioMinutes} />
       </div>
       <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">

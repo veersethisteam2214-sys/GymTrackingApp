@@ -1,10 +1,23 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Activity, Camera, Check, Dumbbell, GlassWater, ImagePlus, Loader2, Scale, ShieldCheck, Trash2, X } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  Camera,
+  Check,
+  Dumbbell,
+  GlassWater,
+  ImagePlus,
+  Loader2,
+  Scale,
+  ShieldCheck,
+  Trash2,
+  X
+} from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { calculateDailyStatus } from "@/lib/status";
-import type { CardioEntry, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
+import type { CardioEntry, CheckInCategory, CheckInItem, DailyCheckIn, ReadingEntry, WeightEntry } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
@@ -12,19 +25,22 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   progress_photo: <Dumbbell className="size-5" />,
   treadmill_photo: <Activity className="size-5" />,
   weight_scale_photo: <Scale className="size-5" />,
-  protein_shake_photo: <GlassWater className="size-5" />
+  protein_shake_photo: <GlassWater className="size-5" />,
+  reading_proof: <BookOpen className="size-5" />
 };
 
 export function TodayClient({
   checkin,
   initialItems,
   initialWeight,
-  initialCardio
+  initialCardio,
+  initialReading
 }: {
   checkin: DailyCheckIn;
   initialItems: CheckInItem[];
   initialWeight: WeightEntry | null;
   initialCardio: CardioEntry | null;
+  initialReading: ReadingEntry | null;
 }) {
   const [items, setItems] = useState(initialItems);
   const [restDay, setRestDay] = useState(checkin.is_rest_day);
@@ -32,6 +48,7 @@ export function TodayClient({
   const [weight, setWeight] = useState(initialWeight?.weight_value?.toString() ?? "");
   const [minutes, setMinutes] = useState(initialCardio?.treadmill_minutes?.toString() ?? "");
   const [distance, setDistance] = useState(initialCardio?.treadmill_distance?.toString() ?? "");
+  const [readingPage, setReadingPage] = useState(initialReading?.current_page?.toString() ?? "");
   const [toast, setToast] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CheckInCategory>(
@@ -57,6 +74,7 @@ export function TodayClient({
     formData.set("weight", weight);
     formData.set("minutes", minutes);
     formData.set("distance", distance);
+    formData.set("reading_page", readingPage);
 
     const response = await fetch("/api/today/upload", {
       method: "POST",
@@ -137,7 +155,9 @@ export function TodayClient({
           <div className="mt-3 flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-white/62">Completion</p>
-              <h2 className="text-4xl font-semibold">{completionCount}/4</h2>
+              <h2 className="text-4xl font-semibold">
+                {completionCount}/{CATEGORIES.length}
+              </h2>
             </div>
             <button
               onClick={() => setRestDayState(!restDay)}
@@ -150,7 +170,7 @@ export function TodayClient({
             </button>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/12">
-            <div className="h-full rounded-full bg-mint" style={{ width: `${(completionCount / 4) * 100}%` }} />
+            <div className="h-full rounded-full bg-mint" style={{ width: `${(completionCount / CATEGORIES.length) * 100}%` }} />
           </div>
           {restDay ? (
             <input
@@ -162,7 +182,7 @@ export function TodayClient({
             />
           ) : null}
         </div>
-        <div className="grid grid-cols-4 gap-px bg-white/10">
+        <div className="grid grid-cols-5 gap-px bg-white/10">
           {CATEGORIES.map((category) => {
             const item = items.find((entry) => entry.category === category.id);
             const isSelected = category.id === selectedCategory;
@@ -193,9 +213,11 @@ export function TodayClient({
         weight={weight}
         minutes={minutes}
         distance={distance}
+        readingPage={readingPage}
         onWeight={setWeight}
         onMinutes={setMinutes}
         onDistance={setDistance}
+        onReadingPage={setReadingPage}
         onUpload={upload}
         onExcuse={markExcused}
         onDelete={remove}
@@ -245,9 +267,11 @@ function UploadPanel({
   weight,
   minutes,
   distance,
+  readingPage,
   onWeight,
   onMinutes,
   onDistance,
+  onReadingPage,
   onUpload,
   onExcuse,
   onDelete
@@ -258,9 +282,11 @@ function UploadPanel({
   weight: string;
   minutes: string;
   distance: string;
+  readingPage: string;
   onWeight: (value: string) => void;
   onMinutes: (value: string) => void;
   onDistance: (value: string) => void;
+  onReadingPage: (value: string) => void;
   onUpload: (category: CheckInItem["category"], file: File | null, note: string) => void;
   onExcuse: (category: CheckInItem["category"]) => void;
   onDelete: (category: CheckInItem["category"]) => void;
@@ -270,6 +296,7 @@ function UploadPanel({
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState(item?.note ?? "");
   const isWeightEntry = category.id === "weight_scale_photo";
+  const isReadingEntry = category.id === "reading_proof";
 
   function selectFile(nextFile?: File) {
     if (!nextFile) return;
@@ -329,6 +356,14 @@ function UploadPanel({
         <div className="mt-3 grid grid-cols-2 gap-2">
           <MetricInput label="Minutes" value={minutes} onChange={onMinutes} />
           <MetricInput label="Distance km" value={distance} onChange={onDistance} />
+        </div>
+      ) : null}
+      {isReadingEntry ? (
+        <div className="mt-3">
+          <MetricInput label="Current page" value={readingPage} onChange={onReadingPage} />
+          <div className="mt-3 rounded-2xl bg-violet-100 px-4 py-3 text-sm font-semibold text-ink/70">
+            Read at least 10 pages. Add the page number you reached and upload a proof photo.
+          </div>
         </div>
       ) : null}
       <textarea

@@ -2,7 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Dumbbell, ImagePlus, Loader2, Save, Scale, Target, Timer, UserRound } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  Dumbbell,
+  ImagePlus,
+  Loader2,
+  Save,
+  Scale,
+  Target,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  UserRound
+} from "lucide-react";
 import type { Profile } from "@/lib/types";
 
 export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
@@ -11,8 +24,11 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const [startingWeight, setStartingWeight] = useState(profile?.starting_weight?.toString() ?? "");
   const [targetWeight, setTargetWeight] = useState(profile?.target_weight?.toString() ?? "");
   const [targetDate, setTargetDate] = useState(profile?.target_date ?? "");
+  const [goalMode, setGoalMode] = useState<"cutting" | "bulking">(profile?.goal_mode ?? "cutting");
   const [gymRoutine, setGymRoutine] = useState(profile?.gym_routine ?? "");
   const [cardioRoutine, setCardioRoutine] = useState(profile?.cardio_routine ?? "");
+  const [currentBookTitle, setCurrentBookTitle] = useState(profile?.current_book_title ?? "");
+  const [currentBookTotalPages, setCurrentBookTotalPages] = useState(profile?.current_book_total_pages?.toString() ?? "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatarSignedUrl ?? null);
   const [busy, setBusy] = useState(false);
@@ -28,8 +44,11 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
     formData.set("starting_weight", startingWeight);
     formData.set("target_weight", targetWeight);
     formData.set("target_date", targetDate);
+    formData.set("goal_mode", goalMode);
     formData.set("gym_routine", gymRoutine);
     formData.set("cardio_routine", cardioRoutine);
+    formData.set("current_book_title", currentBookTitle);
+    formData.set("current_book_total_pages", currentBookTotalPages);
     if (avatarFile) formData.set("avatar", avatarFile);
 
     const response = await fetch("/api/profile", {
@@ -55,7 +74,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   }
 
   return (
-    <section className="w-full max-w-md rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-soft backdrop-blur">
+    <section className="w-full max-w-2xl rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-soft backdrop-blur">
       <div className="mb-5">
         <label className="app-button relative mb-4 flex size-20 cursor-pointer items-center justify-center overflow-hidden rounded-[1.75rem] bg-ink text-white shadow-soft hover:bg-leaf">
           {avatarPreview ? (
@@ -117,6 +136,23 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
             className="w-full bg-transparent text-base outline-none"
           />
         </Field>
+        <div>
+          <span className="mb-2 block text-sm font-medium text-ink">Goal type</span>
+          <div className="grid grid-cols-2 gap-2">
+            <ModeButton
+              active={goalMode === "cutting"}
+              icon={<TrendingDown className="size-5" />}
+              label="Cutting"
+              onClick={() => setGoalMode("cutting")}
+            />
+            <ModeButton
+              active={goalMode === "bulking"}
+              icon={<TrendingUp className="size-5" />}
+              label="Bulking"
+              onClick={() => setGoalMode("bulking")}
+            />
+          </div>
+        </div>
         <TextArea
           icon={<Dumbbell className="size-5" />}
           label="Gym routine"
@@ -131,6 +167,33 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
           onChange={setCardioRoutine}
           placeholder="Example: Treadmill 25 min after lifting"
         />
+        <div className="rounded-3xl bg-paper p-3">
+          <div className="mb-3 flex items-center gap-2">
+            <BookOpen className="size-5 text-leaf" aria-hidden />
+            <h2 className="font-semibold text-ink">Reading target</h2>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[1fr_9rem]">
+            <Field icon={<BookOpen className="size-5" />} label="Current book">
+              <input
+                value={currentBookTitle}
+                onChange={(event) => setCurrentBookTitle(event.target.value)}
+                required
+                className="w-full bg-transparent text-base outline-none"
+                placeholder="Atomic Habits"
+              />
+            </Field>
+            <Field icon={<BookOpen className="size-5" />} label="Pages">
+              <input
+                value={currentBookTotalPages}
+                onChange={(event) => setCurrentBookTotalPages(event.target.value)}
+                inputMode="numeric"
+                required
+                className="w-full bg-transparent text-base outline-none"
+                placeholder="320"
+              />
+            </Field>
+          </div>
+        </div>
         {error ? (
           <p aria-live="polite" className="rounded-2xl bg-clay/10 px-4 py-3 text-sm font-medium text-clay">
             {error}
@@ -145,6 +208,33 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
         </button>
       </form>
     </section>
+  );
+}
+
+function ModeButton({
+  active,
+  icon,
+  label,
+  onClick
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-bold ${
+        active
+          ? "border-ink bg-ink text-white shadow-soft"
+          : "border-ink/10 bg-white text-ink/62 hover:border-leaf/35 hover:bg-mint"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

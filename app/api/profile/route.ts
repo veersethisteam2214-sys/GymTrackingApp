@@ -12,6 +12,13 @@ function nullableNumber(value: FormDataEntryValue | null) {
   return Number.isFinite(number) ? number : null;
 }
 
+function nullableInteger(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const number = Number(text);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   const hasAccess = cookieStore.get("gym_access_granted")?.value === "true";
@@ -29,6 +36,8 @@ export async function POST(request: Request) {
   const displayName = String(formData.get("display_name") ?? "").trim();
   const gymRoutine = String(formData.get("gym_routine") ?? "").trim();
   const cardioRoutine = String(formData.get("cardio_routine") ?? "").trim();
+  const goalMode = String(formData.get("goal_mode") ?? "cutting").trim();
+  const currentBookTitle = String(formData.get("current_book_title") ?? "").trim();
   const targetDate = String(formData.get("target_date") ?? "").trim();
   const avatar = formData.get("avatar");
 
@@ -36,15 +45,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Name, gym routine, and cardio routine are required." }, { status: 400 });
   }
 
+  const currentBookTotalPages = nullableInteger(formData.get("current_book_total_pages"));
+
+  if (!currentBookTitle || !currentBookTotalPages) {
+    return NextResponse.json({ error: "Current book and total pages are required." }, { status: 400 });
+  }
+
+  if (!["cutting", "bulking"].includes(goalMode)) {
+    return NextResponse.json({ error: "Choose cutting or bulking." }, { status: 400 });
+  }
+
   const currentProfileId = cookieStore.get("gym_profile_id")?.value;
+
+  if (!currentProfileId) {
+    const { count, error: countError } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true });
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+
+    if ((count ?? 0) >= 10) {
+      return NextResponse.json({ error: "This group is full. The app supports up to 10 people." }, { status: 400 });
+    }
+  }
+
   const values = {
     display_name: displayName,
     starting_weight: nullableNumber(formData.get("starting_weight")),
     target_weight: nullableNumber(formData.get("target_weight")),
     target_date: targetDate || null,
     weight_unit: "kg",
+    goal_mode: goalMode,
     gym_routine: gymRoutine,
     cardio_routine: cardioRoutine,
+    current_book_title: currentBookTitle || null,
+    current_book_total_pages: currentBookTotalPages,
     updated_at: new Date().toISOString()
   };
 
@@ -104,4 +141,3 @@ export async function POST(request: Request) {
   });
   return response;
 }
-

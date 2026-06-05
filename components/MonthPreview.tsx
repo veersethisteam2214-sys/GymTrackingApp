@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getMonthDays } from "@/lib/dates";
-import type { DailyCheckIn } from "@/lib/types";
+import type { DailyCheckIn, Profile } from "@/lib/types";
 
 const tones = {
   complete: "bg-leaf",
@@ -10,7 +10,7 @@ const tones = {
   excused: "bg-sky"
 };
 
-export function MonthPreview({ checkins }: { checkins: DailyCheckIn[] }) {
+export function MonthPreview({ checkins, profiles }: { checkins: DailyCheckIn[]; profiles: Profile[] }) {
   const days = getMonthDays();
 
   return (
@@ -19,7 +19,7 @@ export function MonthPreview({ checkins }: { checkins: DailyCheckIn[] }) {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-leaf">History access</p>
           <h2 className="mt-1 text-xl font-semibold text-ink">Current month</h2>
-          <p className="text-sm text-ink/55">Two-person completion snapshot</p>
+          <p className="text-sm text-ink/55">Group completion snapshot</p>
         </div>
         <Link
           href="/calendar"
@@ -35,10 +35,11 @@ export function MonthPreview({ checkins }: { checkins: DailyCheckIn[] }) {
           return (
             <div key={day} className="aspect-square rounded-2xl border border-ink/8 bg-paper p-1.5">
               <p className="text-[11px] font-semibold text-ink/45">{Number(day.slice(-2))}</p>
-              <div className="mt-1 flex gap-1">
-                {[0, 1].map((index) => {
-                  const status = dayCheckins[index]?.overall_status ?? "missing";
-                  return <span key={index} className={`h-5 flex-1 rounded-full ${tones[status]}`} />;
+              <div className="mt-1 grid grid-cols-5 gap-1">
+                {profiles.slice(0, 10).map((profile) => {
+                  const status =
+                    dayCheckins.find((item) => item.user_id === profile.id)?.overall_status ?? "missing";
+                  return <span key={profile.id} className={`h-2.5 rounded-full ${tones[status]}`} />;
                 })}
               </div>
             </div>

@@ -7,8 +7,12 @@ create table if not exists public.profiles (
   target_weight numeric null,
   target_date date null,
   weight_unit text not null default 'kg',
+  goal_mode text not null default 'cutting'
+    check (goal_mode in ('cutting', 'bulking')),
   gym_routine text not null,
   cardio_routine text not null,
+  current_book_title text null,
+  current_book_total_pages integer null,
   avatar_url text null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -32,7 +36,7 @@ create table if not exists public.checkin_items (
   checkin_id uuid not null references public.daily_checkins(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   category text not null
-    check (category in ('progress_photo', 'treadmill_photo', 'weight_scale_photo', 'protein_shake_photo')),
+    check (category in ('progress_photo', 'treadmill_photo', 'weight_scale_photo', 'protein_shake_photo', 'reading_proof')),
   status text not null default 'missing'
     check (status in ('missing', 'uploaded', 'excused')),
   storage_path text null,
@@ -71,6 +75,27 @@ create table if not exists public.cardio_entries (
   unique (user_id, checkin_id)
 );
 
+create table if not exists public.reading_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  checkin_id uuid not null references public.daily_checkins(id) on delete cascade,
+  source_item_id uuid references public.checkin_items(id) on delete set null,
+  book_title text not null,
+  current_page integer not null,
+  total_pages integer null,
+  created_at timestamptz default now(),
+  unique (user_id, checkin_id)
+);
+
+create table if not exists public.completed_books (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  total_pages integer null,
+  completed_at timestamptz default now(),
+  unique (user_id, title)
+);
+
 create table if not exists public.audit_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete set null,
@@ -91,6 +116,14 @@ create table if not exists public.challenges (
   start_date date null,
   end_date date null,
   created_by_profile_id uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.recommendations (
+  id uuid primary key default gen_random_uuid(),
+  created_by_profile_id uuid references public.profiles(id) on delete set null,
+  title text not null,
+  note text null,
   created_at timestamptz default now()
 );
 
@@ -124,8 +157,11 @@ alter table public.daily_checkins enable row level security;
 alter table public.checkin_items enable row level security;
 alter table public.weight_entries enable row level security;
 alter table public.cardio_entries enable row level security;
+alter table public.reading_entries enable row level security;
+alter table public.completed_books enable row level security;
 alter table public.audit_log enable row level security;
 alter table public.challenges enable row level security;
+alter table public.recommendations enable row level security;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

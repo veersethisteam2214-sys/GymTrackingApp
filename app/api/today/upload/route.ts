@@ -64,6 +64,57 @@ export async function POST(request: Request) {
     return NextResponse.json({ item });
   }
 
+  let readingData: { bookTitle: string; totalPages: number | null; page: number } | null = null;
+  if (category === "reading_proof") {
+    const pageValue = String(formData.get("reading_page") ?? "").trim();
+    const page = Number(pageValue);
+
+    if (!pageValue || !Number.isInteger(page) || page < 1) {
+      return NextResponse.json({ error: "Enter the page number you reached today." }, { status: 400 });
+    }
+
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("current_book_title,current_book_total_pages")
+      .eq("id", context.profileId)
+      .single();
+
+    const bookTitle = String(profile?.current_book_title ?? "").trim();
+    const totalPages = Number(profile?.current_book_total_pages ?? 0);
+
+    if (!bookTitle) {
+      return NextResponse.json({ error: "Add your current book in profile settings first." }, { status: 400 });
+    }
+
+    if (totalPages > 0 && page > totalPages) {
+      return NextResponse.json({ error: "Page number cannot be higher than the book's total pages." }, { status: 400 });
+    }
+
+    const { data: previousLogs } = await context.supabase
+      .from("reading_entries")
+      .select("current_page")
+      .eq("user_id", context.profileId)
+      .eq("book_title", bookTitle)
+      .neq("checkin_id", context.checkin.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const previousPage = Number(previousLogs?.[0]?.current_page ?? 0);
+
+    let requiredPage = Math.max(10, previousPage + 10);
+    if (totalPages > 0 && previousPage === 0 && totalPages < 10) {
+      requiredPage = totalPages;
+    }
+    if (totalPages > 0 && previousPage > 0 && totalPages - previousPage < 10) {
+      requiredPage = totalPages;
+    }
+
+    if (page < requiredPage) {
+      return NextResponse.json({ error: "Reading proof needs at least 10 new pages." }, { status: 400 });
+    }
+
+    readingData = { bookTitle, totalPages: totalPages > 0 ? totalPages : null, page };
+  }
+
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Choose an image to upload." }, { status: 400 });
   }
@@ -136,6 +187,32 @@ export async function POST(request: Request) {
       },
       { onConflict: "user_id,checkin_id" }
     );
+  }
+
+  if (readingData) {
+    await context.supabase.from("reading_entries").upsert(
+      {
+        user_id: context.profileId,
+        checkin_id: context.checkin.id,
+        source_item_id: data.id,
+        book_title: readingData.bookTitle,
+        current_page: readingData.page,
+        total_pages: readingData.totalPages
+      },
+      { onConflict: "user_id,checkin_id" }
+    );
+
+    if (readingData.totalPages && readingData.page >= readingData.totalPages) {
+      await context.supabase.from("completed_books").upsert(
+        {
+          user_id: context.profileId,
+          title: readingData.bookTitle,
+          total_pages: readingData.totalPages,
+          completed_at: new Date().toISOString()
+        },
+        { onConflict: "user_id,title" }
+      );
+    }
   }
 
   await recalculateTodayStatus(context.supabase, context.checkin.id);

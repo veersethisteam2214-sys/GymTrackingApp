@@ -2,7 +2,8 @@ export type CheckInCategory =
   | "progress_photo"
   | "treadmill_photo"
   | "weight_scale_photo"
-  | "protein_shake_photo";
+  | "protein_shake_photo"
+  | "reading_proof";
 
 export type ItemStatus = "missing" | "uploaded" | "excused";
 export type DailyStatus = "missing" | "partial" | "complete" | "excused";
@@ -14,8 +15,11 @@ export type Profile = {
   target_weight: number | null;
   target_date: string | null;
   weight_unit: string;
+  goal_mode: "cutting" | "bulking";
   gym_routine: string | null;
   cardio_routine: string | null;
+  current_book_title: string | null;
+  current_book_total_pages: number | null;
   avatar_url: string | null;
   avatarSignedUrl?: string | null;
   created_at: string;
@@ -69,6 +73,25 @@ export type CardioEntry = {
   calories: number | null;
 };
 
+export type ReadingEntry = {
+  id: string;
+  user_id: string;
+  checkin_id: string;
+  source_item_id: string | null;
+  book_title: string;
+  current_page: number;
+  total_pages: number | null;
+  created_at: string;
+};
+
+export type CompletedBook = {
+  id: string;
+  user_id: string;
+  title: string;
+  total_pages: number | null;
+  completed_at: string;
+};
+
 export type CategoryMeta = {
   id: CheckInCategory;
   label: string;
@@ -88,4 +111,13 @@ export type Challenge = {
   end_date: string | null;
   created_by_profile_id: string | null;
   created_at: string;
+};
+
+export type Recommendation = {
+  id: string;
+  created_by_profile_id: string | null;
+  title: string;
+  note: string | null;
+  created_at: string;
+  profile?: Pick<Profile, "display_name" | "avatarSignedUrl"> | null;
 };

@@ -28,6 +28,13 @@ export const CATEGORIES: CategoryMeta[] = [
     shortLabel: "Protein",
     helper: "Protein shake or prepared protein photo.",
     accent: "bg-clay"
+  },
+  {
+    id: "reading_proof",
+    label: "Reading proof",
+    shortLabel: "Reading",
+    helper: "Read at least 10 pages, upload proof, and enter the page number.",
+    accent: "bg-violet-600"
   }
 ];
 

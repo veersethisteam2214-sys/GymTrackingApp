@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Flame, Scale, Target, Timer } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, Flame, Scale, Target, Timer } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { WeightTrend } from "@/components/AnalyticsCharts";
 import { SetupMissing } from "@/components/SetupMissing";
@@ -28,6 +28,8 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
   const stats = getStats(checkins);
   const weights = data.weights.filter((item) => item.user_id === profile.id);
   const latestWeight = weights.at(-1)?.weight_value ?? profile.starting_weight ?? "--";
+  const latestReading = data.reading.filter((item) => item.user_id === profile.id).at(-1);
+  const completedBooks = data.books.filter((item) => item.user_id === profile.id);
   const cardioMinutes = data.cardio
     .filter((item) => item.user_id === profile.id)
     .reduce((sum, item) => sum + Number(item.treadmill_minutes ?? 0), 0);
@@ -57,7 +59,7 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
             <p className="mt-1 text-sm text-white/55">Everyone can see this overview.</p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5">
           <GoalChip icon={<Scale className="size-4" />} label="Current" value={latestWeight === "--" ? "--" : `${latestWeight}kg`} />
           <GoalChip
             icon={<Target className="size-4" />}
@@ -73,6 +75,11 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
             icon={<Timer className="size-4" />}
             label="Cardio"
             value={`${cardioMinutes} min`}
+          />
+          <GoalChip
+            icon={<BookOpen className="size-4" />}
+            label="Mode"
+            value={profile.goal_mode}
           />
         </div>
       </section>
@@ -92,6 +99,34 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
           <div className="rounded-2xl bg-paper p-3">
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Cardio</p>
             <p className="mt-1 text-sm leading-6 text-ink/70">{profile.cardio_routine}</p>
+          </div>
+        </div>
+      </section>
+      <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
+        <h2 className="text-xl font-semibold text-ink">Reading</h2>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          <div className="rounded-2xl bg-paper p-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Currently reading</p>
+            <p className="mt-1 text-sm font-bold text-ink">{profile.current_book_title ?? "No book set"}</p>
+            <p className="mt-1 text-sm text-ink/60">
+              {latestReading
+                ? `Page ${latestReading.current_page}${latestReading.total_pages ? `/${latestReading.total_pages}` : ""}`
+                : "No reading proof yet"}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-paper p-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Finished books</p>
+            {completedBooks.length === 0 ? (
+              <p className="mt-1 text-sm text-ink/60">No completed books yet.</p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {completedBooks.slice(0, 6).map((book) => (
+                  <span key={book.id} className="rounded-full bg-white px-3 py-1 text-xs font-bold text-ink/65">
+                    {book.title}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

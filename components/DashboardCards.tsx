@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
+  BookOpen,
   Camera,
   Dumbbell,
   Flame,
@@ -12,13 +13,24 @@ import {
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { getCompletionCount } from "@/lib/status";
-import type { CheckInCategory, CheckInItem, DailyCheckIn, DailyStatus, Profile, WeightEntry } from "@/lib/types";
+import type {
+  CheckInCategory,
+  CheckInItem,
+  CompletedBook,
+  DailyCheckIn,
+  DailyStatus,
+  Profile,
+  ReadingEntry,
+  WeightEntry
+} from "@/lib/types";
 
 type Person = {
   profile: Profile;
   todayCheckin: DailyCheckIn | null;
   todayItems: CheckInItem[];
   latestWeight?: WeightEntry | null;
+  latestReading?: ReadingEntry | null;
+  completedBooks: CompletedBook[];
   monthStats: Record<string, number>;
   weekStats: Record<string, number>;
   currentStreak: number;
@@ -36,7 +48,8 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   progress_photo: <Dumbbell className="size-4" />,
   treadmill_photo: <Activity className="size-4" />,
   weight_scale_photo: <Scale className="size-4" />,
-  protein_shake_photo: <GlassWater className="size-4" />
+  protein_shake_photo: <GlassWater className="size-4" />,
+  reading_proof: <BookOpen className="size-4" />
 };
 
 export function DashboardCards({ people, currentUserId }: { people: Person[]; currentUserId: string }) {
@@ -74,7 +87,7 @@ export function DashboardCards({ people, currentUserId }: { people: Person[]; cu
             <div className="h-full rounded-full bg-mint" style={{ width: `${(totalCompleted / totalPossible) * 100}%` }} />
           </div>
         </div>
-        <div className="grid gap-px bg-white/10 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-px bg-white/10 sm:grid-cols-2 xl:grid-cols-5">
           {people.map((person) => (
             <PersonOverview key={person.profile.id} person={person} isMe={person.profile.id === currentUserId} />
           ))}
@@ -99,11 +112,11 @@ function PersonOverview({ person, isMe }: { person: Person; isMe: boolean }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/42">
-            {isMe ? "Your station" : "Partner station"}
+            {isMe ? "Your station" : "Group station"}
           </p>
           <h3 className="mt-1 truncate text-2xl font-semibold text-white">{person.profile.display_name}</h3>
           <p className="mt-1 text-sm text-white/48">
-            {statusCopy[person.todayStatus]} / {count}/4 today
+            {statusCopy[person.todayStatus]} / {count}/{CATEGORIES.length} today
           </p>
         </div>
         <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white text-ink">
@@ -119,7 +132,7 @@ function PersonOverview({ person, isMe }: { person: Person; isMe: boolean }) {
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Signal icon={<Flame className="size-4" />} label="Streak" value={`${person.currentStreak}d`} />
         <Signal icon={<Scale className="size-4" />} label="Weight" value={latestWeight ? `${latestWeight}kg` : "--"} />
-        <Signal icon={<Zap className="size-4" />} label="Week" value={`${person.weekStats.complete ?? 0}`} />
+        <Signal icon={<Zap className="size-4" />} label="Mode" value={person.profile.goal_mode} />
       </div>
 
       <div className="mt-2 rounded-2xl border border-white/10 bg-white/7 p-3">
@@ -140,7 +153,24 @@ function PersonOverview({ person, isMe }: { person: Person; isMe: boolean }) {
         ) : null}
       </div>
 
-      <div className="mt-4 grid grid-cols-4 gap-2">
+      <div className="mt-2 rounded-2xl border border-white/10 bg-white/7 p-3">
+        <div className="flex items-center gap-2 text-violet-300">
+          <BookOpen className="size-4" aria-hidden />
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/38">Reading</p>
+        </div>
+        <p className="mt-2 truncate text-sm font-bold text-white">
+          {person.profile.current_book_title ?? "No book set"}
+        </p>
+        <p className="mt-1 text-xs font-semibold text-white/50">
+          {person.latestReading
+            ? `Page ${person.latestReading.current_page}${person.latestReading.total_pages ? `/${person.latestReading.total_pages}` : ""}`
+            : person.completedBooks[0]
+              ? `Finished ${person.completedBooks[0].title}`
+              : "10 pages/day"}
+        </p>
+      </div>
+
+      <div className="mt-4 grid grid-cols-5 gap-2">
         {proofItems.map(({ category, item }) => (
           <ProofTile
             key={category.id}
@@ -192,7 +222,7 @@ function ProofTile({
       {isWeight && item?.status === "uploaded" ? (
         <div className="flex h-full flex-col items-center justify-center text-white">
           <Scale className="size-5 text-mint" aria-hidden />
-          <span className="mt-1 text-sm font-black">{weightValue ? `${weightValue}kg` : "Saved"}</span>
+          <span className="mt-1 text-xs font-black">{weightValue ? `${weightValue}kg` : "Saved"}</span>
         </div>
       ) : item?.signedUrl ? (
         // eslint-disable-next-line @next/next/no-img-element

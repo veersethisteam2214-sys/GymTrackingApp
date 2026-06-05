@@ -39,14 +39,14 @@ export function CalendarClient({
                 className="app-button aspect-square rounded-2xl border border-ink/8 bg-paper p-1.5 text-left hover:border-leaf/40 hover:bg-mint/60 focus:outline-none focus:ring-4 focus:ring-leaf/15"
               >
                 <span className="text-xs font-bold text-ink/50">{Number(day.slice(-2))}</span>
-                <span className="mt-1 grid gap-1">
-                  {profiles.slice(0, 2).map((profile) => {
+                <span className="mt-1 grid grid-cols-5 gap-1">
+                  {profiles.slice(0, 10).map((profile) => {
                     const status =
                       dayCheckins.find((checkin) => checkin.user_id === profile.id)?.overall_status ?? "missing";
                     return (
                       <span
                         key={profile.id}
-                        className={`block h-4 rounded-full ${tones[status]}`}
+                        className={`block h-2.5 rounded-full ${tones[status]}`}
                         title={`${profile.display_name}: ${status}`}
                       />
                     );
@@ -85,7 +85,7 @@ export function CalendarClient({
                         {checkin?.overall_status ?? "missing"}
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-4 gap-2">
+                    <div className="mt-3 grid grid-cols-5 gap-2">
                       {CATEGORIES.map((category) => {
                         const item = checkinItems.find((entry) => entry.category === category.id);
                         return (

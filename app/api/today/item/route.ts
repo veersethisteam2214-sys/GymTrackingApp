@@ -29,6 +29,10 @@ export async function PATCH(request: Request) {
     await context.supabase.from("weight_entries").delete().eq("checkin_id", context.checkin.id);
   }
 
+  if (action === "clear" && category === "reading_proof") {
+    await context.supabase.from("reading_entries").delete().eq("checkin_id", context.checkin.id);
+  }
+
   const update =
     action === "excuse"
       ? { status: "excused", updated_at: new Date().toISOString() }
