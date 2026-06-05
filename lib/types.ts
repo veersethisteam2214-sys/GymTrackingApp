@@ -11,10 +11,13 @@ export type Profile = {
   id: string;
   display_name: string;
   starting_weight: number | null;
+  target_weight: number | null;
+  target_date: string | null;
   weight_unit: string;
   gym_routine: string | null;
   cardio_routine: string | null;
   avatar_url: string | null;
+  avatarSignedUrl?: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -42,15 +42,18 @@ export function TodayClient({
   const selectedMeta = CATEGORIES.find((category) => category.id === selectedCategory) ?? CATEGORIES[0];
   const selectedItem = items.find((entry) => entry.category === selectedCategory);
 
-  async function upload(category: CheckInItem["category"], file: File, note: string) {
-    if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
-    if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
+  async function upload(category: CheckInItem["category"], file: File | null, note: string) {
+    if (category !== "weight_scale_photo") {
+      if (!file) return setToast("Choose an image first.");
+      if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
+      if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
+    }
 
     setBusyKey(category);
     const formData = new FormData();
     formData.set("category", category);
     formData.set("note", note);
-    formData.set("file", file);
+    if (file) formData.set("file", file);
     formData.set("weight", weight);
     formData.set("minutes", minutes);
     formData.set("distance", distance);
@@ -257,7 +260,7 @@ function UploadPanel({
   onWeight: (value: string) => void;
   onMinutes: (value: string) => void;
   onDistance: (value: string) => void;
-  onUpload: (category: CheckInItem["category"], file: File, note: string) => void;
+  onUpload: (category: CheckInItem["category"], file: File | null, note: string) => void;
   onExcuse: (category: CheckInItem["category"]) => void;
   onDelete: (category: CheckInItem["category"]) => void;
 }) {
@@ -265,6 +268,7 @@ function UploadPanel({
   const [preview, setPreview] = useState<string | null>(item?.signedUrl ?? null);
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState(item?.note ?? "");
+  const isWeightEntry = category.id === "weight_scale_photo";
 
   function selectFile(nextFile?: File) {
     if (!nextFile) return;
@@ -289,31 +293,36 @@ function UploadPanel({
         </span>
       </div>
 
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed border-ink/18 bg-paper hover:border-leaf/50 hover:bg-mint/50"
-      >
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="text-center">
-            <ImagePlus className="mx-auto size-9 text-ink/35" aria-hidden />
-            <p className="mt-2 text-sm font-semibold text-ink">Tap to add image</p>
-          </div>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-          className="sr-only"
-          onChange={(event) => selectFile(event.target.files?.[0])}
-        />
-      </button>
-
-      {category.id === "weight_scale_photo" ? (
+      {isWeightEntry ? (
         <MetricInput label="Weight kg" value={weight} onChange={onWeight} />
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed border-ink/18 bg-paper hover:border-leaf/50 hover:bg-mint/50"
+        >
+          {preview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <div className="text-center">
+              <ImagePlus className="mx-auto size-9 text-ink/35" aria-hidden />
+              <p className="mt-2 text-sm font-semibold text-ink">Tap to add image</p>
+            </div>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            className="sr-only"
+            onChange={(event) => selectFile(event.target.files?.[0])}
+          />
+        </button>
+      )}
+      {isWeightEntry ? (
+        <div className="mt-3 rounded-2xl bg-mint/55 px-4 py-3 text-sm font-semibold text-ink/70">
+          Weight is saved as a number entry. No photo needed.
+        </div>
       ) : null}
       {category.id === "treadmill_photo" ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -329,12 +338,12 @@ function UploadPanel({
       />
       <div className="mt-3 grid grid-cols-3 gap-2">
         <button
-          onClick={() => file && onUpload(category.id, file, note)}
-          disabled={!file || busy}
+          onClick={() => onUpload(category.id, file, note)}
+          disabled={(!file && !isWeightEntry) || busy}
           className="app-button flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-leaf px-3 text-sm font-semibold text-white hover:bg-ink disabled:cursor-not-allowed disabled:opacity-45"
         >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
-          Save
+          {isWeightEntry ? "Save" : "Save"}
         </button>
         <button
           onClick={() => onExcuse(category.id)}

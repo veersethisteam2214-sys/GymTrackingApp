@@ -13,6 +13,17 @@ export async function getSignedUrl(supabase: Client, storagePath?: string | null
   return data?.signedUrl ?? null;
 }
 
+export async function signProfile(supabase: Client, profile: Profile): Promise<Profile> {
+  return {
+    ...profile,
+    avatarSignedUrl: await getSignedUrl(supabase, profile.avatar_url)
+  };
+}
+
+async function signProfiles(supabase: Client, profiles: Profile[]) {
+  return Promise.all(profiles.map((profile) => signProfile(supabase, profile)));
+}
+
 export async function fetchDashboardData(supabase: Client, profileId: string) {
   const today = getLocalDateString();
   const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
@@ -43,7 +54,9 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     }))
   );
 
-  const people = ((profiles ?? []) as Profile[]).map((profile) => {
+  const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
+
+  const people = signedProfiles.map((profile) => {
     const checkinsForUser = ((monthCheckins ?? []) as DailyCheckIn[]).filter((item) => item.user_id === profile.id);
     const todayCheckin = ((todayCheckins ?? []) as DailyCheckIn[]).find((item) => item.user_id === profile.id) ?? null;
     const todayItems = todayCheckin
@@ -153,7 +166,7 @@ export async function fetchCalendarData(supabase: Client) {
   );
 
   return {
-    profiles: (profiles ?? []) as Profile[],
+    profiles: await signProfiles(supabase, (profiles ?? []) as Profile[]),
     checkins: (checkins ?? []) as DailyCheckIn[],
     items: signedItems
   };
@@ -178,7 +191,7 @@ export async function fetchAnalyticsData(supabase: Client) {
     ]);
 
   return {
-    profiles: (profiles ?? []) as Profile[],
+    profiles: await signProfiles(supabase, (profiles ?? []) as Profile[]),
     checkins: (checkins ?? []) as DailyCheckIn[],
     weekCheckins: ((checkins ?? []) as DailyCheckIn[]).filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd

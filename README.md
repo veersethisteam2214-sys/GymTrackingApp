@@ -1,6 +1,6 @@
 # Private Gym & Cardio Discipline Tracker
 
-A private, mobile-first accountability app protected by one shared app password. After entering the password, each person creates an app profile with their name, current weight, gym routine, and cardio routine.
+A private, mobile-first accountability app protected by one shared app password. After entering the password, each person creates an app profile with their photo, name, current weight, target weight, target date, gym routine, and cardio routine.
 
 ## Stack
 
@@ -32,10 +32,11 @@ SUPABASE_URL=
 ## Supabase Setup
 
 1. Create a Supabase project.
-2. Run `supabase/migrations/0001_private_gym_tracker.sql` in Supabase SQL Editor.
-3. Confirm the private `checkin-uploads` bucket exists.
-4. No Supabase Auth setup is needed.
-5. No allowed-email setup is needed.
+2. Run `supabase/migrations/0001_private_gym_tracker.sql` in Supabase SQL Editor for a fresh setup.
+3. If you already ran the original setup before target goals existed, also run `supabase/migrations/0002_profile_goals_and_weight_entry.sql`.
+4. Confirm the private `checkin-uploads` bucket exists.
+5. No Supabase Auth setup is needed.
+6. No allowed-email setup is needed.
 
 ## Vercel Setup
 
@@ -56,6 +57,8 @@ Redeploy after saving the variables.
 3. Visitor fills out profile setup:
    - name
    - current weight
+   - target weight
+   - target date
    - gym routine
    - cardio routine
 4. Visitor presses Save profile.
@@ -85,4 +88,3 @@ delete from public.checkin_items;
 delete from public.daily_checkins;
 delete from public.profiles;
 ```
-

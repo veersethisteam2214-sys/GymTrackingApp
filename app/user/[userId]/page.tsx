@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Flame, Scale, Timer } from "lucide-react";
+import { ArrowLeft, CalendarDays, Flame, Scale, Target, Timer } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { WeightTrend } from "@/components/AnalyticsCharts";
 import { SetupMissing } from "@/components/SetupMissing";
@@ -27,6 +27,7 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
   const checkins = data.checkins.filter((item) => item.user_id === profile.id);
   const stats = getStats(checkins);
   const weights = data.weights.filter((item) => item.user_id === profile.id);
+  const latestWeight = weights.at(-1)?.weight_value ?? profile.starting_weight ?? "--";
   const cardioMinutes = data.cardio
     .filter((item) => item.user_id === profile.id)
     .reduce((sum, item) => sum + Number(item.treadmill_minutes ?? 0), 0);
@@ -40,10 +41,45 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
         <ArrowLeft className="size-4" aria-hidden />
         Dashboard
       </Link>
+      <section className="mb-4 overflow-hidden rounded-[2rem] bg-ink p-4 text-white shadow-soft">
+        <div className="flex items-center gap-4">
+          <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] bg-white text-ink">
+            {profile.avatarSignedUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatarSignedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <span className="text-2xl font-black">{profile.display_name.slice(0, 1).toUpperCase()}</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-mint/70">Shared profile</p>
+            <h2 className="truncate text-3xl font-semibold">{profile.display_name}</h2>
+            <p className="mt-1 text-sm text-white/55">Everyone can see this overview.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <GoalChip icon={<Scale className="size-4" />} label="Current" value={latestWeight === "--" ? "--" : `${latestWeight}kg`} />
+          <GoalChip
+            icon={<Target className="size-4" />}
+            label="Goal"
+            value={profile.target_weight ? `${profile.target_weight}kg` : "--"}
+          />
+          <GoalChip
+            icon={<CalendarDays className="size-4" />}
+            label="Target date"
+            value={profile.target_date ?? "--"}
+          />
+          <GoalChip
+            icon={<Timer className="size-4" />}
+            label="Cardio"
+            value={`${cardioMinutes} min`}
+          />
+        </div>
+      </section>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat icon={<Flame className="size-5" />} label="Current streak" value={getCurrentStreak(checkins)} />
         <Stat icon={<Flame className="size-5" />} label="Longest streak" value={getLongestStreak(checkins)} />
-        <Stat icon={<Scale className="size-5" />} label="Latest weight" value={weights.at(-1)?.weight_value ?? "--"} />
+        <Stat icon={<Scale className="size-5" />} label="Latest weight" value={latestWeight} />
         <Stat icon={<Timer className="size-5" />} label="Cardio minutes" value={cardioMinutes} />
       </div>
       <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
@@ -73,6 +109,16 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
         <WeightTrend profiles={[profile]} weights={weights} />
       </section>
     </AppShell>
+  );
+}
+
+function GoalChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/7 p-3">
+      <div className="text-mint">{icon}</div>
+      <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/38">{label}</p>
+      <p className="truncate text-sm font-bold text-white">{value}</p>
+    </div>
   );
 }
 

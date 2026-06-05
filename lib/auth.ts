@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminSupabase } from "@/lib/supabase/server";
+import { signProfile } from "@/lib/data";
 import type { Profile } from "@/lib/types";
 
 export async function getProfileIdFromCookie() {
@@ -26,6 +27,5 @@ export async function requireAppProfile() {
     redirect("/profile-setup");
   }
 
-  return { supabase, profile: profile as Profile, setupMissing: false as const };
+  return { supabase, profile: await signProfile(supabase, profile as Profile), setupMissing: false as const };
 }
-

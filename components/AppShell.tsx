@@ -24,7 +24,7 @@ export function AppShell({
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
       <header className="sticky top-0 z-20 border-b border-white/60 bg-paper/84 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ink text-white shadow-soft">
               <Dumbbell className="size-5" aria-hidden />
@@ -40,15 +40,20 @@ export function AppShell({
           {profile ? (
             <Link
               href={`/user/${profile.id}`}
-              className="app-button flex size-11 shrink-0 items-center justify-center rounded-2xl border border-ink/10 bg-white text-sm font-bold text-ink shadow-sm hover:border-leaf/40 hover:bg-mint/70"
+              className="app-button relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-ink/10 bg-white text-sm font-bold text-ink shadow-sm hover:border-leaf/40 hover:bg-mint/70"
               title={profile.display_name}
             >
-              {profile.display_name.slice(0, 1).toUpperCase()}
+              {profile.avatarSignedUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatarSignedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                profile.display_name.slice(0, 1).toUpperCase()
+              )}
             </Link>
           ) : null}
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-5">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-ink/8 bg-white/92 px-2 pt-2 shadow-[0_-12px_30px_rgba(21,35,30,0.08)] backdrop-blur-xl lg:hidden">
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
           {navItems.map((item) => {
@@ -86,4 +91,3 @@ export function AppShell({
     </div>
   );
 }
-

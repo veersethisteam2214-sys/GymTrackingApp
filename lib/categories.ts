@@ -3,9 +3,9 @@ import type { CategoryMeta } from "@/lib/types";
 export const CATEGORIES: CategoryMeta[] = [
   {
     id: "progress_photo",
-    label: "Gym proof",
-    shortLabel: "Gym",
-    helper: "Fully clothed progress or gym check-in photo.",
+    label: "Progress picture proof",
+    shortLabel: "Progress",
+    helper: "Fully clothed progress or gym check-in proof photo.",
     accent: "bg-leaf"
   },
   {
@@ -17,9 +17,9 @@ export const CATEGORIES: CategoryMeta[] = [
   },
   {
     id: "weight_scale_photo",
-    label: "Weight proof",
+    label: "Weight entry",
     shortLabel: "Weight",
-    helper: "Scale photo plus optional manual weight entry.",
+    helper: "Enter today's weight. No image required.",
     accent: "bg-sun"
   },
   {
@@ -32,4 +32,3 @@ export const CATEGORIES: CategoryMeta[] = [
 ];
 
 export const CATEGORY_IDS = CATEGORIES.map((category) => category.id);
-

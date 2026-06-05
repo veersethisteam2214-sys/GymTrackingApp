@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { ProfileSetupForm } from "@/components/ProfileSetupForm";
 import { SetupMissing } from "@/components/SetupMissing";
+import { signProfile } from "@/lib/data";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
@@ -16,7 +17,7 @@ export default async function ProfileSetupPage() {
 
   if (profileId) {
     const { data } = await supabase.from("profiles").select("*").eq("id", profileId).single();
-    profile = data as Profile | null;
+    profile = data ? await signProfile(supabase, data as Profile) : null;
   }
 
   return (
@@ -25,4 +26,3 @@ export default async function ProfileSetupPage() {
     </main>
   );
 }
-

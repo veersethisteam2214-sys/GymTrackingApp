@@ -25,6 +25,10 @@ export async function PATCH(request: Request) {
     await context.supabase.storage.from("checkin-uploads").remove([current.storage_path.replace(/^checkin-uploads\//, "")]);
   }
 
+  if (action === "clear" && category === "weight_scale_photo") {
+    await context.supabase.from("weight_entries").delete().eq("checkin_id", context.checkin.id);
+  }
+
   const update =
     action === "excuse"
       ? { status: "excused", updated_at: new Date().toISOString() }
@@ -54,4 +58,3 @@ export async function PATCH(request: Request) {
   const item = await withSignedUrl(context.supabase, data as CheckInItem);
   return NextResponse.json({ item });
 }
-

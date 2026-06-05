@@ -2,6 +2,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createAdminSupabase } from "@/lib/supabase/server";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+
+function nullableNumber(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const number = Number(text);
+  return Number.isFinite(number) ? number : null;
+}
+
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   const hasAccess = cookieStore.get("gym_access_granted")?.value === "true";
@@ -15,11 +25,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
   }
 
-  const payload = await request.json();
-  const displayName = String(payload.display_name ?? "").trim();
-  const gymRoutine = String(payload.gym_routine ?? "").trim();
-  const cardioRoutine = String(payload.cardio_routine ?? "").trim();
-  const startingWeight = payload.starting_weight === null ? null : Number(payload.starting_weight);
+  const formData = await request.formData();
+  const displayName = String(formData.get("display_name") ?? "").trim();
+  const gymRoutine = String(formData.get("gym_routine") ?? "").trim();
+  const cardioRoutine = String(formData.get("cardio_routine") ?? "").trim();
+  const targetDate = String(formData.get("target_date") ?? "").trim();
+  const avatar = formData.get("avatar");
 
   if (!displayName || !gymRoutine || !cardioRoutine) {
     return NextResponse.json({ error: "Name, gym routine, and cardio routine are required." }, { status: 400 });
@@ -28,7 +39,9 @@ export async function POST(request: Request) {
   const currentProfileId = cookieStore.get("gym_profile_id")?.value;
   const values = {
     display_name: displayName,
-    starting_weight: Number.isFinite(startingWeight) ? startingWeight : null,
+    starting_weight: nullableNumber(formData.get("starting_weight")),
+    target_weight: nullableNumber(formData.get("target_weight")),
+    target_date: targetDate || null,
     weight_unit: "kg",
     gym_routine: gymRoutine,
     cardio_routine: cardioRoutine,
@@ -45,8 +58,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? "Could not save profile." }, { status: 500 });
   }
 
-  const response = NextResponse.json({ profile: data });
-  response.cookies.set("gym_profile_id", data.id, {
+  let profile = data;
+
+  if (avatar instanceof File && avatar.size > 0) {
+    if (!ACCEPTED_TYPES.includes(avatar.type) || avatar.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "Profile photo must be an allowed image under 10 MB." }, { status: 400 });
+    }
+
+    if (profile.avatar_url) {
+      await supabase.storage.from("checkin-uploads").remove([profile.avatar_url.replace(/^checkin-uploads\//, "")]);
+    }
+
+    const safeName = avatar.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const path = `profile-photos/${profile.id}/${Date.now()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage.from("checkin-uploads").upload(path, avatar, {
+      cacheControl: "3600",
+      upsert: false
+    });
+
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    }
+
+    const updated = await supabase
+      .from("profiles")
+      .update({ avatar_url: `checkin-uploads/${path}`, updated_at: new Date().toISOString() })
+      .eq("id", profile.id)
+      .select("*")
+      .single();
+
+    if (updated.error || !updated.data) {
+      return NextResponse.json({ error: updated.error?.message ?? "Could not save profile photo." }, { status: 500 });
+    }
+
+    profile = updated.data;
+  }
+
+  const response = NextResponse.json({ profile });
+  response.cookies.set("gym_profile_id", profile.id, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
