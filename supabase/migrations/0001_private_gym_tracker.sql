@@ -13,6 +13,10 @@ create table if not exists public.profiles (
   cardio_routine text not null,
   current_book_title text null,
   current_book_total_pages integer null,
+  username text null,
+  password_hash text null,
+  password_salt text null,
+  login_updated_at timestamptz null,
   avatar_url text null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -144,6 +148,10 @@ drop trigger if exists touch_profiles_updated_at on public.profiles;
 create trigger touch_profiles_updated_at
 before update on public.profiles
 for each row execute function public.touch_updated_at();
+
+create unique index if not exists profiles_username_lower_idx
+on public.profiles (lower(username))
+where username is not null;
 
 drop trigger if exists touch_daily_checkins_updated_at on public.daily_checkins;
 create trigger touch_daily_checkins_updated_at

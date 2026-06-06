@@ -14,6 +14,8 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/access") ||
     pathname.startsWith("/api/profile") ||
+    pathname.startsWith("/api/auth/login") ||
+    pathname.startsWith("/api/auth/setup-login") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     PUBLIC_FILE.test(pathname);
@@ -33,7 +35,7 @@ export function proxy(request: NextRequest) {
 
   if (needsProfile) {
     const url = request.nextUrl.clone();
-    url.pathname = "/profile-setup";
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 

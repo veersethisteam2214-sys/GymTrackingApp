@@ -26,6 +26,8 @@ export async function getSignedUrl(supabase: Client, storagePath?: string | null
 export async function signProfile(supabase: Client, profile: Profile): Promise<Profile> {
   return {
     ...profile,
+    password_hash: null,
+    password_salt: null,
     avatarSignedUrl: await getSignedUrl(supabase, profile.avatar_url)
   };
 }

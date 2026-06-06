@@ -146,7 +146,13 @@ export async function POST(request: Request) {
     profile = updated.data;
   }
 
-  const response = NextResponse.json({ profile });
+  const response = NextResponse.json({
+    profile: {
+      ...profile,
+      password_hash: null,
+      password_salt: null
+    }
+  });
   response.cookies.set("gym_profile_id", profile.id, {
     httpOnly: true,
     sameSite: "lax",

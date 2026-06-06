@@ -21,10 +21,14 @@ export async function requireAppProfile() {
     redirect("/profile-setup");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", profileId).single();
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", profileId).maybeSingle();
 
   if (!profile) {
-    redirect("/profile-setup");
+    redirect("/login");
+  }
+
+  if (!profile.username || !profile.password_hash || !profile.password_salt) {
+    redirect("/login-setup");
   }
 
   return { supabase, profile: await signProfile(supabase, profile as Profile), setupMissing: false as const };

@@ -20,6 +20,10 @@ export type Profile = {
   cardio_routine: string | null;
   current_book_title: string | null;
   current_book_total_pages: number | null;
+  username: string | null;
+  password_hash: string | null;
+  password_salt: string | null;
+  login_updated_at: string | null;
   avatar_url: string | null;
   avatarSignedUrl?: string | null;
   created_at: string;

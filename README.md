@@ -37,9 +37,10 @@ SUPABASE_URL=
 4. Run `supabase/migrations/0003_challenges.sql` to add the shared challenges board.
 5. Run `supabase/migrations/0004_reading_recommendations_and_group_limit.sql` to add reading proof, completed books, recommendations, and max-10 profile support.
 6. Run `supabase/migrations/0005_general_recommendations.sql` if your recommendations table was created before category/link/photo support.
-7. Confirm the private `checkin-uploads` bucket exists.
-8. No Supabase Auth setup is needed.
-9. No allowed-email setup is needed.
+7. Run `supabase/migrations/0006_profile_login_credentials.sql` to add username/password login to existing profiles.
+8. Confirm the private `checkin-uploads` bucket exists.
+9. No Supabase Auth setup is needed.
+10. No allowed-email setup is needed.
 
 ## Vercel Setup
 
@@ -57,7 +58,9 @@ Redeploy after saving the variables.
 
 1. Visitor opens the Vercel app.
 2. Visitor enters the shared app password.
-3. Visitor fills out profile setup:
+3. Existing profile users log in with their profile username/password.
+4. Existing profiles without login credentials are prompted to create username/password once.
+5. New users fill out profile setup:
    - name
    - current weight
    - target weight
@@ -67,12 +70,14 @@ Redeploy after saving the variables.
    - cardio routine
    - current book
    - total pages in that book
-4. Visitor presses Save profile.
-5. The app saves a private profile cookie and opens the dashboard.
+6. Visitor presses Save profile.
+7. The app saves a private profile cookie and opens the dashboard.
 
 ## Routes
 
 - `/access` shared password gate
+- `/login` profile username/password login
+- `/login-setup` link an existing profile to username/password
 - `/profile-setup` profile setup form
 - `/dashboard` profile cards, today split, task completion, calendar entry, recommendations
 - `/today` daily upload flow
