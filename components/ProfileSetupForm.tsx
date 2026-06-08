@@ -8,6 +8,7 @@ import {
   Dumbbell,
   ImagePlus,
   Loader2,
+  Mail,
   Save,
   Scale,
   Target,
@@ -45,6 +46,7 @@ function serializeGymRoutine(days: Record<string, string>) {
 export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
+  const [email, setEmail] = useState(profile?.email ?? "");
   const [startingWeight, setStartingWeight] = useState(profile?.starting_weight?.toString() ?? "");
   const [targetWeight, setTargetWeight] = useState(profile?.target_weight?.toString() ?? "");
   const [targetDate, setTargetDate] = useState(profile?.target_date ?? "");
@@ -65,6 +67,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
 
     const formData = new FormData();
     formData.set("display_name", displayName);
+    formData.set("email", email);
     formData.set("starting_weight", startingWeight);
     formData.set("target_weight", targetWeight);
     formData.set("target_date", targetDate);
@@ -130,6 +133,17 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
             required
             className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
             placeholder="Your name"
+          />
+        </Field>
+        <Field icon={<Mail className="size-5" />} label="Email for weekly summary">
+          <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            type="email"
+            required
+            autoComplete="email"
+            className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
+            placeholder="you@example.com"
           />
         </Field>
         <div className="grid grid-cols-2 gap-2">

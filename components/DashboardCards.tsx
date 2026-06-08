@@ -116,7 +116,7 @@ export function DashboardCards({
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {people.map((person, index) => (
           <button
             key={person.profile.id}
@@ -357,7 +357,7 @@ function TodaySplit({ people, weekday }: { people: Person[]; weekday: string }) 
         Today ({weekday})
       </p>
       <div className="mt-3 space-y-2">
-        {people.slice(0, 10).map((person) => (
+        {people.slice(0, 13).map((person) => (
           <div key={person.profile.id} className="flex items-center justify-between gap-3">
             <span className="truncate text-sm font-bold text-app">{person.profile.display_name}</span>
             <span className="truncate text-xs font-extrabold text-muted">{getRoutineForDay(person.profile.gym_routine, weekday)}</span>

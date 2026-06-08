@@ -13,6 +13,7 @@ create table if not exists public.profiles (
   cardio_routine text not null,
   current_book_title text null,
   current_book_total_pages integer null,
+  email text null,
   username text null,
   password_hash text null,
   password_salt text null,

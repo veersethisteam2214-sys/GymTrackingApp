@@ -74,14 +74,14 @@ export function CalendarClient({
                 }}
               >
                 <span className="display-font text-2xl font-extrabold text-app">{Number(day.slice(-2))}</span>
-                <span className="mt-2 grid grid-cols-5 gap-1">
-                  {profiles.slice(0, 10).map((profile) => {
+                <span className="mt-2 grid grid-cols-7 gap-1">
+                  {profiles.slice(0, 13).map((profile) => {
                     const status =
                       dayCheckins.find((checkin) => checkin.user_id === profile.id)?.overall_status ?? "missing";
                     return (
                       <span
                         key={profile.id}
-                        className="block h-2 rounded-full"
+                        className="block h-1.5 rounded-full"
                         style={{ background: tones[status] }}
                         title={`${profile.display_name}: ${status}`}
                       />

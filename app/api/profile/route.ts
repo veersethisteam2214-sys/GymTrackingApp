@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { createAdminSupabase } from "@/lib/supabase/server";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_PROFILES = 13;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function nullableNumber(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
@@ -34,6 +36,7 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const displayName = String(formData.get("display_name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const gymRoutine = String(formData.get("gym_routine") ?? "").trim();
   const cardioRoutine = String(formData.get("cardio_routine") ?? "").trim();
   const goalMode = String(formData.get("goal_mode") ?? "cutting").trim();
@@ -41,8 +44,12 @@ export async function POST(request: Request) {
   const targetDate = String(formData.get("target_date") ?? "").trim();
   const avatar = formData.get("avatar");
 
-  if (!displayName || !gymRoutine || !cardioRoutine) {
-    return NextResponse.json({ error: "Name, gym routine, and cardio routine are required." }, { status: 400 });
+  if (!displayName || !email || !gymRoutine || !cardioRoutine) {
+    return NextResponse.json({ error: "Name, email, gym routine, and cardio routine are required." }, { status: 400 });
+  }
+
+  if (!EMAIL_PATTERN.test(email)) {
+    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
 
   const currentBookTotalPages = nullableInteger(formData.get("current_book_total_pages"));
@@ -81,13 +88,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: countError.message }, { status: 500 });
     }
 
-    if ((count ?? 0) >= 10) {
-      return NextResponse.json({ error: "This group is full. The app supports up to 10 people." }, { status: 400 });
+    if ((count ?? 0) >= MAX_PROFILES) {
+      return NextResponse.json({ error: `This group is full. The app supports up to ${MAX_PROFILES} people.` }, { status: 400 });
     }
   }
 
   const values = {
     display_name: displayName,
+    email,
     starting_weight: nullableNumber(formData.get("starting_weight")),
     target_weight: nullableNumber(formData.get("target_weight")),
     target_date: targetDate || null,

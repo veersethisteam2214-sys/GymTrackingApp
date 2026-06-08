@@ -1,0 +1,10 @@
+delete from public.recommendations;
+delete from public.completed_books;
+delete from public.reading_entries;
+delete from public.challenges;
+delete from public.audit_log;
+delete from public.cardio_entries;
+delete from public.weight_entries;
+delete from public.checkin_items;
+delete from public.daily_checkins;
+delete from public.profiles;

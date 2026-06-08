@@ -35,11 +35,11 @@ export function MonthPreview({ checkins, profiles }: { checkins: DailyCheckIn[];
           return (
             <div key={day} className="aspect-square rounded-2xl border border-ink/8 bg-paper p-1.5">
               <p className="text-[11px] font-semibold text-ink/45">{Number(day.slice(-2))}</p>
-              <div className="mt-1 grid grid-cols-5 gap-1">
-                {profiles.slice(0, 10).map((profile) => {
+              <div className="mt-1 grid grid-cols-7 gap-1">
+                {profiles.slice(0, 13).map((profile) => {
                   const status =
                     dayCheckins.find((item) => item.user_id === profile.id)?.overall_status ?? "missing";
-                  return <span key={profile.id} className={`h-2.5 rounded-full ${tones[status]}`} />;
+                  return <span key={profile.id} className={`h-1.5 rounded-full ${tones[status]}`} />;
                 })}
               </div>
             </div>
