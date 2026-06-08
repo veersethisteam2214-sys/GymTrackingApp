@@ -27,7 +27,7 @@ export default async function SettingsPage() {
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 size-5 text-leaf" aria-hidden />
             <p className="text-sm leading-6 text-muted">
-              Access is protected by the shared app password. Your app profile is saved after you press Save profile.
+              Your profile is protected by your username and password. Your app profile is saved after you press Save profile.
             </p>
           </div>
         </div>

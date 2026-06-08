@@ -9,8 +9,8 @@ export function SetupMissing() {
         </div>
         <h1 className="text-2xl font-semibold text-ink">Supabase setup needed</h1>
         <p className="mt-3 text-sm leading-6 text-ink/65">
-          Add the Supabase URL, service role key, and app password listed in the README, then restart the app. The UI
-          and routes are ready; they need the private backend connection before profiles and uploads can work.
+          Add the Supabase URL and service role key listed in the README, then restart the app. The UI and routes are
+          ready; they need the private backend connection before profiles and uploads can work.
         </p>
       </section>
     </main>

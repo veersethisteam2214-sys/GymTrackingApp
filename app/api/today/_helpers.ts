@@ -6,10 +6,9 @@ import type { CheckInCategory, CheckInItem } from "@/lib/types";
 
 export async function getTodayContext() {
   const cookieStore = await cookies();
-  const hasAccess = cookieStore.get("gym_access_granted")?.value === "true";
   const profileId = cookieStore.get("gym_profile_id")?.value;
 
-  if (!hasAccess || !profileId) {
+  if (!profileId) {
     return { error: "Set up your app profile first.", status: 401 as const };
   }
 

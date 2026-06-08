@@ -10,10 +10,6 @@ export const dynamic = "force-dynamic";
 
 export default async function LoginSetupPage() {
   const cookieStore = await cookies();
-  if (cookieStore.get("gym_access_granted")?.value !== "true") {
-    redirect("/access?next=/login-setup");
-  }
-
   const profileId = cookieStore.get("gym_profile_id")?.value;
   if (!profileId) redirect("/login");
 

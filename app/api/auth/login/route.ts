@@ -32,13 +32,6 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set("gym_access_granted", "true", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 14,
-    path: "/"
-  });
   response.cookies.set("gym_profile_id", profile.id, {
     httpOnly: true,
     sameSite: "lax",

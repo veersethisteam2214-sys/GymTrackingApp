@@ -88,7 +88,7 @@ export function DashboardCards({
       <section className="app-surface rounded-[2rem] p-5">
         <h2 className="display-font text-4xl font-extrabold text-app">No profiles yet</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Enter the shared password, then save a profile to start tracking.
+          Create a profile to start tracking with the group.
         </p>
       </section>
     );

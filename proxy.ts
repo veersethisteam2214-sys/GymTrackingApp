@@ -3,16 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 const PUBLIC_FILE = /\.(.*)$/;
 
 export function proxy(request: NextRequest) {
-  const hasAccessPassword = Boolean(process.env.APP_ACCESS_PASSWORD);
-  const passedAccess = request.cookies.get("gym_access_granted")?.value === "true";
   const { pathname } = request.nextUrl;
 
   const isPublic =
-    pathname === "/access" ||
-    pathname === "/access-denied" ||
     pathname === "/profile-setup" ||
     pathname.startsWith("/login") ||
-    pathname.startsWith("/api/access") ||
     pathname.startsWith("/api/profile") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/setup-login") ||
@@ -20,15 +15,7 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/favicon") ||
     PUBLIC_FILE.test(pathname);
 
-  if (hasAccessPassword && !passedAccess && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/access";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-
   const needsProfile =
-    passedAccess &&
     !request.cookies.get("gym_profile_id")?.value &&
     !isPublic &&
     pathname !== "/profile-setup";

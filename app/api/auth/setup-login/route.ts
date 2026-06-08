@@ -5,10 +5,9 @@ import { createAdminSupabase } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
-  const hasAccess = cookieStore.get("gym_access_granted")?.value === "true";
   const profileId = cookieStore.get("gym_profile_id")?.value;
 
-  if (!hasAccess || !profileId) {
+  if (!profileId) {
     return NextResponse.json({ error: "Open your profile first." }, { status: 401 });
   }
 

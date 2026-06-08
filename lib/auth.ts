@@ -18,7 +18,7 @@ export async function requireAppProfile() {
 
   const profileId = await getProfileIdFromCookie();
   if (!profileId) {
-    redirect("/profile-setup");
+    redirect("/login");
   }
 
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", profileId).maybeSingle();

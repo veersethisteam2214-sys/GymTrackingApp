@@ -23,11 +23,6 @@ function nullableInteger(value: FormDataEntryValue | null) {
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
-  const hasAccess = cookieStore.get("gym_access_granted")?.value === "true";
-
-  if (!hasAccess) {
-    return NextResponse.json({ error: "Enter the app password first." }, { status: 401 });
-  }
 
   const supabase = createAdminSupabase();
   if (!supabase) {

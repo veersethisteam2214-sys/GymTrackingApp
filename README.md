@@ -1,6 +1,6 @@
 # Private Gym & Cardio Discipline Tracker
 
-A private, mobile-first accountability app protected by one shared app password. After entering the password, each person creates an app profile with their photo, name, current weight, target weight, target date, goal mode, routines, and reading target.
+A private, mobile-first accountability app where each person logs in with their own profile username and password. New users can create a profile with their photo, name, email, current weight, target weight, target date, goal mode, routines, and reading target.
 
 The group is capped at 13 profiles.
 
@@ -20,7 +20,6 @@ Add these in Vercel and in `.env.local` for local development:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-APP_ACCESS_PASSWORD=
 RESEND_API_KEY=
 WEEKLY_SUMMARY_FROM=
 CRON_SECRET=
@@ -55,7 +54,6 @@ Add these environment variables:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-secret-service-role-key
-APP_ACCESS_PASSWORD=choose-a-private-password
 RESEND_API_KEY=your-resend-api-key
 WEEKLY_SUMMARY_FROM=Discipline Tracker <summary@your-domain.com>
 CRON_SECRET=choose-a-long-random-secret
@@ -68,10 +66,9 @@ Redeploy after saving the variables.
 ## App Flow
 
 1. Visitor opens the Vercel app.
-2. Visitor enters the shared app password.
-3. Existing profile users log in with their profile username/password.
-4. Existing profiles without login credentials are prompted to create username/password once.
-5. New users fill out profile setup:
+2. Existing profile users log in with their profile username/password.
+3. Existing profiles without login credentials are prompted to create username/password once.
+4. New users click Create a new profile and fill out profile setup:
    - name
    - email for weekly summaries
    - current weight
@@ -82,12 +79,11 @@ Redeploy after saving the variables.
    - cardio routine
    - current book
    - total pages in that book
-6. Visitor presses Save profile.
-7. The app saves a private profile cookie and opens the dashboard.
+5. Visitor presses Save profile.
+6. The app saves a private profile cookie and opens the dashboard.
 
 ## Routes
 
-- `/access` shared password gate
 - `/login` profile username/password login
 - `/login-setup` link an existing profile to username/password
 - `/profile-setup` profile setup form
@@ -118,7 +114,7 @@ Redeploy after saving the variables.
 
 ## Privacy
 
-Supabase tables have Row Level Security enabled and no public table policies. The app uses server-side routes with the service role key after the shared password gate. Uploaded images are stored in the private `checkin-uploads` bucket and displayed using signed URLs.
+Supabase tables have Row Level Security enabled and no public table policies. The app uses server-side routes with the service role key after profile login. Uploaded images are stored in the private `checkin-uploads` bucket and displayed using signed URLs.
 
 ## Data Reset
 
