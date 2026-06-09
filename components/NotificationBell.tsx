@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCircle2, Sparkles } from "lucide-react";
 import type { GroupNotification } from "@/lib/types";
 
@@ -23,6 +23,15 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [notifications, setNotifications] = useState(initialNotifications);
+  const lastUnreadCountRef = useRef(initialUnreadCount);
+  const playedInitialSoundRef = useRef(false);
+
+  useEffect(() => {
+    if (playedInitialSoundRef.current || initialUnreadCount <= 0) return;
+    playedInitialSoundRef.current = true;
+    const timer = window.setTimeout(() => playNotificationSound(), 450);
+    return () => window.clearTimeout(timer);
+  }, [initialUnreadCount]);
 
   useEffect(() => {
     async function refresh() {
@@ -32,8 +41,13 @@ export function NotificationBell({
         | { notifications?: GroupNotification[]; unreadCount?: number }
         | null;
       if (!payload?.notifications) return;
+      const nextUnreadCount = Number(payload.unreadCount ?? 0);
       setNotifications(payload.notifications);
-      setUnreadCount(Number(payload.unreadCount ?? 0));
+      setUnreadCount(nextUnreadCount);
+      if (nextUnreadCount > lastUnreadCountRef.current) {
+        playNotificationSound();
+      }
+      lastUnreadCountRef.current = nextUnreadCount;
     }
 
     const timer = window.setInterval(refresh, 45_000);
@@ -46,6 +60,7 @@ export function NotificationBell({
 
     if (nextOpen && unreadCount > 0) {
       setUnreadCount(0);
+      lastUnreadCountRef.current = 0;
       setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
       await fetch("/api/notifications/read", { method: "POST" }).catch(() => null);
     }
@@ -117,6 +132,40 @@ export function NotificationBell({
       ) : null}
     </div>
   );
+}
+
+function playNotificationSound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const audioContext = new AudioContextClass();
+    const now = audioContext.currentTime;
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+    gain.connect(audioContext.destination);
+
+    [659.25, 880].forEach((frequency, index) => {
+      const oscillator = audioContext.createOscillator();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, now + index * 0.09);
+      oscillator.connect(gain);
+      oscillator.start(now + index * 0.09);
+      oscillator.stop(now + 0.28 + index * 0.09);
+    });
+
+    window.setTimeout(() => audioContext.close().catch(() => null), 700);
+  } catch {
+    // Browsers can block audio before user interaction; the visual red dot still works.
+  }
+}
+
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
 }
 
 function Avatar({ notification }: { notification: GroupNotification }) {
