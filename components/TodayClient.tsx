@@ -51,6 +51,7 @@ export function TodayClient({
   const [readingPage, setReadingPage] = useState(initialReading?.current_page?.toString() ?? "");
   const [toast, setToast] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CheckInCategory>(
     items.find((item) => item.status === "missing")?.category ?? CATEGORIES[0].id
   );
@@ -93,6 +94,7 @@ export function TodayClient({
     );
     setItems(nextItems);
     setToast("Saved.");
+    setMobilePanelOpen(false);
     setBusyKey(null);
   }
 
@@ -112,6 +114,7 @@ export function TodayClient({
     const nextItems = items.map((item) => (item.category === category ? (payload.item as CheckInItem) : item));
     setItems(nextItems);
     setToast("Marked excused.");
+    setMobilePanelOpen(false);
     setBusyKey(null);
   }
 
@@ -131,6 +134,7 @@ export function TodayClient({
     const nextItems = items.map((item) => (item.category === category ? (payload.item as CheckInItem) : item));
     setItems(nextItems);
     setToast("Removed.");
+    setMobilePanelOpen(false);
     setBusyKey(null);
   }
 
@@ -192,7 +196,10 @@ export function TodayClient({
             return (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setMobilePanelOpen(true);
+                }}
                 className="app-button min-h-24 p-2 text-left"
                 style={{
                   background: isSelected ? "color-mix(in srgb, var(--brand) 12%, var(--surface-strong))" : "var(--surface-strong)",
@@ -210,23 +217,25 @@ export function TodayClient({
         </div>
       </section>
 
-      <UploadPanel
-        key={selectedCategory}
-        item={selectedItem}
-        category={selectedMeta}
-        busy={busyKey === selectedCategory}
-        weight={weight}
-        minutes={minutes}
-        distance={distance}
-        readingPage={readingPage}
-        onWeight={setWeight}
-        onMinutes={setMinutes}
-        onDistance={setDistance}
-        onReadingPage={setReadingPage}
-        onUpload={upload}
-        onExcuse={markExcused}
-        onDelete={remove}
-      />
+      <div className="hidden md:block">
+        <UploadPanel
+          key={`desktop-${selectedCategory}`}
+          item={selectedItem}
+          category={selectedMeta}
+          busy={busyKey === selectedCategory}
+          weight={weight}
+          minutes={minutes}
+          distance={distance}
+          readingPage={readingPage}
+          onWeight={setWeight}
+          onMinutes={setMinutes}
+          onDistance={setDistance}
+          onReadingPage={setReadingPage}
+          onUpload={upload}
+          onExcuse={markExcused}
+          onDelete={remove}
+        />
+      </div>
 
       <section className="app-surface rounded-[2rem] p-4">
         <h3 className="text-lg font-extrabold text-app">All criteria</h3>
@@ -236,7 +245,10 @@ export function TodayClient({
             return (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setMobilePanelOpen(true);
+                }}
                 className="app-button flex min-h-14 items-center justify-between rounded-2xl px-3 text-left"
                 style={{ background: "var(--surface-soft)" }}
               >
@@ -252,6 +264,41 @@ export function TodayClient({
           })}
         </div>
       </section>
+
+      {mobilePanelOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 backdrop-blur-sm md:hidden">
+          <section className="reveal-in max-h-[88vh] w-full overflow-y-auto rounded-[2rem] p-1" style={{ background: "var(--surface-strong)", border: "1px solid var(--faint)", boxShadow: "var(--shadow)" }}>
+            <div className="flex items-center justify-between gap-3 px-3 py-2">
+              <p className="text-sm font-extrabold text-muted">Upload {selectedMeta.shortLabel}</p>
+              <button
+                onClick={() => setMobilePanelOpen(false)}
+                className="app-button grid size-10 place-items-center rounded-2xl"
+                style={{ background: "var(--surface-soft)", color: "var(--text)" }}
+                aria-label="Close upload panel"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </div>
+            <UploadPanel
+              key={`mobile-${selectedCategory}`}
+              item={selectedItem}
+              category={selectedMeta}
+              busy={busyKey === selectedCategory}
+              weight={weight}
+              minutes={minutes}
+              distance={distance}
+              readingPage={readingPage}
+              onWeight={setWeight}
+              onMinutes={setMinutes}
+              onDistance={setDistance}
+              onReadingPage={setReadingPage}
+              onUpload={upload}
+              onExcuse={markExcused}
+              onDelete={remove}
+            />
+          </section>
+        </div>
+      ) : null}
 
       {toast ? (
         <button
