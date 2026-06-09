@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Activity, BookOpen, Check, Dumbbell, GlassWater, Timer, Users } from "lucide-react";
+import { Activity, Check, Dumbbell, GlassWater, Timer, Users } from "lucide-react";
 import { CompletionBars, getProfileChartColor, WeightTrend } from "@/components/AnalyticsCharts";
 import { StatsDataChat } from "@/components/StatsDataChat";
 import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
@@ -35,7 +35,6 @@ export function AnalyticsClient({
   const gymUploads = filteredItems.filter((item) => item.category === "progress_photo" && item.status === "uploaded").length;
   const cardioUploads = filteredItems.filter((item) => item.category === "treadmill_photo" && item.status === "uploaded").length;
   const proteinUploads = filteredItems.filter((item) => item.category === "protein_shake_photo" && item.status === "uploaded").length;
-  const readingUploads = filteredItems.filter((item) => item.category === "reading_proof" && item.status === "uploaded").length;
   const cardioMinutes = filteredCardio.reduce((sum, entry) => sum + Number(entry.treadmill_minutes ?? 0), 0);
 
   function toggleUser(id: string) {
@@ -64,11 +63,10 @@ export function AnalyticsClient({
           <p className="mt-2 text-sm text-muted">Choose users from the filter panel. The metrics and charts update together.</p>
         </section>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Metric icon={<Dumbbell className="size-5" />} label="Gym uploads" value={gymUploads} />
           <Metric icon={<Timer className="size-5" />} label="Cardio uploads" value={cardioUploads} />
           <Metric icon={<GlassWater className="size-5" />} label="Protein uploads" value={proteinUploads} />
-          <Metric icon={<BookOpen className="size-5" />} label="Reading proofs" value={readingUploads} />
           <Metric icon={<Activity className="size-5" />} label="Cardio minutes" value={cardioMinutes} />
         </div>
 

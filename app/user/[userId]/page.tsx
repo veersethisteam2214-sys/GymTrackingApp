@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, CalendarDays, Flame, Scale, Target, Timer } from "lucide-react";
+import { ArrowLeft, CalendarDays, Flame, Scale, Target, Timer } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { WeightTrend } from "@/components/AnalyticsCharts";
 import { SetupMissing } from "@/components/SetupMissing";
@@ -28,8 +28,6 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
   const stats = getStats(checkins);
   const weights = data.weights.filter((item) => item.user_id === profile.id);
   const latestWeight = weights.at(-1)?.weight_value ?? profile.starting_weight ?? "--";
-  const latestReading = data.reading.filter((item) => item.user_id === profile.id).at(-1);
-  const completedBooks = data.books.filter((item) => item.user_id === profile.id);
   const cardioMinutes = data.cardio
     .filter((item) => item.user_id === profile.id)
     .reduce((sum, item) => sum + Number(item.treadmill_minutes ?? 0), 0);
@@ -78,7 +76,7 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
             value={`${cardioMinutes} min`}
           />
           <GoalChip
-            icon={<BookOpen className="size-4" />}
+            icon={<Flame className="size-4" />}
             label="Mode"
             value={profile.goal_mode}
           />
@@ -100,34 +98,6 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
           <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
             <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Cardio</p>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-app">{profile.cardio_routine}</p>
-          </div>
-        </div>
-      </section>
-      <section className="app-surface mt-4 rounded-[2rem] p-4">
-        <h2 className="text-xl font-extrabold text-app">Reading</h2>
-        <div className="mt-3 grid gap-2 md:grid-cols-2">
-          <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
-            <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Currently reading</p>
-            <p className="mt-1 text-sm font-extrabold text-app">{profile.current_book_title ?? "No book set"}</p>
-            <p className="mt-1 text-sm text-muted">
-              {latestReading
-                ? `Page ${latestReading.current_page}${latestReading.total_pages ? `/${latestReading.total_pages}` : ""}`
-                : "No reading proof yet"}
-            </p>
-          </div>
-          <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
-            <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Finished books</p>
-            {completedBooks.length === 0 ? (
-              <p className="mt-1 text-sm text-muted">No completed books yet.</p>
-            ) : (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {completedBooks.slice(0, 6).map((book) => (
-                  <span key={book.id} className="rounded-full px-3 py-1 text-xs font-bold text-app" style={{ background: "var(--surface-soft)" }}>
-                    {book.title}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </section>

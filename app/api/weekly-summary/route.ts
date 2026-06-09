@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
 import { createAdminSupabase } from "@/lib/supabase/server";
-import type { CardioEntry, CheckInItem, CompletedBook, DailyCheckIn, Profile, ReadingEntry, WeightEntry } from "@/lib/types";
+import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +14,6 @@ type WeeklyPerson = {
   possibleTasks: number;
   latestWeight: WeightEntry | null;
   latestCardio: CardioEntry | null;
-  latestReading: ReadingEntry | null;
-  completedBooks: CompletedBook[];
 };
 
 function isoDate(date: Date) {
@@ -50,14 +48,12 @@ function buildRows(
   checkins: DailyCheckIn[],
   items: CheckInItem[],
   weights: WeightEntry[],
-  cardio: CardioEntry[],
-  reading: ReadingEntry[],
-  books: CompletedBook[]
+  cardio: CardioEntry[]
 ): WeeklyPerson[] {
   return profiles.map((profile) => {
     const userCheckins = checkins.filter((checkin) => checkin.user_id === profile.id);
     const userCheckinIds = new Set(userCheckins.map((checkin) => checkin.id));
-    const userItems = items.filter((item) => userCheckinIds.has(item.checkin_id));
+    const userItems = items.filter((item) => userCheckinIds.has(item.checkin_id) && CATEGORY_IDS.includes(item.category));
 
     return {
       profile,
@@ -67,9 +63,7 @@ function buildRows(
       taskCount: userItems.filter((item) => item.status === "uploaded" || item.status === "excused").length,
       possibleTasks: userCheckins.length * CATEGORIES.length,
       latestWeight: latestByUser(weights, profile.id),
-      latestCardio: latestByUser(cardio, profile.id),
-      latestReading: latestByUser(reading, profile.id),
-      completedBooks: books.filter((book) => book.user_id === profile.id)
+      latestCardio: latestByUser(cardio, profile.id)
     };
   });
 }
@@ -81,11 +75,8 @@ function buildText(rows: WeeklyPerson[], startDate: string, endDate: string) {
     ...rows.map((row) => {
       const weight = row.latestWeight ? `${row.latestWeight.weight_value}${row.latestWeight.weight_unit}` : "No weight logged";
       const cardio = row.latestCardio?.treadmill_minutes ? `${row.latestCardio.treadmill_minutes} min cardio` : "No cardio logged";
-      const reading = row.latestReading
-        ? `${row.latestReading.book_title}, page ${row.latestReading.current_page}${row.latestReading.total_pages ? `/${row.latestReading.total_pages}` : ""}`
-        : "No reading logged";
 
-      return `${row.profile.display_name}: ${row.completedDays} complete days, ${row.partialDays} partial, ${row.excusedDays} excused, ${row.taskCount}/${row.possibleTasks || 0} tasks. ${weight}. ${cardio}. ${reading}.`;
+      return `${row.profile.display_name}: ${row.completedDays} complete days, ${row.partialDays} partial, ${row.excusedDays} excused, ${row.taskCount}/${row.possibleTasks || 0} tasks. ${weight}. ${cardio}.`;
     })
   ].join("\n");
 }
@@ -100,10 +91,6 @@ function buildHtml(rows: WeeklyPerson[], startDate: string, endDate: string) {
       const taskPercent = row.possibleTasks ? Math.round((row.taskCount / row.possibleTasks) * 100) : 0;
       const weight = row.latestWeight ? `${row.latestWeight.weight_value}${row.latestWeight.weight_unit}` : "--";
       const cardio = row.latestCardio?.treadmill_minutes ? `${row.latestCardio.treadmill_minutes} min` : "--";
-      const reading = row.latestReading
-        ? `${escapeHtml(row.latestReading.book_title)}<br><span style="color:#64748b">Page ${row.latestReading.current_page}${row.latestReading.total_pages ? `/${row.latestReading.total_pages}` : ""}</span>`
-        : "--";
-      const books = row.completedBooks.length ? row.completedBooks.map((book) => escapeHtml(book.title)).join(", ") : "--";
 
       return `
         <tr>
@@ -112,8 +99,6 @@ function buildHtml(rows: WeeklyPerson[], startDate: string, endDate: string) {
           <td style="padding:14px 10px;border-bottom:1px solid #dbeafe;color:#0f172a">${row.taskCount}/${row.possibleTasks || 0}<br><span style="color:#2563eb;font-weight:800">${taskPercent}%</span></td>
           <td style="padding:14px 10px;border-bottom:1px solid #dbeafe;color:#0f172a">${escapeHtml(weight)}</td>
           <td style="padding:14px 10px;border-bottom:1px solid #dbeafe;color:#0f172a">${escapeHtml(cardio)}</td>
-          <td style="padding:14px 10px;border-bottom:1px solid #dbeafe;color:#0f172a">${reading}</td>
-          <td style="padding:14px 10px;border-bottom:1px solid #dbeafe;color:#0f172a">${books}</td>
         </tr>
       `;
     })
@@ -142,8 +127,6 @@ function buildHtml(rows: WeeklyPerson[], startDate: string, endDate: string) {
                   <th align="left" style="padding:10px;color:#2563eb;text-transform:uppercase;font-size:11px;letter-spacing:.12em">Tasks</th>
                   <th align="left" style="padding:10px;color:#2563eb;text-transform:uppercase;font-size:11px;letter-spacing:.12em">Weight</th>
                   <th align="left" style="padding:10px;color:#2563eb;text-transform:uppercase;font-size:11px;letter-spacing:.12em">Cardio</th>
-                  <th align="left" style="padding:10px;color:#2563eb;text-transform:uppercase;font-size:11px;letter-spacing:.12em">Reading</th>
-                  <th align="left" style="padding:10px;color:#2563eb;text-transform:uppercase;font-size:11px;letter-spacing:.12em">Books</th>
                 </tr>
               </thead>
               <tbody>${rowHtml}</tbody>
@@ -199,9 +182,7 @@ export async function GET(request: Request) {
     { data: profiles, error: profilesError },
     { data: checkins, error: checkinsError },
     { data: weights, error: weightsError },
-    { data: cardio, error: cardioError },
-    { data: reading, error: readingError },
-    { data: books, error: booksError }
+    { data: cardio, error: cardioError }
   ] = await Promise.all([
     supabase.from("profiles").select("*").order("created_at", { ascending: true }),
     supabase
@@ -211,12 +192,10 @@ export async function GET(request: Request) {
       .lte("checkin_date", endDate)
       .order("checkin_date", { ascending: true }),
     supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(200),
-    supabase.from("cardio_entries").select("*").order("created_at", { ascending: false }).limit(200),
-    supabase.from("reading_entries").select("*").order("created_at", { ascending: false }).limit(200),
-    supabase.from("completed_books").select("*").order("completed_at", { ascending: false }).limit(200)
+    supabase.from("cardio_entries").select("*").order("created_at", { ascending: false }).limit(200)
   ]);
 
-  const firstError = profilesError ?? checkinsError ?? weightsError ?? cardioError ?? readingError ?? booksError;
+  const firstError = profilesError ?? checkinsError ?? weightsError ?? cardioError;
   if (firstError) {
     return NextResponse.json({ error: firstError.message }, { status: 500 });
   }
@@ -245,9 +224,7 @@ export async function GET(request: Request) {
     weeklyCheckins,
     (items ?? []) as CheckInItem[],
     (weights ?? []) as WeightEntry[],
-    (cardio ?? []) as CardioEntry[],
-    (reading ?? []) as ReadingEntry[],
-    (books ?? []) as CompletedBook[]
+    (cardio ?? []) as CardioEntry[]
   );
   const subject = `Weekly Discipline Tracker overview: ${startDate} to ${endDate}`;
   const html = buildHtml(rows, startDate, endDate);

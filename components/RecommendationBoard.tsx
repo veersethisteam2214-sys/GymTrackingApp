@@ -113,7 +113,7 @@ export function RecommendationBoard({
                 <input
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
-                  placeholder="Category, e.g. book / gear"
+                  placeholder="Category, e.g. gear / meal / video"
                   className="min-h-12 rounded-2xl border bg-transparent px-4 text-sm text-app outline-none placeholder:text-muted focus:ring-4"
                   style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
                 />

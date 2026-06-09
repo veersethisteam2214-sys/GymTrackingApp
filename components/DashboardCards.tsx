@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   BicepsFlexed,
-  BookOpen,
   Check,
   ChevronDown,
   Dna,
@@ -23,11 +22,9 @@ import { getCompletionCount } from "@/lib/status";
 import type {
   CheckInCategory,
   CheckInItem,
-  CompletedBook,
   DailyCheckIn,
   DailyStatus,
   Profile,
-  ReadingEntry,
   WeightEntry
 } from "@/lib/types";
 
@@ -36,8 +33,6 @@ type Person = {
   todayCheckin: DailyCheckIn | null;
   todayItems: CheckInItem[];
   latestWeight?: WeightEntry | null;
-  latestReading?: ReadingEntry | null;
-  completedBooks: CompletedBook[];
   monthStats: Record<string, number>;
   weekStats: Record<string, number>;
   currentStreak: number;
@@ -59,8 +54,7 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   progress_photo: <BicepsFlexed className="size-4" />,
   treadmill_photo: <Footprints className="size-4" />,
   weight_scale_photo: <Gauge className="size-4" />,
-  protein_shake_photo: <Dna className="size-4" />,
-  reading_proof: <BookOpen className="size-4" />
+  protein_shake_photo: <Dna className="size-4" />
 };
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -70,15 +64,13 @@ export function DashboardCards({
   currentUserId,
   today,
   monthCheckins,
-  monthItems,
-  statsChat
+  monthItems
 }: {
   people: Person[];
   currentUserId: string;
   today: string;
   monthCheckins: DailyCheckIn[];
   monthItems: CheckInItem[];
-  statsChat?: React.ReactNode;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openPoint, setOpenPoint] = useState<{ person: Person; point: DataPoint } | null>(null);
@@ -112,7 +104,7 @@ export function DashboardCards({
               {totalCompleted}/{totalPossible}
             </h2>
             <p className="mt-2 max-w-xl text-sm font-extrabold leading-6 text-app">
-              Group goal: reach 30/30 for full group success.
+              Group goal: reach {totalPossible}/{totalPossible} for full group success.
             </p>
             <MiniLeaderboard rankedPeople={rankedPeople} />
           </div>
@@ -122,8 +114,6 @@ export function DashboardCards({
           </div>
         </div>
       </section>
-
-      {statsChat ? <div className="reveal-in">{statsChat}</div> : null}
 
       <section className="app-surface rounded-[2rem] p-5">
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -193,10 +183,9 @@ function ProfileCard({ person, isMe }: { person: Person; isMe: boolean }) {
         {isMe ? "You" : person.profile.goal_mode}
       </p>
       <h3 className="mt-1 truncate text-2xl font-extrabold text-app">{person.profile.display_name}</h3>
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <MiniStat icon={<Flame className="size-4" />} label="Streak" value={`${person.currentStreak}d`} />
         <MiniStat icon={<Scale className="size-4" />} label="Weight" value={person.latestWeight ? `${person.latestWeight.weight_value}kg` : "--"} />
-        <MiniStat icon={<BookOpen className="size-4" />} label="Page" value={person.latestReading ? `${person.latestReading.current_page}` : "--"} />
       </div>
     </>
   );
@@ -402,9 +391,7 @@ function buildDataPoints(person: Person): DataPoint[] {
     const text =
       category.id === "weight_scale_photo"
         ? `Weight: ${complete && latestWeight ? `${latestWeight}kg` : "Not entered today"}`
-        : category.id === "reading_proof"
-          ? `${person.profile.current_book_title ?? "No book set"}\n${person.latestReading ? `Page ${person.latestReading.current_page}${person.latestReading.total_pages ? `/${person.latestReading.total_pages}` : ""}` : "No page logged"}`
-          : item?.note;
+        : item?.note;
     return {
       id: category.id,
       label: category.label,

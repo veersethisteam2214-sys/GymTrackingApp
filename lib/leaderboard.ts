@@ -1,4 +1,4 @@
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
 import type { CheckInItem, DailyCheckIn, Profile } from "@/lib/types";
 
 export type LeaderboardPerson<T extends { profile: Profile; todayItems: CheckInItem[]; currentStreak: number }> = T & {
@@ -15,7 +15,7 @@ export function getLeaderboardScore(userId: string, checkins: DailyCheckIn[], it
 }
 
 export function getUploadCount(items: CheckInItem[]) {
-  return items.filter((item) => item.status === "uploaded").length;
+  return items.filter((item) => CATEGORY_IDS.includes(item.category) && item.status === "uploaded").length;
 }
 
 export function rankPeople<T extends { profile: Profile; todayItems: CheckInItem[]; currentStreak: number }>(

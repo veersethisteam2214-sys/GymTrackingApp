@@ -38,7 +38,7 @@ export function TodayReminder() {
         </div>
         <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">Upload picture in Today</p>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Add today&apos;s proof while it is fresh. Photos, cardio, weight, protein, and reading all live in the Today section.
+          Add today&apos;s proof while it is fresh. Progress, cardio, weight, and protein all live in the Today section.
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <button

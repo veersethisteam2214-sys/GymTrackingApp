@@ -39,8 +39,7 @@ export function isValidCategory(value: unknown): value is CheckInCategory {
     value === "progress_photo" ||
     value === "treadmill_photo" ||
     value === "weight_scale_photo" ||
-    value === "protein_shake_photo" ||
-    value === "reading_proof"
+    value === "protein_shake_photo"
   );
 }
 

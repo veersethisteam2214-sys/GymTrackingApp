@@ -14,13 +14,6 @@ function nullableNumber(value: FormDataEntryValue | null) {
   return Number.isFinite(number) ? number : null;
 }
 
-function nullableInteger(value: FormDataEntryValue | null) {
-  const text = String(value ?? "").trim();
-  if (!text) return null;
-  const number = Number(text);
-  return Number.isInteger(number) && number > 0 ? number : null;
-}
-
 export async function POST(request: Request) {
   const cookieStore = await cookies();
 
@@ -35,7 +28,6 @@ export async function POST(request: Request) {
   const gymRoutine = String(formData.get("gym_routine") ?? "").trim();
   const cardioRoutine = String(formData.get("cardio_routine") ?? "").trim();
   const goalMode = String(formData.get("goal_mode") ?? "cutting").trim();
-  const currentBookTitle = String(formData.get("current_book_title") ?? "").trim();
   const targetDate = String(formData.get("target_date") ?? "").trim();
   const avatar = formData.get("avatar");
 
@@ -45,12 +37,6 @@ export async function POST(request: Request) {
 
   if (!EMAIL_PATTERN.test(email)) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-  }
-
-  const currentBookTotalPages = nullableInteger(formData.get("current_book_total_pages"));
-
-  if (!currentBookTitle || !currentBookTotalPages) {
-    return NextResponse.json({ error: "Current book and total pages are required." }, { status: 400 });
   }
 
   if (!["cutting", "bulking"].includes(goalMode)) {
@@ -98,8 +84,6 @@ export async function POST(request: Request) {
     goal_mode: goalMode,
     gym_routine: gymRoutine,
     cardio_routine: cardioRoutine,
-    current_book_title: currentBookTitle || null,
-    current_book_total_pages: currentBookTotalPages,
     updated_at: new Date().toISOString()
   };
 

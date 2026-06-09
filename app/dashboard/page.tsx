@@ -27,8 +27,8 @@ export default async function DashboardPage() {
         today={data.today}
         monthCheckins={data.monthCheckins}
         monthItems={data.monthItems}
-        statsChat={<StatsDataChat profiles={data.people.map((person) => person.profile)} checkins={data.monthCheckins} items={data.monthItems} />}
       />
+      <StatsDataChat profiles={data.people.map((person) => person.profile)} checkins={data.monthCheckins} items={data.monthItems} />
       <ChallengePreview challenges={challenges} />
       <RecommendationBoard initialRecommendations={recommendations} currentProfile={session.profile} />
     </AppShell>

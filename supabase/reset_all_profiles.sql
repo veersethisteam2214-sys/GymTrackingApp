@@ -1,6 +1,4 @@
 delete from public.recommendations;
-delete from public.completed_books;
-delete from public.reading_entries;
 delete from public.challenges;
 delete from public.audit_log;
 delete from public.cardio_entries;

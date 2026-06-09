@@ -34,7 +34,6 @@ const categoryAliases = new Map(
     if (category.id === "treadmill_photo") aliases.push("cardio", "run", "running", "treadmill");
     if (category.id === "weight_scale_photo") aliases.push("weight", "scale");
     if (category.id === "protein_shake_photo") aliases.push("protein", "shake");
-    if (category.id === "reading_proof") aliases.push("reading", "book", "pages");
     return aliases.map((alias) => [alias, category.id] as const);
   })
 );
@@ -110,7 +109,7 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
   const profile = findProfile(question, profiles);
 
   if (!profile) {
-    return `I could not find that user. Try using the exact profile name, like: "How many out of 5 did Arnav do on Monday?"`;
+    return `I could not find that user. Try using the exact profile name, like: "How many out of 4 did Arnav do on Monday?"`;
   }
 
   const userCheckins = checkins.filter((checkin) => checkin.user_id === profile.id);
@@ -167,7 +166,7 @@ export function StatsDataChat({
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      text: "Ask me about user data by day. Example: How many out of 5 did Arnav do on Monday?"
+      text: "Ask me about user data by day. Example: How many out of 4 did Arnav do on Monday?"
     }
   ]);
   const [question, setQuestion] = useState("");
@@ -213,7 +212,7 @@ export function StatsDataChat({
         <input
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="Ask: How many out of 5 did Arnav do on Monday?"
+          placeholder="Ask: How many out of 4 did Arnav do on Monday?"
           className="min-h-12 min-w-0 flex-1 rounded-2xl border px-4 text-sm text-app outline-none focus:ring-4"
           style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
         />

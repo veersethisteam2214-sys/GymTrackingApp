@@ -2,8 +2,7 @@ export type CheckInCategory =
   | "progress_photo"
   | "treadmill_photo"
   | "weight_scale_photo"
-  | "protein_shake_photo"
-  | "reading_proof";
+  | "protein_shake_photo";
 
 export type ItemStatus = "missing" | "uploaded" | "excused";
 export type DailyStatus = "missing" | "partial" | "complete" | "excused";
@@ -18,8 +17,6 @@ export type Profile = {
   goal_mode: "cutting" | "bulking";
   gym_routine: string | null;
   cardio_routine: string | null;
-  current_book_title: string | null;
-  current_book_total_pages: number | null;
   email: string | null;
   username: string | null;
   password_hash: string | null;
@@ -76,25 +73,6 @@ export type CardioEntry = {
   treadmill_distance: number | null;
   distance_unit: string | null;
   calories: number | null;
-};
-
-export type ReadingEntry = {
-  id: string;
-  user_id: string;
-  checkin_id: string;
-  source_item_id: string | null;
-  book_title: string;
-  current_page: number;
-  total_pages: number | null;
-  created_at: string;
-};
-
-export type CompletedBook = {
-  id: string;
-  user_id: string;
-  title: string;
-  total_pages: number | null;
-  completed_at: string;
 };
 
 export type CategoryMeta = {

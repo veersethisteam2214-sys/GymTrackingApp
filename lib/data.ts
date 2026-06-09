@@ -6,10 +6,8 @@ import type {
   CardioEntry,
   Challenge,
   CheckInItem,
-  CompletedBook,
   DailyCheckIn,
   Profile,
-  ReadingEntry,
   Recommendation,
   WeightEntry
 } from "@/lib/types";
@@ -46,9 +44,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     { data: todayCheckins },
     { data: monthCheckins },
     { data: items },
-    { data: weights },
-    { data: readingEntries },
-    { data: completedBooks }
+    { data: weights }
   ] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: true }),
       supabase.from("daily_checkins").select("*").eq("checkin_date", today),
@@ -63,13 +59,11 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
         .select("*")
         .gte("created_at", `${monthStart}T00:00:00`)
         .lte("created_at", `${monthEnd}T23:59:59`),
-      supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(80),
-      supabase.from("reading_entries").select("*").order("created_at", { ascending: false }).limit(80),
-      supabase.from("completed_books").select("*").order("completed_at", { ascending: false }).limit(80)
+      supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(80)
     ]);
 
   const signedMonthItems = await Promise.all(
-    ((items ?? []) as CheckInItem[]).map(async (item) => ({
+    ((items ?? []) as CheckInItem[]).filter((item) => CATEGORY_IDS.includes(item.category)).map(async (item) => ({
       ...item,
       signedUrl: await getSignedUrl(supabase, item.storage_path)
     }))
@@ -84,7 +78,6 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
       ? signedMonthItems.filter((item) => item.checkin_id === todayCheckin.id)
       : [];
     const latestWeight = ((weights ?? []) as WeightEntry[]).find((item) => item.user_id === profile.id);
-    const latestReading = ((readingEntries ?? []) as ReadingEntry[]).find((item) => item.user_id === profile.id);
     const weekCheckins = checkinsForUser.filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd
     );
@@ -94,8 +87,6 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
       todayCheckin,
       todayItems,
       latestWeight,
-      latestReading,
-      completedBooks: ((completedBooks ?? []) as CompletedBook[]).filter((item) => item.user_id === profile.id),
       monthStats: getStats(checkinsForUser),
       weekStats: getStats(weekCheckins),
       currentStreak: getCurrentStreak(checkinsForUser),
@@ -147,15 +138,14 @@ export async function ensureTodayCheckin(supabase: Client, profileId: string) {
 export async function fetchTodayData(supabase: Client, profile: Profile) {
   const dailyCheckin = await ensureTodayCheckin(supabase, profile.id);
 
-  const [{ data: items }, { data: weightEntries }, { data: cardioEntries }, { data: readingEntries }] = await Promise.all([
+  const [{ data: items }, { data: weightEntries }, { data: cardioEntries }] = await Promise.all([
     supabase.from("checkin_items").select("*").eq("checkin_id", dailyCheckin.id),
     supabase.from("weight_entries").select("*").eq("checkin_id", dailyCheckin.id).limit(1),
-    supabase.from("cardio_entries").select("*").eq("checkin_id", dailyCheckin.id).limit(1),
-    supabase.from("reading_entries").select("*").eq("checkin_id", dailyCheckin.id).limit(1)
+    supabase.from("cardio_entries").select("*").eq("checkin_id", dailyCheckin.id).limit(1)
   ]);
 
   const signedItems = await Promise.all(
-    ((items ?? []) as CheckInItem[]).map(async (item) => ({
+    ((items ?? []) as CheckInItem[]).filter((item) => CATEGORY_IDS.includes(item.category)).map(async (item) => ({
       ...item,
       signedUrl: await getSignedUrl(supabase, item.storage_path)
     }))
@@ -167,7 +157,6 @@ export async function fetchTodayData(supabase: Client, profile: Profile) {
     items: signedItems,
     weightEntry: ((weightEntries ?? []) as WeightEntry[])[0] ?? null,
     cardioEntry: ((cardioEntries ?? []) as CardioEntry[])[0] ?? null,
-    readingEntry: ((readingEntries ?? []) as ReadingEntry[])[0] ?? null,
     categories: CATEGORIES
   };
 }
@@ -176,7 +165,7 @@ export async function fetchAnalyticsData(supabase: Client) {
   const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();
 
-  const [{ data: profiles }, { data: checkins }, { data: items }, { data: weights }, { data: cardio }, { data: reading }, { data: books }] =
+  const [{ data: profiles }, { data: checkins }, { data: items }, { data: weights }, { data: cardio }] =
     await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: true }),
       supabase
@@ -187,9 +176,7 @@ export async function fetchAnalyticsData(supabase: Client) {
         .order("checkin_date", { ascending: true }),
       supabase.from("checkin_items").select("*"),
       supabase.from("weight_entries").select("*").order("measured_at", { ascending: true }),
-      supabase.from("cardio_entries").select("*"),
-      supabase.from("reading_entries").select("*").order("created_at", { ascending: true }),
-      supabase.from("completed_books").select("*").order("completed_at", { ascending: false })
+      supabase.from("cardio_entries").select("*")
     ]);
 
   return {
@@ -198,11 +185,9 @@ export async function fetchAnalyticsData(supabase: Client) {
     weekCheckins: ((checkins ?? []) as DailyCheckIn[]).filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd
     ),
-    items: (items ?? []) as CheckInItem[],
+    items: ((items ?? []) as CheckInItem[]).filter((item) => CATEGORY_IDS.includes(item.category)),
     weights: (weights ?? []) as WeightEntry[],
-    cardio: (cardio ?? []) as CardioEntry[],
-    reading: (reading ?? []) as ReadingEntry[],
-    books: (books ?? []) as CompletedBook[]
+    cardio: (cardio ?? []) as CardioEntry[]
   };
 }
 

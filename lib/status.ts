@@ -1,12 +1,18 @@
 import { CATEGORY_IDS } from "@/lib/categories";
 import type { CheckInItem, DailyCheckIn, DailyStatus } from "@/lib/types";
 
-export function getCompletionCount(items: Pick<CheckInItem, "status">[] = []) {
-  return items.filter((item) => item.status === "uploaded" || item.status === "excused").length;
+type CountableItem = Pick<CheckInItem, "status"> & Partial<Pick<CheckInItem, "category">>;
+
+function isActiveItem(item: CountableItem) {
+  return !item.category || CATEGORY_IDS.includes(item.category);
+}
+
+export function getCompletionCount(items: CountableItem[] = []) {
+  return items.filter((item) => isActiveItem(item) && (item.status === "uploaded" || item.status === "excused")).length;
 }
 
 export function calculateDailyStatus(
-  items: Pick<CheckInItem, "status">[] = [],
+  items: CountableItem[] = [],
   isRestDay = false
 ): DailyStatus {
   if (isRestDay) return "excused";
@@ -69,4 +75,3 @@ export function getStats(checkins: Pick<DailyCheckIn, "overall_status">[]) {
     excused: checkins.filter((item) => item.overall_status === "excused").length
   };
 }
-

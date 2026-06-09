@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BookOpen,
   CalendarDays,
   Dumbbell,
   ImagePlus,
@@ -53,8 +52,6 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
   const [goalMode, setGoalMode] = useState<"cutting" | "bulking">(profile?.goal_mode ?? "cutting");
   const [gymDays, setGymDays] = useState(() => parseGymRoutine(profile?.gym_routine ?? WEEKLY_GYM_TEMPLATE));
   const [cardioRoutine, setCardioRoutine] = useState(profile?.cardio_routine ?? "");
-  const [currentBookTitle, setCurrentBookTitle] = useState(profile?.current_book_title ?? "");
-  const [currentBookTotalPages, setCurrentBookTotalPages] = useState(profile?.current_book_total_pages?.toString() ?? "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatarSignedUrl ?? null);
   const [busy, setBusy] = useState(false);
@@ -74,8 +71,6 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
     formData.set("goal_mode", goalMode);
     formData.set("gym_routine", serializeGymRoutine(gymDays));
     formData.set("cardio_routine", cardioRoutine);
-    formData.set("current_book_title", currentBookTitle);
-    formData.set("current_book_total_pages", currentBookTotalPages);
     if (avatarFile) formData.set("avatar", avatarFile);
 
     const response = await fetch("/api/profile", {
@@ -122,7 +117,7 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
         </label>
         <h1 className="display-font text-5xl font-extrabold text-app">Set up your profile</h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Add your avatar, training plan, goal, and reading target. Friends see this after they tap your profile.
+          Add your avatar, training plan, and goal. Friends see this after they tap your profile.
         </p>
       </div>
       <form onSubmit={submit} className="space-y-4">
@@ -204,33 +199,6 @@ export function ProfileSetupForm({ profile }: { profile?: Profile | null }) {
           onChange={setCardioRoutine}
           placeholder="Example: Treadmill 25 min after lifting"
         />
-        <div className="rounded-3xl p-3" style={{ background: "var(--surface-soft)" }}>
-          <div className="mb-3 flex items-center gap-2">
-            <BookOpen className="size-5 text-leaf" aria-hidden />
-            <h2 className="font-semibold text-app">Reading target</h2>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-[1fr_9rem]">
-            <Field icon={<BookOpen className="size-5" />} label="Current book">
-              <input
-                value={currentBookTitle}
-                onChange={(event) => setCurrentBookTitle(event.target.value)}
-                required
-                className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
-                placeholder="Atomic Habits"
-              />
-            </Field>
-            <Field icon={<BookOpen className="size-5" />} label="Pages">
-              <input
-                value={currentBookTotalPages}
-                onChange={(event) => setCurrentBookTotalPages(event.target.value)}
-                inputMode="numeric"
-                required
-                className="w-full bg-transparent text-base text-app outline-none placeholder:text-muted"
-                placeholder="320"
-              />
-            </Field>
-          </div>
-        </div>
         {error ? (
           <p aria-live="polite" className="rounded-2xl px-4 py-3 text-sm font-bold" style={{ background: "color-mix(in srgb, var(--danger) 14%, transparent)", color: "var(--danger)" }}>
             {error}
