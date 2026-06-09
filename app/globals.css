@@ -68,6 +68,16 @@ select {
   touch-action: manipulation;
 }
 
+select option {
+  background: #101b30;
+  color: #f4f7ee;
+}
+
+:root[data-theme="light"] select option {
+  background: #f0f6fc;
+  color: #0b1728;
+}
+
 .app-button {
   transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease,
     border-color 180ms ease, color 180ms ease, opacity 180ms ease;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Dumbbell, Loader2, Plus, Target, Trophy } from "lucide-react";
+import { CalendarDays, ChevronDown, Dumbbell, Loader2, Plus, Target, Trophy } from "lucide-react";
 import type { Challenge } from "@/lib/types";
 
 const challengeTypes = [
@@ -85,19 +85,22 @@ export function ChallengesClient({ initialChallenges }: { initialChallenges: Cha
           </Field>
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-app">Type</span>
-            <select
-              name="challenge-type"
-              value={challengeType}
-              onChange={(event) => setChallengeType(event.target.value)}
-              className="min-h-12 w-full rounded-2xl border px-4 text-sm font-bold text-app outline-none focus-visible:ring-4"
-              style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
-            >
-              {challengeTypes.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                name="challenge-type"
+                value={challengeType}
+                onChange={(event) => setChallengeType(event.target.value)}
+                className="min-h-12 w-full appearance-none rounded-2xl border px-4 pr-11 text-sm font-bold text-app outline-none focus-visible:ring-4"
+                style={{ borderColor: "var(--faint)", background: "var(--surface-strong)", color: "var(--text)" }}
+              >
+                {challengeTypes.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+            </div>
           </label>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Target">

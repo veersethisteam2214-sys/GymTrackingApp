@@ -192,7 +192,8 @@ export async function fetchAnalyticsData(supabase: Client) {
 }
 
 export async function fetchChallenges(supabase: Client) {
-  const { data } = await supabase.from("challenges").select("*").order("created_at", { ascending: false }).limit(20);
+  const { data, error } = await supabase.from("challenges").select("*").order("created_at", { ascending: false }).limit(20);
+  if (error) return [] as Challenge[];
   return (data ?? []) as Challenge[];
 }
 

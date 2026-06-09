@@ -2,6 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createAdminSupabase } from "@/lib/supabase/server";
 
+function isMissingChallengesTable(error?: { code?: string; message?: string } | null) {
+  const message = error?.message?.toLowerCase() ?? "";
+  return error?.code === "42P01" || error?.code === "PGRST205" || message.includes("public.challenges");
+}
+
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   const profileId = cookieStore.get("gym_profile_id")?.value ?? null;
@@ -49,6 +54,12 @@ export async function POST(request: Request) {
     .single();
 
   if (error || !data) {
+    if (isMissingChallengesTable(error)) {
+      return NextResponse.json(
+        { error: "Challenges table is missing. Run supabase/migrations/0010_ensure_challenges_table.sql in Supabase SQL Editor, then try again." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: error?.message ?? "Could not create challenge." }, { status: 500 });
   }
 
