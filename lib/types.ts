@@ -3,7 +3,8 @@ export type CheckInCategory =
   | "treadmill_photo"
   | "weight_scale_photo"
   | "protein_shake_photo"
-  | "group_challenge_ab_photo";
+  | "group_challenge_ab_photo"
+  | "weekly_progress_photo";
 
 export type ItemStatus = "missing" | "uploaded" | "excused";
 export type DailyStatus = "missing" | "partial" | "complete" | "excused";
@@ -113,7 +114,7 @@ export type Recommendation = {
 export type GroupNotification = {
   id: string;
   actor_profile_id: string | null;
-  notification_type: "upload" | "recommendation" | "challenge";
+  notification_type: "upload" | "recommendation" | "challenge" | "system";
   title: string;
   body: string;
   metadata: Record<string, unknown>;

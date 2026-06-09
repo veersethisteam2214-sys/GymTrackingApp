@@ -3,9 +3,9 @@ import type { CategoryMeta } from "@/lib/types";
 export const CATEGORIES: CategoryMeta[] = [
   {
     id: "progress_photo",
-    label: "Progress picture proof",
-    shortLabel: "Progress",
-    helper: "Fully clothed progress or gym check-in proof photo.",
+    label: "Gym attendance proof",
+    shortLabel: "Gym",
+    helper: "Take a live photo of yourself at the gym for attendance proof.",
     accent: "bg-leaf"
   },
   {
@@ -35,6 +35,7 @@ export const CATEGORY_IDS = CATEGORIES.map((category) => category.id);
 
 export const GROUP_CHALLENGE_CATEGORY_ID = "group_challenge_ab_photo" as const;
 export const GROUP_CHALLENGE_DATES = ["2026-06-11", "2026-06-13"];
+export const WEEKLY_PROGRESS_CATEGORY_ID = "weekly_progress_photo" as const;
 
 export function isGroupChallengeDate(dateString: string) {
   return GROUP_CHALLENGE_DATES.includes(dateString);
@@ -52,10 +53,26 @@ export function getGroupChallengeCategory(createdByName?: string | null): Catego
   };
 }
 
+export function isSunday(dateString: string) {
+  return new Date(`${dateString}T12:00:00`).getDay() === 0;
+}
+
+export function getWeeklyProgressCategory(): CategoryMeta {
+  return {
+    id: WEEKLY_PROGRESS_CATEGORY_ID,
+    label: "Weekly progress picture",
+    shortLabel: "Progress",
+    helper: "Sunday-only weekly progress photo. Take a clear live picture once per week.",
+    accent: "bg-leaf"
+  };
+}
+
 export function getCategoriesForDate(dateString: string, challengeCreatorName?: string | null) {
-  return isGroupChallengeDate(dateString)
-    ? [...CATEGORIES, getGroupChallengeCategory(challengeCreatorName)]
-    : CATEGORIES;
+  return [
+    ...CATEGORIES,
+    ...(isSunday(dateString) ? [getWeeklyProgressCategory()] : []),
+    ...(isGroupChallengeDate(dateString) ? [getGroupChallengeCategory(challengeCreatorName)] : [])
+  ];
 }
 
 export function getCategoryIdsForDate(dateString: string) {
@@ -63,7 +80,7 @@ export function getCategoryIdsForDate(dateString: string) {
 }
 
 export function getAllCategories(challengeCreatorName?: string | null) {
-  return [...CATEGORIES, getGroupChallengeCategory(challengeCreatorName)];
+  return [...CATEGORIES, getWeeklyProgressCategory(), getGroupChallengeCategory(challengeCreatorName)];
 }
 
 export const ALL_CATEGORY_IDS = getAllCategories().map((category) => category.id);

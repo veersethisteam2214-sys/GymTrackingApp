@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Bot, Send } from "lucide-react";
-import { CATEGORIES, getCategoriesForDate } from "@/lib/categories";
+import { getAllCategories, getCategoriesForDate } from "@/lib/categories";
 import { getCurrentStreak, getStats } from "@/lib/status";
 import type { CheckInItem, DailyCheckIn, Profile } from "@/lib/types";
 
@@ -29,12 +29,13 @@ const monthNames = [
 
 const categoryAliases = new Map(
   [
-    ...CATEGORIES.flatMap((category) => {
+    ...getAllCategories().flatMap((category) => {
     const aliases = [category.shortLabel.toLowerCase(), category.label.toLowerCase()];
-    if (category.id === "progress_photo") aliases.push("progress", "picture", "photo", "gym");
+    if (category.id === "progress_photo") aliases.push("gym attendance", "attendance", "gym");
     if (category.id === "treadmill_photo") aliases.push("cardio", "run", "running", "treadmill");
     if (category.id === "weight_scale_photo") aliases.push("weight", "scale");
     if (category.id === "protein_shake_photo") aliases.push("protein", "shake");
+    if (category.id === "weekly_progress_photo") aliases.push("progress", "progress picture", "weekly progress", "body picture");
     return aliases.map((alias) => [alias, category.id] as const);
     }),
     ["group challenge", "group_challenge_ab_photo"] as const,
