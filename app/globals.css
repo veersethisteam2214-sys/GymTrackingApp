@@ -23,19 +23,19 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #edf5ff;
-  --bg-grid: rgba(27, 77, 150, 0.075);
-  --surface: rgba(248, 252, 255, 0.88);
-  --surface-strong: rgba(248, 252, 255, 0.96);
-  --surface-soft: rgba(7, 9, 7, 0.055);
-  --text: #10150f;
-  --muted: rgba(16, 21, 15, 0.62);
-  --faint: rgba(16, 21, 15, 0.12);
-  --brand: #246fd6;
-  --brand-2: #163d8f;
-  --accent: #008fb3;
+  --bg: #dbe8f4;
+  --bg-grid: rgba(22, 61, 117, 0.085);
+  --surface: rgba(229, 239, 249, 0.94);
+  --surface-strong: rgba(240, 246, 252, 0.98);
+  --surface-soft: rgba(32, 54, 84, 0.105);
+  --text: #0b1728;
+  --muted: rgba(11, 23, 40, 0.66);
+  --faint: rgba(11, 23, 40, 0.2);
+  --brand: #1e64c8;
+  --brand-2: #113b86;
+  --accent: #047f9f;
   --danger: #d84b35;
-  --shadow: 0 24px 80px rgba(38, 48, 32, 0.18);
+  --shadow: 0 18px 50px rgba(24, 48, 80, 0.18);
 }
 
 * {

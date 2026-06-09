@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, LogIn } from "lucide-react";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export function ProfileLoginForm() {
   const [error, setError] = useState("");
@@ -39,7 +40,7 @@ export function ProfileLoginForm() {
       <p className="mt-2 text-sm leading-6 text-muted">Log in with your profile username and password on any device.</p>
       <form onSubmit={submit} className="mt-5 space-y-3">
         <Field label="Username" name="username" autoComplete="username" />
-        <Field label="Password" name="password" type="password" autoComplete="current-password" />
+        <PasswordInput label="Password" name="password" autoComplete="current-password" />
         <label className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-app" style={{ background: "var(--surface-soft)" }}>
           <input name="save_login" type="checkbox" defaultChecked className="size-4 accent-[var(--brand)]" />
           Save login on this device
@@ -67,12 +68,10 @@ export function ProfileLoginForm() {
 function Field({
   label,
   name,
-  type = "text",
   autoComplete
 }: {
   label: string;
   name: string;
-  type?: string;
   autoComplete?: string;
 }) {
   return (
@@ -80,7 +79,6 @@ function Field({
       <span className="mb-2 block text-sm font-bold text-app">{label}</span>
       <input
         name={name}
-        type={type}
         required
         autoComplete={autoComplete}
         className="min-h-12 w-full rounded-2xl border px-4 text-base text-app outline-none placeholder:text-muted focus:ring-4"

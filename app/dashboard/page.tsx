@@ -5,7 +5,6 @@ import { RecommendationBoard } from "@/components/RecommendationBoard";
 import { SetupMissing } from "@/components/SetupMissing";
 import { requireAppProfile } from "@/lib/auth";
 import { fetchChallenges, fetchDashboardData, fetchRecommendations } from "@/lib/data";
-import { formatDisplayDate } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +19,7 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <AppShell title="Today" subtitle={formatDisplayDate(data.today)} profile={session.profile}>
+    <AppShell title="Today" profile={session.profile}>
       <DashboardCards people={data.people} currentUserId={data.currentUserId} today={data.today} />
       <ChallengePreview challenges={challenges} />
       <RecommendationBoard initialRecommendations={recommendations} currentProfile={session.profile} />

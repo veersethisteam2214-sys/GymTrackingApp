@@ -91,6 +91,7 @@ Redeploy after saving the variables.
 - `/today` daily upload flow
 - `/calendar` current month status grid
 - `/analytics` stats and charts
+- `/leaderboard` consistency and discipline rankings
 - `/challenges` shared group challenges
 - `/user/[userId]` per-user progress dashboard
 - `/settings` edit profile and sign out

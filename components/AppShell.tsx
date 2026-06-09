@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Dumbbell } from "lucide-react";
+import { HeaderClock } from "@/components/HeaderClock";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TodayReminder } from "@/components/TodayReminder";
 import { TopNavLinks } from "@/components/TopNavLinks";
 import type { Profile } from "@/lib/types";
 
@@ -24,9 +25,6 @@ export function AppShell({
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="brand-gradient grid size-12 shrink-0 place-items-center rounded-2xl text-black shadow-[0_12px_36px_rgba(125,183,255,.28)]">
-                <Dumbbell className="size-5" aria-hidden />
-              </div>
               <div className="min-w-0">
                 <p className="display-font truncate text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
                   Discipline Tracker
@@ -36,6 +34,7 @@ export function AppShell({
               </div>
             </div>
             <div className="flex items-center gap-2 lg:hidden">
+              <HeaderClock />
               <ThemeToggle />
               <ProfileButton profile={profile} />
             </div>
@@ -43,12 +42,14 @@ export function AppShell({
           <div className="flex min-w-0 items-center gap-2">
             <TopNavLinks />
             <div className="hidden items-center gap-2 lg:flex">
+              <HeaderClock />
               <ThemeToggle />
               <ProfileButton profile={profile} />
             </div>
           </div>
         </div>
       </header>
+      {profile ? <TodayReminder /> : null}
       <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 py-6">
         {children}
       </main>

@@ -1,5 +1,6 @@
 import { LogOut, ShieldCheck, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { CredentialSettingsForm } from "@/components/CredentialSettingsForm";
 import { ProfileSetupForm } from "@/components/ProfileSetupForm";
 import { SetupMissing } from "@/components/SetupMissing";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -45,6 +46,9 @@ export default async function SettingsPage() {
           </button>
         </form>
       </section>
+      <div className="mt-4">
+        <CredentialSettingsForm profile={session.profile} />
+      </div>
       <div className="mt-4">
         <ProfileSetupForm profile={session.profile} />
       </div>
