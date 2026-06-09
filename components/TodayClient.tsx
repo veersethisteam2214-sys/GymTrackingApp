@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BicepsFlexed,
   Camera,
@@ -8,7 +8,6 @@ import {
   Dna,
   Footprints,
   Gauge,
-  ImagePlus,
   Loader2,
   Trophy,
   ShieldCheck,
@@ -60,7 +59,7 @@ export function TodayClient({
   const selectedItem = items.find((entry) => entry.category === selectedCategory);
 
   async function upload(category: CheckInItem["category"], file: File | null, note: string) {
-    if (!file) return setToast(category === "weight_scale_photo" ? "Upload a scale photo first." : "Choose an image first.");
+    if (!file) return setToast(category === "weight_scale_photo" ? "Take a scale photo first." : "Take a proof photo first.");
     if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
     if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
 
@@ -340,16 +339,84 @@ function UploadPanel({
   onExcuse: (category: CheckInItem["category"]) => void;
   onDelete: (category: CheckInItem["category"]) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [preview, setPreview] = useState<string | null>(item?.signedUrl ?? null);
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState(item?.note ?? "");
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState("");
   const isWeightEntry = category.id === "weight_scale_photo";
 
-  function selectFile(nextFile?: File) {
-    if (!nextFile) return;
-    setFile(nextFile);
-    setPreview(URL.createObjectURL(nextFile));
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current || !streamRef.current) return;
+    videoRef.current.srcObject = streamRef.current;
+    videoRef.current.play().catch(() => setCameraError("Camera opened, but the video preview could not start."));
+  }, [cameraActive]);
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setCameraActive(false);
+  }
+
+  async function openCamera() {
+    setCameraError("");
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Camera capture is not supported on this browser.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1600 },
+          height: { ideal: 1200 }
+        }
+      });
+      streamRef.current = stream;
+      setCameraActive(true);
+    } catch {
+      setCameraError("Camera permission is required. Allow camera access, then try again.");
+    }
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 960;
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.drawImage(video, 0, 0, width, height);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setCameraError("Could not capture photo. Try again.");
+          return;
+        }
+        if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+        const nextFile = new File([blob], `${category.id}-${Date.now()}.jpg`, { type: "image/jpeg" });
+        setFile(nextFile);
+        setPreview(URL.createObjectURL(nextFile));
+        stopCamera();
+      },
+      "image/jpeg",
+      0.92
+    );
   }
 
   return (
@@ -370,29 +437,63 @@ function UploadPanel({
       </div>
 
       {isWeightEntry ? <MetricInput label="Weight kg" value={weight} onChange={onWeight} /> : null}
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed"
+      <div
+        className="relative mt-4 overflow-hidden rounded-3xl border"
         style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
       >
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="text-center">
-            <ImagePlus className="mx-auto size-9 text-muted" aria-hidden />
-            <p className="mt-2 text-sm font-extrabold text-app">{isWeightEntry ? "Tap to add scale photo" : "Tap to add image"}</p>
+        {cameraActive ? (
+          <div className="relative aspect-[4/3]">
+            <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
+            <div className="absolute inset-x-3 bottom-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={capturePhoto}
+                className="app-button brand-gradient min-h-12 rounded-2xl px-4 text-sm font-extrabold text-black shadow-soft"
+              >
+                Take photo
+              </button>
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="app-button min-h-12 rounded-2xl px-4 text-sm font-extrabold"
+                style={{ background: "var(--surface-strong)", color: "var(--text)" }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={openCamera}
+            className="app-button relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden"
+          >
+            {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <div className="text-center">
+                <Camera className="mx-auto size-10 text-muted" aria-hidden />
+                <p className="mt-2 text-sm font-extrabold text-app">
+                  {isWeightEntry ? "Open camera for scale photo" : "Open camera to take proof"}
+                </p>
+                <p className="mt-1 text-xs font-bold text-muted">Library uploads are disabled.</p>
+              </div>
+            )}
+            {preview ? (
+              <span className="absolute bottom-3 left-3 right-3 rounded-2xl px-4 py-3 text-center text-sm font-extrabold shadow-soft" style={{ background: "var(--text)", color: "var(--bg)" }}>
+                Retake with camera
+              </span>
+            ) : null}
+          </button>
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-          className="sr-only"
-          onChange={(event) => selectFile(event.target.files?.[0])}
-        />
-      </button>
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+      {cameraError ? (
+        <p className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold" style={{ background: "color-mix(in srgb, var(--danger) 12%, transparent)", color: "var(--danger)" }}>
+          {cameraError}
+        </p>
+      ) : null}
       {isWeightEntry ? (
         <div className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold text-muted" style={{ background: "var(--surface-soft)" }}>
           Save requires both the weight number and a clear scale photo.
