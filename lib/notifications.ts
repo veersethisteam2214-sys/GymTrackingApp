@@ -76,6 +76,42 @@ export async function createRecommendationNotification(supabase: Supabase, actor
   if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
 }
 
+export async function createChallengeNotification(
+  supabase: Supabase,
+  actorProfileId: string,
+  challenge: { id: string; title: string; challenge_type?: string | null; start_date?: string | null; end_date?: string | null }
+) {
+  const actorName = await getProfileName(supabase, actorProfileId);
+  const dateText =
+    challenge.start_date && challenge.end_date
+      ? ` from ${challenge.start_date} to ${challenge.end_date}`
+      : challenge.start_date
+        ? ` on ${challenge.start_date}`
+        : "";
+  const { data, error } = await supabase
+    .from("group_notifications")
+    .insert({
+      actor_profile_id: actorProfileId,
+      notification_type: "challenge",
+      title: `${actorName} created a challenge`,
+      body: `${actorName} added "${challenge.title}"${dateText}.`,
+      metadata: {
+        challenge_id: challenge.id,
+        challenge_title: challenge.title,
+        challenge_type: challenge.challenge_type ?? null,
+        start_date: challenge.start_date ?? null,
+        end_date: challenge.end_date ?? null
+      }
+    })
+    .select("id")
+    .single();
+
+  if (error && !isMissingTableError(error)) {
+    console.error("Could not create challenge notification:", error.message);
+  }
+  if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
+}
+
 export async function fetchNotificationCenter(
   supabase: Supabase,
   profileId: string

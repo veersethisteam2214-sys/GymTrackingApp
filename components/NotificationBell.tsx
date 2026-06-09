@@ -74,7 +74,7 @@ export function NotificationBell({
           <div className="mb-3 flex items-center justify-between gap-3 px-1">
             <div>
               <h2 className="text-sm font-extrabold text-app">Notifications</h2>
-              <p className="text-xs font-bold text-muted">Uploads, data, and recommendations</p>
+              <p className="text-xs font-bold text-muted">Uploads, challenges, and recommendations</p>
             </div>
             <span className="grid size-9 place-items-center rounded-2xl" style={{ background: "var(--surface-soft)", color: "var(--brand)" }}>
               <Sparkles className="size-4" aria-hidden />

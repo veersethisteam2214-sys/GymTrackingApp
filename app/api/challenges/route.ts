@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createChallengeNotification } from "@/lib/notifications";
 import { createAdminSupabase } from "@/lib/supabase/server";
 
 function isMissingChallengesTable(error?: { code?: string; message?: string } | null) {
@@ -63,5 +64,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? "Could not create challenge." }, { status: 500 });
   }
 
+  await createChallengeNotification(supabase, profileId, data);
   return NextResponse.json({ challenge: data });
 }

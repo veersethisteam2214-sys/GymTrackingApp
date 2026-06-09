@@ -113,7 +113,7 @@ export type Recommendation = {
 export type GroupNotification = {
   id: string;
   actor_profile_id: string | null;
-  notification_type: "upload" | "recommendation";
+  notification_type: "upload" | "recommendation" | "challenge";
   title: string;
   body: string;
   metadata: Record<string, unknown>;
