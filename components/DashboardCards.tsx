@@ -76,7 +76,6 @@ export function DashboardCards({
   today: string;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [expandedTasks, setExpandedTasks] = useState<string | null>(null);
   const [openPoint, setOpenPoint] = useState<{ person: Person; point: DataPoint } | null>(null);
   const selectedPerson = people.find((person) => person.profile.id === selectedId) ?? null;
   const totalCompleted = people.reduce((sum, person) => sum + getCompletionCount(person.todayItems), 0);
@@ -117,29 +116,44 @@ export function DashboardCards({
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-        {people.map((person, index) => (
-          <button
-            key={person.profile.id}
-            onClick={() => setSelectedId(person.profile.id === selectedId ? null : person.profile.id)}
-            className="app-button reveal-in rounded-[2rem] p-4 text-left hover:-translate-y-1"
-            style={{
-              animationDelay: `${index * 70}ms`,
-              border: selectedId === person.profile.id ? "1px solid var(--brand)" : "1px solid var(--faint)",
-              background: selectedId === person.profile.id ? "color-mix(in srgb, var(--brand) 13%, var(--surface-strong))" : "var(--surface)",
-              boxShadow: selectedId === person.profile.id ? "0 22px 70px color-mix(in srgb, var(--brand) 22%, transparent)" : "var(--shadow)"
-            }}
-          >
-            <ProfileCard person={person} isMe={person.profile.id === currentUserId} />
-          </button>
-        ))}
+      <section className="app-surface rounded-[2rem] p-5">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
+              Users
+            </p>
+            <h2 className="display-font text-5xl font-extrabold leading-none text-app">Profile images</h2>
+          </div>
+          <p className="text-sm font-bold text-muted">Tap a username to reveal their profile data below.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          {people.map((person, index) => {
+            const userLabel = getUserLabel(person.profile);
+            return (
+              <button
+                key={person.profile.id}
+                onClick={() => setSelectedId(person.profile.id === selectedId ? null : person.profile.id)}
+                className="app-button group reveal-in relative overflow-hidden rounded-[2rem] p-4 text-left hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4"
+                style={{
+                  animationDelay: `${index * 70}ms`,
+                  border: selectedId === person.profile.id ? "1px solid var(--brand)" : "1px solid var(--faint)",
+                  background: selectedId === person.profile.id ? "color-mix(in srgb, var(--brand) 13%, var(--surface-strong))" : "var(--surface)",
+                  boxShadow: selectedId === person.profile.id ? "0 22px 70px color-mix(in srgb, var(--brand) 22%, transparent)" : "var(--shadow)"
+                }}
+                title={`Click to see ${userLabel}'s image`}
+              >
+                <span
+                  className="pointer-events-none absolute inset-x-3 top-3 z-10 translate-y-[-120%] rounded-2xl px-3 py-2 text-center text-xs font-extrabold opacity-0 shadow-soft transition group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+                  style={{ background: "var(--text)", color: "var(--bg)" }}
+                >
+                  Click to see {userLabel}&apos;s image
+                </span>
+                <ProfileCard person={person} isMe={person.profile.id === currentUserId} />
+              </button>
+            );
+          })}
+        </div>
       </section>
-
-      <TaskCompletionOverview
-        people={people}
-        expandedTasks={expandedTasks}
-        onToggle={(id) => setExpandedTasks(expandedTasks === id ? null : id)}
-      />
 
       {selectedPerson ? (
         <PersonDataPanel
@@ -242,69 +256,6 @@ function PersonDataPanel({
             </div>
           </button>
         ))}
-      </div>
-    </section>
-  );
-}
-
-function TaskCompletionOverview({
-  people,
-  expandedTasks,
-  onToggle
-}: {
-  people: Person[];
-  expandedTasks: string | null;
-  onToggle: (id: string) => void;
-}) {
-  return (
-    <section className="app-surface rounded-[2rem] p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
-            Task completion
-          </p>
-          <h2 className="text-2xl font-extrabold text-app">Everyone today</h2>
-        </div>
-      </div>
-      <div className="grid gap-3 lg:grid-cols-2">
-        {people.map((person) => {
-          const count = getCompletionCount(person.todayItems);
-          return (
-            <article key={person.profile.id} className="rounded-3xl p-3" style={{ background: "var(--surface-soft)" }}>
-              <button onClick={() => onToggle(person.profile.id)} className="app-button flex w-full items-center gap-3 text-left">
-                <Avatar profile={person.profile} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-extrabold text-app">{person.profile.display_name}</p>
-                    <p className="display-font text-2xl font-extrabold" style={{ color: "var(--brand)" }}>
-                      {count}/{CATEGORIES.length}
-                    </p>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-soft)" }}>
-                    <div className="h-full rounded-full brand-gradient" style={{ width: `${(count / CATEGORIES.length) * 100}%` }} />
-                  </div>
-                </div>
-                <ChevronDown className={`size-4 text-muted transition ${expandedTasks === person.profile.id ? "rotate-180" : ""}`} />
-              </button>
-              {expandedTasks === person.profile.id ? (
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                  {CATEGORIES.map((category) => {
-                    const item = person.todayItems.find((entry) => entry.category === category.id);
-                    const done = item?.status === "uploaded" || item?.status === "excused";
-                    return (
-                      <div key={category.id} className="rounded-2xl p-2 text-center" style={{ background: done ? "color-mix(in srgb, var(--brand) 14%, transparent)" : "var(--surface-soft)" }}>
-                        <span className="mx-auto grid size-8 place-items-center rounded-xl" style={{ background: done ? "var(--brand)" : "var(--surface-soft)", color: done ? "var(--bg)" : "var(--muted)" }}>
-                          {done ? <Check className="size-4" /> : categoryIcons[category.id]}
-                        </span>
-                        <p className="mt-1 truncate text-[11px] font-extrabold text-app">{category.shortLabel}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </article>
-          );
-        })}
       </div>
     </section>
   );
@@ -456,6 +407,10 @@ function getRoutineForDay(routine: string | null, weekday: string) {
     .find((entry) => entry.trim().toLowerCase().startsWith(weekday.toLowerCase()));
   const value = line?.split("-").slice(1).join("-").trim();
   return value || "Rest";
+}
+
+function getUserLabel(profile: Profile) {
+  return profile.username || profile.display_name;
 }
 
 function Avatar({ profile, size }: { profile: Profile; size: "sm" | "lg" | "xl" }) {
