@@ -70,7 +70,7 @@ function buildRows(
 
 function buildText(rows: WeeklyPerson[], startDate: string, endDate: string) {
   return [
-    `Weekly Discipline Tracker overview (${startDate} to ${endDate})`,
+    `Weekly LOCKED IN overview (${startDate} to ${endDate})`,
     "",
     ...rows.map((row) => {
       const weight = row.latestWeight ? `${row.latestWeight.weight_value}${row.latestWeight.weight_unit}` : "No weight logged";
@@ -108,7 +108,7 @@ function buildHtml(rows: WeeklyPerson[], startDate: string, endDate: string) {
     <div style="margin:0;background:#eff6ff;padding:24px;font-family:Inter,Arial,sans-serif;color:#0f172a">
       <div style="max-width:980px;margin:0 auto;background:#ffffff;border:1px solid #dbeafe;border-radius:24px;overflow:hidden">
         <div style="background:linear-gradient(135deg,#1d4ed8,#0f766e);padding:28px;color:#ffffff">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase">Discipline Tracker</p>
+          <p style="margin:0 0 6px;font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase">LOCKED IN</p>
           <h1 style="margin:0;font-size:32px;line-height:1.05">Weekly group overview</h1>
           <p style="margin:10px 0 0;color:#dbeafe">${escapeHtml(startDate)} to ${escapeHtml(endDate)}</p>
         </div>
@@ -226,7 +226,7 @@ export async function GET(request: Request) {
     (weights ?? []) as WeightEntry[],
     (cardio ?? []) as CardioEntry[]
   );
-  const subject = `Weekly Discipline Tracker overview: ${startDate} to ${endDate}`;
+  const subject = `Weekly LOCKED IN overview: ${startDate} to ${endDate}`;
   const html = buildHtml(rows, startDate, endDate);
   const text = buildText(rows, startDate, endDate);
   const uniqueRecipients = Array.from(new Set(recipients));

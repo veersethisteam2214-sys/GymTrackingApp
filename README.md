@@ -1,4 +1,4 @@
-# Private Gym & Cardio Discipline Tracker
+# LOCKED IN
 
 A private, mobile-first accountability app where each person logs in with their own profile username and password. New users can create a profile with their photo, name, email, current weight, target weight, target date, goal mode, routines, and reading target.
 
@@ -55,7 +55,7 @@ Add these environment variables:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-secret-service-role-key
 RESEND_API_KEY=your-resend-api-key
-WEEKLY_SUMMARY_FROM=Discipline Tracker <summary@your-domain.com>
+WEEKLY_SUMMARY_FROM=LOCKED IN <summary@your-domain.com>
 CRON_SECRET=choose-a-long-random-secret
 ```
 

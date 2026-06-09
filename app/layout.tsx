@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Discipline Tracker",
-  description: "Private group gym and cardio accountability tracker"
+  title: "LOCKED IN",
+  description: "Private group discipline and accountability tracker"
 };
 
 export const viewport: Viewport = {
