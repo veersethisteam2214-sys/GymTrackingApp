@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { Settings, UserRound } from "lucide-react";
 import { HeaderClock } from "@/components/HeaderClock";
+import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodayReminder } from "@/components/TodayReminder";
 import { TopNavLinks } from "@/components/TopNavLinks";
+import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
+import { fetchNotificationCenter, getActiveAnnouncement } from "@/lib/notifications";
+import { createAdminSupabase } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
-export function AppShell({
+export async function AppShell({
   children,
   title,
   subtitle,
@@ -17,6 +21,15 @@ export function AppShell({
   subtitle?: string;
   profile?: Profile | null;
 }) {
+  const supabase = profile ? createAdminSupabase() : null;
+  const [{ notifications, unreadCount }, announcement] =
+    profile && supabase
+      ? await Promise.all([
+          fetchNotificationCenter(supabase, profile.id),
+          getActiveAnnouncement(supabase, profile.id)
+        ])
+      : [{ notifications: [], unreadCount: 0 }, null];
+
   return (
     <div className="min-h-screen pb-8">
       <a href="#main-content" className="skip-link">
@@ -37,6 +50,7 @@ export function AppShell({
             <div className="flex items-center gap-2 lg:hidden">
               <HeaderClock />
               <ThemeToggle />
+              {profile ? <NotificationBell initialNotifications={notifications} initialUnreadCount={unreadCount} /> : null}
               <ProfileButton profile={profile} />
             </div>
           </div>
@@ -45,11 +59,13 @@ export function AppShell({
             <div className="hidden items-center gap-2 lg:flex">
               <HeaderClock />
               <ThemeToggle />
+              {profile ? <NotificationBell initialNotifications={notifications} initialUnreadCount={unreadCount} /> : null}
               <ProfileButton profile={profile} />
             </div>
           </div>
         </div>
       </header>
+      <UpdateAnnouncementModal announcement={announcement} />
       {profile ? <TodayReminder /> : null}
       <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 py-6">
         {children}

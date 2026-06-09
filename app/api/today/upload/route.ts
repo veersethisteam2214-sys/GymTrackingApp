@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTodayContext, isValidCategory, recalculateTodayStatus, withSignedUrl } from "@/app/api/today/_helpers";
+import { createUploadNotification } from "@/lib/notifications";
 import type { CheckInItem } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -196,6 +197,7 @@ export async function POST(request: Request) {
   }
 
   await recalculateTodayStatus(context.supabase, context.checkin.id);
+  await createUploadNotification(context.supabase, context.profileId, category, context.checkin.checkin_date);
   const item = await withSignedUrl(context.supabase, data as CheckInItem);
   return NextResponse.json({ item });
 }

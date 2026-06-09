@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createRecommendationNotification } from "@/lib/notifications";
 import { createAdminSupabase } from "@/lib/supabase/server";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -67,5 +68,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? "Could not save recommendation." }, { status: 500 });
   }
 
+  await createRecommendationNotification(supabase, profileId, title);
   return NextResponse.json({ recommendation: data });
 }

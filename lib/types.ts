@@ -130,3 +130,23 @@ export type Recommendation = {
   created_at: string;
   profile?: Pick<Profile, "display_name" | "avatarSignedUrl"> | null;
 };
+
+export type GroupNotification = {
+  id: string;
+  actor_profile_id: string | null;
+  notification_type: "upload" | "recommendation";
+  title: string;
+  body: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  actor?: Pick<Profile, "display_name" | "avatarSignedUrl"> | null;
+  read: boolean;
+};
+
+export type FeatureAnnouncement = {
+  id: string;
+  title: string;
+  body: string;
+  active_on: string;
+  created_at: string;
+};
