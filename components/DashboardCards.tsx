@@ -5,12 +5,14 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
+  BicepsFlexed,
   BookOpen,
   Check,
   ChevronDown,
-  Dumbbell,
+  Dna,
+  Footprints,
+  Gauge,
   Flame,
-  GlassWater,
   ImageIcon,
   Scale,
   Target,
@@ -55,10 +57,10 @@ type DataPoint = {
 };
 
 const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
-  progress_photo: <Dumbbell className="size-4" />,
-  treadmill_photo: <Activity className="size-4" />,
-  weight_scale_photo: <Scale className="size-4" />,
-  protein_shake_photo: <GlassWater className="size-4" />,
+  progress_photo: <BicepsFlexed className="size-4" />,
+  treadmill_photo: <Footprints className="size-4" />,
+  weight_scale_photo: <Gauge className="size-4" />,
+  protein_shake_photo: <Dna className="size-4" />,
   reading_proof: <BookOpen className="size-4" />
 };
 
@@ -393,7 +395,7 @@ function buildDataPoints(person: Person): DataPoint[] {
       label: "Gym routine",
       helper: person.profile.gym_routine ? "Routine filled" : "Missing routine",
       complete: Boolean(person.profile.gym_routine),
-      icon: <Dumbbell className="size-4" />,
+      icon: <BicepsFlexed className="size-4" />,
       text: person.profile.gym_routine
     },
     {

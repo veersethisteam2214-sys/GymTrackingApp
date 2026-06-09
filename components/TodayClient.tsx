@@ -2,15 +2,15 @@
 
 import { useRef, useState } from "react";
 import {
-  Activity,
+  BicepsFlexed,
   BookOpen,
   Camera,
   Check,
-  Dumbbell,
-  GlassWater,
+  Dna,
+  Footprints,
+  Gauge,
   ImagePlus,
   Loader2,
-  Scale,
   ShieldCheck,
   Trash2,
   X
@@ -22,10 +22,10 @@ import type { CardioEntry, CheckInCategory, CheckInItem, DailyCheckIn, ReadingEn
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
-  progress_photo: <Dumbbell className="size-5" />,
-  treadmill_photo: <Activity className="size-5" />,
-  weight_scale_photo: <Scale className="size-5" />,
-  protein_shake_photo: <GlassWater className="size-5" />,
+  progress_photo: <BicepsFlexed className="size-5" />,
+  treadmill_photo: <Footprints className="size-5" />,
+  weight_scale_photo: <Gauge className="size-5" />,
+  protein_shake_photo: <Dna className="size-5" />,
   reading_proof: <BookOpen className="size-5" />
 };
 

@@ -38,14 +38,15 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
     <AppShell title={profile.display_name} subtitle="Profile progress" profile={session.profile}>
       <Link
         href="/dashboard"
-        className="app-button mb-4 inline-flex min-h-11 items-center gap-2 rounded-2xl bg-white px-4 text-sm font-semibold text-ink shadow-sm hover:bg-mint"
+        className="app-button mb-4 inline-flex min-h-11 items-center gap-2 rounded-2xl px-4 text-sm font-extrabold shadow-sm"
+        style={{ background: "var(--surface-soft)", color: "var(--text)" }}
       >
         <ArrowLeft className="size-4" aria-hidden />
         Dashboard
       </Link>
-      <section className="mb-4 overflow-hidden rounded-[2rem] bg-ink p-4 text-white shadow-soft">
+      <section className="app-surface-strong mb-4 overflow-hidden rounded-[2rem] p-4">
         <div className="flex items-center gap-4">
-          <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] bg-white text-ink">
+          <div className="brand-gradient relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] text-black">
             {profile.avatarSignedUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.avatarSignedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -54,9 +55,9 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-mint/70">Shared profile</p>
-            <h2 className="truncate text-3xl font-semibold">{profile.display_name}</h2>
-            <p className="mt-1 text-sm text-white/55">Everyone can see this overview.</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>Shared profile</p>
+            <h2 className="truncate text-3xl font-extrabold text-app">{profile.display_name}</h2>
+            <p className="mt-1 text-sm text-muted">Everyone can see this overview.</p>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5">
@@ -89,39 +90,39 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
         <Stat icon={<Scale className="size-5" />} label="Latest weight" value={latestWeight} />
         <Stat icon={<Timer className="size-5" />} label="Cardio minutes" value={cardioMinutes} />
       </div>
-      <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
-        <h2 className="text-xl font-semibold text-ink">Routine</h2>
+      <section className="app-surface mt-4 rounded-[2rem] p-4">
+        <h2 className="text-xl font-extrabold text-app">Routine</h2>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
-          <div className="rounded-2xl bg-paper p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Gym</p>
-            <p className="mt-1 text-sm leading-6 text-ink/70">{profile.gym_routine}</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Gym</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-app">{profile.gym_routine}</p>
           </div>
-          <div className="rounded-2xl bg-paper p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Cardio</p>
-            <p className="mt-1 text-sm leading-6 text-ink/70">{profile.cardio_routine}</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Cardio</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-app">{profile.cardio_routine}</p>
           </div>
         </div>
       </section>
-      <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
-        <h2 className="text-xl font-semibold text-ink">Reading</h2>
+      <section className="app-surface mt-4 rounded-[2rem] p-4">
+        <h2 className="text-xl font-extrabold text-app">Reading</h2>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
-          <div className="rounded-2xl bg-paper p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Currently reading</p>
-            <p className="mt-1 text-sm font-bold text-ink">{profile.current_book_title ?? "No book set"}</p>
-            <p className="mt-1 text-sm text-ink/60">
+          <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Currently reading</p>
+            <p className="mt-1 text-sm font-extrabold text-app">{profile.current_book_title ?? "No book set"}</p>
+            <p className="mt-1 text-sm text-muted">
               {latestReading
                 ? `Page ${latestReading.current_page}${latestReading.total_pages ? `/${latestReading.total_pages}` : ""}`
                 : "No reading proof yet"}
             </p>
           </div>
-          <div className="rounded-2xl bg-paper p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">Finished books</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em]" style={{ color: "var(--brand)" }}>Finished books</p>
             {completedBooks.length === 0 ? (
-              <p className="mt-1 text-sm text-ink/60">No completed books yet.</p>
+              <p className="mt-1 text-sm text-muted">No completed books yet.</p>
             ) : (
               <div className="mt-2 flex flex-wrap gap-2">
                 {completedBooks.slice(0, 6).map((book) => (
-                  <span key={book.id} className="rounded-full bg-white px-3 py-1 text-xs font-bold text-ink/65">
+                  <span key={book.id} className="rounded-full px-3 py-1 text-xs font-bold text-app" style={{ background: "var(--surface-soft)" }}>
                     {book.title}
                   </span>
                 ))}
@@ -130,8 +131,8 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
           </div>
         </div>
       </section>
-      <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
-        <h2 className="text-xl font-semibold text-ink">Month summary</h2>
+      <section className="app-surface mt-4 rounded-[2rem] p-4">
+        <h2 className="text-xl font-extrabold text-app">Month summary</h2>
         <div className="mt-3 grid grid-cols-4 gap-2">
           <Pill label="Complete" value={stats.complete} />
           <Pill label="Partial" value={stats.partial} />
@@ -139,8 +140,8 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
           <Pill label="Excused" value={stats.excused} />
         </div>
       </section>
-      <section className="mt-4 rounded-[2rem] border border-white/70 bg-white/90 p-4 shadow-soft">
-        <h2 className="text-xl font-semibold text-ink">Weight trend</h2>
+      <section className="app-surface mt-4 rounded-[2rem] p-4">
+        <h2 className="text-xl font-extrabold text-app">Weight trend</h2>
         <WeightTrend profiles={[profile]} weights={weights} />
       </section>
     </AppShell>
@@ -149,29 +150,29 @@ export default async function UserPage({ params }: { params: Promise<{ userId: s
 
 function GoalChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/7 p-3">
-      <div className="text-mint">{icon}</div>
-      <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/38">{label}</p>
-      <p className="truncate text-sm font-bold text-white">{value}</p>
+    <div className="rounded-2xl border p-3" style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}>
+      <div style={{ color: "var(--brand)" }}>{icon}</div>
+      <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted">{label}</p>
+      <p className="truncate text-sm font-extrabold text-app">{value}</p>
     </div>
   );
 }
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/70 bg-white/90 p-4 shadow-soft">
-      <div className="mb-3 flex size-10 items-center justify-center rounded-2xl bg-mint text-leaf">{icon}</div>
-      <p className="text-xs font-bold uppercase tracking-[0.12em] text-ink/45">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-ink">{value}</p>
+    <section className="app-surface rounded-[1.5rem] p-4">
+      <div className="mb-3 flex size-10 items-center justify-center rounded-2xl" style={{ background: "color-mix(in srgb, var(--brand) 16%, transparent)", color: "var(--brand)" }}>{icon}</div>
+      <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold text-app">{value}</p>
     </section>
   );
 }
 
 function Pill({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl bg-paper p-3 text-center">
-      <p className="text-lg font-semibold text-ink">{value}</p>
-      <p className="text-[11px] font-bold text-ink/45">{label}</p>
+    <div className="rounded-2xl p-3 text-center" style={{ background: "var(--surface-soft)" }}>
+      <p className="text-lg font-extrabold text-app">{value}</p>
+      <p className="text-[11px] font-extrabold text-muted">{label}</p>
     </div>
   );
 }
