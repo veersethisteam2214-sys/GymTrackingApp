@@ -122,9 +122,9 @@ export function DashboardCards({
             <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
               Users
             </p>
-            <h2 className="display-font text-5xl font-extrabold leading-none text-app">Profile images</h2>
+            <h2 className="display-font text-5xl font-extrabold leading-none text-app">See your friends uploads!</h2>
           </div>
-          <p className="text-sm font-bold text-muted">Tap a username to reveal their profile data below.</p>
+          <p className="text-sm font-bold text-muted">Tap a username to open their data and proof images.</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           {people.map((person, index) => {
@@ -132,7 +132,7 @@ export function DashboardCards({
             return (
               <button
                 key={person.profile.id}
-                onClick={() => setSelectedId(person.profile.id === selectedId ? null : person.profile.id)}
+                onClick={() => setSelectedId(person.profile.id)}
                 className="app-button group reveal-in relative overflow-hidden rounded-[2rem] p-4 text-left hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4"
                 style={{
                   animationDelay: `${index * 70}ms`,
@@ -156,17 +156,13 @@ export function DashboardCards({
       </section>
 
       {selectedPerson ? (
-        <PersonDataPanel
+        <PersonDataDialog
           person={selectedPerson}
           isMe={selectedPerson.profile.id === currentUserId}
+          onClose={() => setSelectedId(null)}
           onOpenPoint={(point) => setOpenPoint({ person: selectedPerson, point })}
         />
-      ) : (
-        <section className="app-surface rounded-[2rem] p-5 text-center">
-          <p className="display-font text-3xl font-extrabold text-app">Choose a profile</p>
-          <p className="mt-1 text-sm text-muted">Their full data opens here only after you tap them.</p>
-        </section>
-      )}
+      ) : null}
 
       {openPoint ? <DataPointDialog detail={openPoint} onClose={() => setOpenPoint(null)} /> : null}
     </div>
@@ -198,66 +194,80 @@ function ProfileCard({ person, isMe }: { person: Person; isMe: boolean }) {
   );
 }
 
-function PersonDataPanel({
+function PersonDataDialog({
   person,
   isMe,
+  onClose,
   onOpenPoint
 }: {
   person: Person;
   isMe: boolean;
+  onClose: () => void;
   onOpenPoint: (point: DataPoint) => void;
 }) {
   const points = useMemo(() => buildDataPoints(person), [person]);
 
   return (
-    <section className="reveal-in app-surface-strong rounded-[2rem] p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar profile={person.profile} size="xl" />
-          <div className="min-w-0">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
-              {isMe ? "Your revealed data" : "Friend data"}
-            </p>
-            <h2 className="display-font truncate text-5xl font-extrabold text-app">{person.profile.display_name}</h2>
+    <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
+      <section className="reveal-in max-h-[88vh] w-full max-w-5xl overflow-y-auto rounded-[2rem] p-5" style={{ background: "var(--surface-strong)", border: "1px solid var(--faint)", boxShadow: "var(--shadow)" }}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar profile={person.profile} size="xl" />
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
+                {isMe ? "Your revealed data" : "Friend data"}
+              </p>
+              <h2 className="display-font truncate text-5xl font-extrabold text-app">{person.profile.display_name}</h2>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Link
+              href={`/user/${person.profile.id}`}
+              className="app-button inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold"
+              style={{ background: "var(--surface-soft)", color: "var(--text)" }}
+            >
+              Full profile
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+            <button
+              onClick={onClose}
+              className="app-button grid size-11 shrink-0 place-items-center rounded-2xl"
+              style={{ background: "var(--surface-soft)", color: "var(--text)" }}
+              aria-label="Close profile data"
+            >
+              <X className="size-5" aria-hidden />
+            </button>
           </div>
         </div>
-        <Link
-          href={`/user/${person.profile.id}`}
-          className="app-button inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold"
-          style={{ background: "var(--surface-soft)", color: "var(--text)" }}
-        >
-          Full profile
-          <ArrowRight className="size-4" aria-hidden />
-        </Link>
-      </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {points.map((point) => (
-          <button
-            key={point.id}
-            onClick={() => onOpenPoint(point)}
-            className="app-button group rounded-3xl p-4 text-left hover:-translate-y-0.5"
-            style={{
-              border: point.complete ? "1px solid color-mix(in srgb, var(--brand) 42%, transparent)" : "1px solid var(--faint)",
-              background: point.complete ? "color-mix(in srgb, var(--brand) 12%, var(--surface))" : "var(--surface-soft)"
-            }}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-2xl" style={{ background: point.complete ? "var(--brand)" : "var(--surface-soft)", color: point.complete ? "var(--bg)" : "var(--muted)" }}>
-                  {point.complete ? <Check className="size-5" /> : point.icon}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-extrabold text-app">{point.label}</p>
-                  <p className="truncate text-xs text-muted">{point.helper}</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {points.map((point) => (
+            <button
+              key={point.id}
+              onClick={() => onOpenPoint(point)}
+              className="app-button group rounded-3xl p-4 text-left hover:-translate-y-0.5"
+              style={{
+                border: point.complete ? "1px solid color-mix(in srgb, var(--brand) 42%, transparent)" : "1px solid var(--faint)",
+                background: point.complete ? "color-mix(in srgb, var(--brand) 12%, var(--surface))" : "var(--surface-soft)"
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl" style={{ background: point.complete ? "var(--brand)" : "var(--surface-soft)", color: point.complete ? "var(--bg)" : "var(--muted)" }}>
+                    {point.complete ? <Check className="size-5" /> : point.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-extrabold text-app">{point.label}</p>
+                    <p className="truncate text-xs text-muted">{point.helper}</p>
+                  </div>
                 </div>
+                <ChevronDown className="size-4 shrink-0 text-muted transition group-hover:translate-y-0.5" />
               </div>
-              <ChevronDown className="size-4 shrink-0 text-muted transition group-hover:translate-y-0.5" />
-            </div>
-          </button>
-        ))}
-      </div>
-    </section>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
 
