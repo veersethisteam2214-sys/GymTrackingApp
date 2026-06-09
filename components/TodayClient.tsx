@@ -61,10 +61,15 @@ export function TodayClient({
   const selectedItem = items.find((entry) => entry.category === selectedCategory);
 
   async function upload(category: CheckInItem["category"], file: File | null, note: string) {
-    if (category !== "weight_scale_photo") {
-      if (!file) return setToast("Choose an image first.");
-      if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
-      if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
+    if (!file) return setToast(category === "weight_scale_photo" ? "Upload a scale photo first." : "Choose an image first.");
+    if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
+    if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
+
+    if (category === "weight_scale_photo") {
+      const nextWeight = Number(weight.trim());
+      if (!weight.trim() || !Number.isFinite(nextWeight)) {
+        return setToast("Enter today's weight.");
+      }
     }
 
     setBusyKey(category);
@@ -375,36 +380,33 @@ function UploadPanel({
         </span>
       </div>
 
-      {isWeightEntry ? (
-        <MetricInput label="Weight kg" value={weight} onChange={onWeight} />
-      ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed"
-          style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
-        >
-          {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            <div className="text-center">
-              <ImagePlus className="mx-auto size-9 text-muted" aria-hidden />
-              <p className="mt-2 text-sm font-extrabold text-app">Tap to add image</p>
-            </div>
-          )}
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-            className="sr-only"
-            onChange={(event) => selectFile(event.target.files?.[0])}
-          />
-        </button>
-      )}
+      {isWeightEntry ? <MetricInput label="Weight kg" value={weight} onChange={onWeight} /> : null}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="app-button relative mt-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-3xl border border-dashed"
+        style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
+      >
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <div className="text-center">
+            <ImagePlus className="mx-auto size-9 text-muted" aria-hidden />
+            <p className="mt-2 text-sm font-extrabold text-app">{isWeightEntry ? "Tap to add scale photo" : "Tap to add image"}</p>
+          </div>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          className="sr-only"
+          onChange={(event) => selectFile(event.target.files?.[0])}
+        />
+      </button>
       {isWeightEntry ? (
         <div className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold text-muted" style={{ background: "var(--surface-soft)" }}>
-          Weight is saved as a number entry. No photo needed.
+          Save requires both the weight number and a clear scale photo.
         </div>
       ) : null}
       {category.id === "treadmill_photo" ? (
@@ -431,7 +433,7 @@ function UploadPanel({
       <div className="mt-3 grid grid-cols-3 gap-2">
         <button
           onClick={() => onUpload(category.id, file, note)}
-          disabled={(!file && !isWeightEntry) || busy}
+          disabled={!file || (isWeightEntry && !weight.trim()) || busy}
           className="app-button brand-gradient flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:opacity-45"
         >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}

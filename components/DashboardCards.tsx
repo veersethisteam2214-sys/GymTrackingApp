@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Activity,
   ArrowRight,
   BicepsFlexed,
   BookOpen,
@@ -15,11 +14,11 @@ import {
   Flame,
   ImageIcon,
   Scale,
-  Target,
   Trophy,
   X
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
+import { getRankBadge, rankPeople, type LeaderboardPerson } from "@/lib/leaderboard";
 import { getCompletionCount } from "@/lib/status";
 import type {
   CheckInCategory,
@@ -69,11 +68,15 @@ const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "F
 export function DashboardCards({
   people,
   currentUserId,
-  today
+  today,
+  monthCheckins,
+  monthItems
 }: {
   people: Person[];
   currentUserId: string;
   today: string;
+  monthCheckins: DailyCheckIn[];
+  monthItems: CheckInItem[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openPoint, setOpenPoint] = useState<{ person: Person; point: DataPoint } | null>(null);
@@ -82,6 +85,7 @@ export function DashboardCards({
   const totalPossible = Math.max(people.length * CATEGORIES.length, 1);
   const todayDate = new Date(`${today}T00:00:00`);
   const weekday = weekdayNames[todayDate.getDay()] ?? "Today";
+  const rankedPeople = rankPeople(people, monthCheckins, monthItems);
 
   if (people.length === 0) {
     return (
@@ -105,9 +109,7 @@ export function DashboardCards({
             <h2 className="display-font mt-2 text-6xl font-extrabold leading-none text-app sm:text-7xl">
               {totalCompleted}/{totalPossible}
             </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-              Tap a profile to reveal their routines, proof, reading, and today task status. Photos stay hidden until a data point is opened.
-            </p>
+            <MiniLeaderboard rankedPeople={rankedPeople} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <TodaySplit people={people} weekday={weekday} />
@@ -122,7 +124,7 @@ export function DashboardCards({
             <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
               Users
             </p>
-            <h2 className="display-font text-5xl font-extrabold leading-none text-app">See your friends uploads!</h2>
+            <h2 className="display-font text-5xl font-extrabold leading-none text-app">See your friends Today uploads!</h2>
           </div>
           <p className="text-sm font-bold text-muted">Tap a username to open their data and proof images.</p>
         </div>
@@ -158,7 +160,6 @@ export function DashboardCards({
       {selectedPerson ? (
         <PersonDataDialog
           person={selectedPerson}
-          isMe={selectedPerson.profile.id === currentUserId}
           onClose={() => setSelectedId(null)}
           onOpenPoint={(point) => setOpenPoint({ person: selectedPerson, point })}
         />
@@ -196,12 +197,10 @@ function ProfileCard({ person, isMe }: { person: Person; isMe: boolean }) {
 
 function PersonDataDialog({
   person,
-  isMe,
   onClose,
   onOpenPoint
 }: {
   person: Person;
-  isMe: boolean;
   onClose: () => void;
   onOpenPoint: (point: DataPoint) => void;
 }) {
@@ -215,7 +214,7 @@ function PersonDataDialog({
             <Avatar profile={person.profile} size="xl" />
             <div className="min-w-0">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
-                {isMe ? "Your revealed data" : "Friend data"}
+                Today uploads
               </p>
               <h2 className="display-font truncate text-5xl font-extrabold text-app">{person.profile.display_name}</h2>
             </div>
@@ -357,45 +356,49 @@ function LeaderboardEntry() {
   );
 }
 
+function MiniLeaderboard({ rankedPeople }: { rankedPeople: LeaderboardPerson<Person>[] }) {
+  return (
+    <div className="mt-4 max-w-xl rounded-3xl p-3" style={{ background: "var(--surface-soft)", border: "1px solid var(--faint)" }}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
+          Rankings
+        </p>
+        <Link href="/leaderboard" className="app-button rounded-2xl px-3 py-2 text-xs font-extrabold" style={{ background: "var(--surface-soft)", color: "var(--text)" }}>
+          View all
+        </Link>
+      </div>
+      <div className="space-y-2">
+        {rankedPeople.slice(0, 3).map((person, index) => {
+          const badge = getRankBadge(index);
+          return (
+            <div key={person.profile.id} className="flex items-center justify-between gap-3 rounded-2xl px-3 py-2" style={{ background: "var(--surface-soft)" }}>
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="grid size-8 shrink-0 place-items-center rounded-xl text-xs font-black" style={{ background: badge.color, color: "#101010" }}>
+                  {index < 3 ? <Trophy className="size-4" aria-hidden /> : badge.symbol}
+                </span>
+                <span className="truncate text-sm font-extrabold text-app">{person.profile.display_name}</span>
+              </span>
+              <span className="display-font text-xl font-extrabold" style={{ color: "var(--brand)" }}>{person.score}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function buildDataPoints(person: Person): DataPoint[] {
   const latestWeight = person.latestWeight?.weight_value ?? person.profile.starting_weight;
-  const points: DataPoint[] = [
-    {
-      id: "gym",
-      label: "Gym routine",
-      helper: person.profile.gym_routine ? "Routine filled" : "Missing routine",
-      complete: Boolean(person.profile.gym_routine),
-      icon: <BicepsFlexed className="size-4" />,
-      text: person.profile.gym_routine
-    },
-    {
-      id: "cardio",
-      label: "Cardio routine",
-      helper: person.profile.cardio_routine ? "Routine filled" : "Missing routine",
-      complete: Boolean(person.profile.cardio_routine),
-      icon: <Activity className="size-4" />,
-      text: person.profile.cardio_routine
-    },
-    {
-      id: "goal",
-      label: "Body goal",
-      helper: `${person.profile.goal_mode} / ${person.profile.target_weight ?? "--"}kg`,
-      complete: Boolean(person.profile.target_weight && person.profile.target_date),
-      icon: <Target className="size-4" />,
-      text: `${person.profile.goal_mode}\nCurrent: ${latestWeight ?? "--"}kg\nTarget: ${person.profile.target_weight ?? "--"}kg\nDate: ${person.profile.target_date ?? "--"}`
-    }
-  ];
-
-  CATEGORIES.forEach((category) => {
+  return CATEGORIES.map((category) => {
     const item = person.todayItems.find((entry) => entry.category === category.id);
-    const complete = item?.status === "uploaded" || item?.status === "excused";
+    const complete = item?.status === "uploaded";
     const text =
       category.id === "weight_scale_photo"
-        ? `Weight: ${latestWeight ? `${latestWeight}kg` : "Not entered"}`
+        ? `Weight: ${complete && latestWeight ? `${latestWeight}kg` : "Not entered today"}`
         : category.id === "reading_proof"
           ? `${person.profile.current_book_title ?? "No book set"}\n${person.latestReading ? `Page ${person.latestReading.current_page}${person.latestReading.total_pages ? `/${person.latestReading.total_pages}` : ""}` : "No page logged"}`
           : item?.note;
-    points.push({
+    return {
       id: category.id,
       label: category.label,
       helper: complete ? "Complete today" : "Missing today",
@@ -404,10 +407,8 @@ function buildDataPoints(person: Person): DataPoint[] {
       text,
       item,
       imageUrl: item?.signedUrl ?? null
-    });
+    };
   });
-
-  return points;
 }
 
 function getRoutineForDay(routine: string | null, weekday: string) {

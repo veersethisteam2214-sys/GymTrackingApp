@@ -19,7 +19,7 @@ export const CATEGORIES: CategoryMeta[] = [
     id: "weight_scale_photo",
     label: "Weight entry",
     shortLabel: "Weight",
-    helper: "Enter today's weight. No image required.",
+    helper: "Upload a scale photo and enter today's weight.",
     accent: "bg-sun"
   },
   {

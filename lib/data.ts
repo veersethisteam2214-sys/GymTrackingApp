@@ -107,7 +107,8 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     currentUserId: profileId,
     today,
     people,
-    monthCheckins: (monthCheckins ?? []) as DailyCheckIn[]
+    monthCheckins: (monthCheckins ?? []) as DailyCheckIn[],
+    monthItems: signedMonthItems
   };
 }
 

@@ -1,10 +1,10 @@
 import { AppShell } from "@/components/AppShell";
 import { SetupMissing } from "@/components/SetupMissing";
-import { CATEGORIES } from "@/lib/categories";
 import { requireAppProfile } from "@/lib/auth";
 import { fetchDashboardData } from "@/lib/data";
 import { formatDisplayDate } from "@/lib/dates";
-import { getCompletionCount } from "@/lib/status";
+import { getMaxDailyPoints, getRankBadge, rankPeople } from "@/lib/leaderboard";
+import { Trophy } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -13,25 +13,10 @@ export default async function LeaderboardPage() {
   if (session.setupMissing || !session.supabase || !session.profile) return <SetupMissing />;
 
   const data = await fetchDashboardData(session.supabase, session.profile.id);
-  const ranked = data.people
-    .map((person) => {
-      const todayTasks = getCompletionCount(person.todayItems);
-      const score =
-        person.monthStats.complete * 10 +
-        person.monthStats.excused * 8 +
-        person.monthStats.partial * 4 +
-        person.currentStreak * 3 +
-        todayTasks;
-
-      return {
-        ...person,
-        todayTasks,
-        score
-      };
-    })
-    .sort((a, b) => b.score - a.score || b.currentStreak - a.currentStreak || b.todayTasks - a.todayTasks);
+  const ranked = rankPeople(data.people, data.monthCheckins, data.monthItems);
 
   const maxScore = Math.max(...ranked.map((person) => person.score), 1);
+  const maxDailyPoints = getMaxDailyPoints();
 
   return (
     <AppShell title="Leaderboard" subtitle={`Consistency rankings for ${formatDisplayDate(data.today)}`} profile={session.profile}>
@@ -43,7 +28,7 @@ export default async function LeaderboardPage() {
             </p>
             <h2 className="display-font mt-1 text-6xl font-extrabold leading-none text-app">Most consistent</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Scores use this month&apos;s complete days, excused days, partial days, current streak, and today&apos;s completed tasks.
+              Scoring is simple: max {maxDailyPoints} points per day, 1 point for each required photo or data entry completed.
             </p>
           </div>
           <div className="rounded-3xl p-4 text-right" style={{ background: "var(--surface-soft)" }}>
@@ -57,6 +42,7 @@ export default async function LeaderboardPage() {
         {ranked.map((person, index) => {
           const percent = Math.round((person.score / maxScore) * 100);
           const isMe = person.profile.id === data.currentUserId;
+          const rankBadge = getRankBadge(index);
           return (
             <article
               key={person.profile.id}
@@ -64,8 +50,15 @@ export default async function LeaderboardPage() {
               style={{ animationDelay: `${index * 60}ms` }}
             >
               <div className="flex items-center gap-3">
-                <div className="display-font grid size-12 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold" style={{ background: index === 0 ? "linear-gradient(135deg, var(--brand), var(--brand-2))" : "var(--surface-soft)", color: index === 0 ? "var(--bg)" : "var(--text)" }}>
-                  {index + 1}
+                <div
+                  className="display-font grid size-12 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold"
+                  style={{
+                    background: index < 3 ? rankBadge.color : "var(--surface-soft)",
+                    color: index < 3 ? "#101010" : "var(--text)"
+                  }}
+                  title={rankBadge.label}
+                >
+                  {index < 3 ? <Trophy className="size-6" aria-hidden /> : rankBadge.symbol}
                 </div>
                 <Avatar name={person.profile.display_name} src={person.profile.avatarSignedUrl} />
                 <div className="min-w-0 flex-1">
@@ -89,7 +82,7 @@ export default async function LeaderboardPage() {
                 <Stat label="Partial" value={person.monthStats.partial} />
                 <Stat label="Excused" value={person.monthStats.excused} />
                 <Stat label="Streak" value={`${person.currentStreak}d`} />
-                <Stat label="Today" value={`${person.todayTasks}/${CATEGORIES.length}`} />
+                <Stat label="Today" value={`${person.todayTasks}/${maxDailyPoints}`} />
               </div>
             </article>
           );

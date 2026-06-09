@@ -20,7 +20,13 @@ export default async function DashboardPage() {
 
   return (
     <AppShell title="Today" profile={session.profile}>
-      <DashboardCards people={data.people} currentUserId={data.currentUserId} today={data.today} />
+      <DashboardCards
+        people={data.people}
+        currentUserId={data.currentUserId}
+        today={data.today}
+        monthCheckins={data.monthCheckins}
+        monthItems={data.monthItems}
+      />
       <ChallengePreview challenges={challenges} />
       <RecommendationBoard initialRecommendations={recommendations} currentProfile={session.profile} />
     </AppShell>
