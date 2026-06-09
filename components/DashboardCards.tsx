@@ -6,7 +6,6 @@ import {
   Activity,
   ArrowRight,
   BookOpen,
-  CalendarDays,
   Check,
   ChevronDown,
   Dumbbell,
@@ -15,7 +14,7 @@ import {
   ImageIcon,
   Scale,
   Target,
-  UploadCloud,
+  Trophy,
   X
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
@@ -111,7 +110,7 @@ export function DashboardCards({
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <TodaySplit people={people} weekday={weekday} />
-            <CalendarEntry />
+            <LeaderboardEntry />
           </div>
         </div>
       </section>
@@ -368,19 +367,19 @@ function TodaySplit({ people, weekday }: { people: Person[]; weekday: string }) 
   );
 }
 
-function CalendarEntry() {
+function LeaderboardEntry() {
   return (
     <Link
-      href="/calendar"
+      href="/leaderboard"
       className="app-button group flex items-center justify-between gap-4 rounded-3xl p-4 hover:-translate-y-0.5"
       style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, var(--surface)), var(--surface-soft))", border: "1px solid var(--faint)" }}
     >
       <div>
-        <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>Calendar</p>
-        <p className="mt-1 text-sm font-bold text-app">Open day-by-day proof view</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>Leaderboard</p>
+        <p className="mt-1 text-sm font-bold text-app">Open rankings and discipline scores</p>
       </div>
       <span className="grid size-12 place-items-center rounded-2xl brand-gradient text-black">
-        <CalendarDays className="size-5" aria-hidden />
+        <Trophy className="size-5" aria-hidden />
       </span>
     </Link>
   );

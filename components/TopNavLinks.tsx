@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Flag, Home, LineChart, Settings, Trophy, UploadCloud } from "lucide-react";
+import { Flag, Home, LineChart, Settings, Trophy, UploadCloud } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/today", label: "Today", icon: UploadCloud },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/analytics", label: "Stats", icon: LineChart },
   { href: "/leaderboard", label: "Ranks", icon: Trophy },
   { href: "/challenges", label: "Challenges", icon: Flag },

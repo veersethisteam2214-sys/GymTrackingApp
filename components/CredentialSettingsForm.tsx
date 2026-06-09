@@ -107,7 +107,7 @@ export function CredentialSettingsForm({ profile }: { profile: Profile }) {
             >
               <X className="size-4" aria-hidden />
             </button>
-            <p className="display-font text-6xl font-extrabold text-app">Veer</p>
+            <p className="display-font text-5xl font-extrabold text-app">Please contact Veer</p>
           </section>
         </div>
       ) : null}

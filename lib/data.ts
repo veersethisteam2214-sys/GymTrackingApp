@@ -171,33 +171,6 @@ export async function fetchTodayData(supabase: Client, profile: Profile) {
   };
 }
 
-export async function fetchCalendarData(supabase: Client) {
-  const { startDate, endDate } = getMonthRange();
-  const [{ data: profiles }, { data: checkins }, { data: items }] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: true }),
-    supabase
-      .from("daily_checkins")
-      .select("*")
-      .gte("checkin_date", startDate)
-      .lte("checkin_date", endDate)
-      .order("checkin_date", { ascending: true }),
-    supabase.from("checkin_items").select("*").not("storage_path", "is", null).limit(1600)
-  ]);
-
-  const signedItems = await Promise.all(
-    ((items ?? []) as CheckInItem[]).map(async (item) => ({
-      ...item,
-      signedUrl: await getSignedUrl(supabase, item.storage_path)
-    }))
-  );
-
-  return {
-    profiles: await signProfiles(supabase, (profiles ?? []) as Profile[]),
-    checkins: (checkins ?? []) as DailyCheckIn[],
-    items: signedItems
-  };
-}
-
 export async function fetchAnalyticsData(supabase: Client) {
   const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();

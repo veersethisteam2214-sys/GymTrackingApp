@@ -87,9 +87,8 @@ Redeploy after saving the variables.
 - `/login` profile username/password login
 - `/login-setup` link an existing profile to username/password
 - `/profile-setup` profile setup form
-- `/dashboard` profile cards, today split, task completion, calendar entry, recommendations
+- `/dashboard` profile cards, today split, task completion, leaderboard entry, recommendations
 - `/today` daily upload flow
-- `/calendar` current month status grid
 - `/analytics` stats and charts
 - `/leaderboard` consistency and discipline rankings
 - `/challenges` shared group challenges
@@ -102,7 +101,7 @@ Redeploy after saving the variables.
 - Dark/light theme toggle in Settings
 - Main page shows profile cards first; detailed data opens after tapping a profile
 - Daily proof photos stay hidden until a specific data point is opened
-- Calendar opens from its own route with all-user or per-user filtering
+- Leaderboard opens from the dashboard shortcut or top navigation
 - Recommendations can be anything: books, gear, videos, links, supplements, or ideas
 
 ## Daily Criteria
