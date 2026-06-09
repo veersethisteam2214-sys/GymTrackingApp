@@ -2,22 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flag, Home, LineChart, Settings, Trophy, UploadCloud } from "lucide-react";
+import { Flag, Home, LineChart, Trophy, UploadCloud } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/today", label: "Today", icon: UploadCloud },
   { href: "/analytics", label: "Stats", icon: LineChart },
   { href: "/leaderboard", label: "Ranks", icon: Trophy },
-  { href: "/challenges", label: "Challenges", icon: Flag },
-  { href: "/settings", label: "Settings", icon: Settings }
+  { href: "/challenges", label: "Challenges", icon: Flag }
 ];
 
 export function TopNavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="grid w-full grid-cols-6 gap-1 rounded-3xl p-1 lg:w-auto" style={{ background: "var(--surface-soft)" }}>
+    <nav className="grid w-full grid-cols-5 gap-1 rounded-3xl p-1 lg:w-auto" style={{ background: "var(--surface-soft)" }}>
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

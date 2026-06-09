@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Settings, UserRound } from "lucide-react";
 import { HeaderClock } from "@/components/HeaderClock";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodayReminder } from "@/components/TodayReminder";
@@ -61,18 +62,44 @@ function ProfileButton({ profile }: { profile?: Profile | null }) {
   if (!profile) return null;
 
   return (
-    <Link
-      href="/settings"
-      className="app-button relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl border text-sm font-black shadow-sm"
-      style={{ borderColor: "var(--faint)", background: "var(--surface-soft)", color: "var(--text)" }}
-      title="Open settings"
-    >
-      {profile.avatarSignedUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={profile.avatarSignedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        profile.display_name.slice(0, 1).toUpperCase()
-      )}
-    </Link>
+    <details className="group relative shrink-0">
+      <summary
+        className="app-button relative grid size-11 cursor-pointer list-none place-items-center overflow-hidden rounded-2xl border text-sm font-black shadow-sm [&::-webkit-details-marker]:hidden"
+        style={{ borderColor: "var(--faint)", background: "var(--surface-soft)", color: "var(--text)" }}
+        title="Open profile menu"
+      >
+        {profile.avatarSignedUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={profile.avatarSignedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          profile.display_name.slice(0, 1).toUpperCase()
+        )}
+      </summary>
+      <div
+        className="absolute right-0 top-14 z-50 w-56 rounded-3xl p-2 shadow-soft"
+        style={{ background: "var(--surface-strong)", border: "1px solid var(--faint)" }}
+      >
+        <div className="px-3 py-2">
+          <p className="truncate text-sm font-extrabold text-app">{profile.display_name}</p>
+          <p className="truncate text-xs font-bold text-muted">{profile.username ?? "Profile menu"}</p>
+        </div>
+        <Link
+          href="/profile-setup"
+          className="app-button flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-extrabold"
+          style={{ color: "var(--text)" }}
+        >
+          <UserRound className="size-4" aria-hidden />
+          Edit your profile
+        </Link>
+        <Link
+          href="/settings"
+          className="app-button mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-extrabold"
+          style={{ color: "var(--text)" }}
+        >
+          <Settings className="size-4" aria-hidden />
+          Settings
+        </Link>
+      </div>
+    </details>
   );
 }
