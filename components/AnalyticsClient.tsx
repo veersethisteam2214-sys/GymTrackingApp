@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Activity, BookOpen, Check, Dumbbell, GlassWater, Timer, Users } from "lucide-react";
-import { CompletionBars, WeightTrend } from "@/components/AnalyticsCharts";
+import { CompletionBars, getProfileChartColor, WeightTrend } from "@/components/AnalyticsCharts";
 import { StatsDataChat } from "@/components/StatsDataChat";
 import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
@@ -27,10 +27,10 @@ export function AnalyticsClient({
     [profiles, selectedIds]
   );
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const filteredItems = items.filter((item) => selectedIdSet.has(item.user_id));
-  const filteredCardio = cardio.filter((entry) => selectedIdSet.has(entry.user_id));
-  const filteredWeights = weights.filter((entry) => selectedIdSet.has(entry.user_id));
-  const filteredCheckins = checkins.filter((entry) => selectedIdSet.has(entry.user_id));
+  const filteredItems = useMemo(() => items.filter((item) => selectedIdSet.has(item.user_id)), [items, selectedIdSet]);
+  const filteredCardio = useMemo(() => cardio.filter((entry) => selectedIdSet.has(entry.user_id)), [cardio, selectedIdSet]);
+  const filteredWeights = useMemo(() => weights.filter((entry) => selectedIdSet.has(entry.user_id)), [weights, selectedIdSet]);
+  const filteredCheckins = useMemo(() => checkins.filter((entry) => selectedIdSet.has(entry.user_id)), [checkins, selectedIdSet]);
 
   const gymUploads = filteredItems.filter((item) => item.category === "progress_photo" && item.status === "uploaded").length;
   const cardioUploads = filteredItems.filter((item) => item.category === "treadmill_photo" && item.status === "uploaded").length;
@@ -115,8 +115,18 @@ export function AnalyticsClient({
                 }}
               >
                 <span className="truncate text-sm font-extrabold">{profile.display_name}</span>
-                <span className="grid size-7 shrink-0 place-items-center rounded-xl" style={{ background: selected ? "var(--brand)" : "transparent", color: selected ? "var(--bg)" : "var(--muted)" }}>
-                  {selected ? <Check className="size-4" aria-hidden /> : null}
+                <span className="flex shrink-0 items-center gap-2">
+                  <span
+                    className="size-3 rounded-full shadow-sm"
+                    style={{
+                      background: getProfileChartColor(profile.id),
+                      boxShadow: selected ? `0 0 0 4px color-mix(in srgb, ${getProfileChartColor(profile.id)} 18%, transparent)` : "none"
+                    }}
+                    aria-hidden
+                  />
+                  <span className="grid size-7 place-items-center rounded-xl" style={{ background: selected ? "var(--brand)" : "transparent", color: selected ? "var(--bg)" : "var(--muted)" }}>
+                    {selected ? <Check className="size-4" aria-hidden /> : null}
+                  </span>
                 </span>
               </button>
             );

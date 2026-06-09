@@ -3,7 +3,15 @@
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
-const palette = ["#7db7ff", "#8ee6ff", "#ffb020", "#ff6a4f", "#b9a7ff", "#5ff0c5", "#ff8ad8", "#9fd86b", "#77a8ff", "#d5e7ff"];
+const palette = ["#7db7ff", "#8ee6ff", "#ffb020", "#ff6a4f", "#b9a7ff", "#5ff0c5", "#ff8ad8", "#9fd86b", "#77a8ff", "#d5e7ff", "#f6c453", "#6ee7b7", "#f0abfc"];
+
+export function getProfileChartColor(profileId: string) {
+  let hash = 0;
+  for (let index = 0; index < profileId.length; index += 1) {
+    hash = (hash * 31 + profileId.charCodeAt(index)) % palette.length;
+  }
+  return palette[Math.abs(hash) % palette.length];
+}
 
 export function CompletionBars({ profiles, checkins }: { profiles: Profile[]; checkins: DailyCheckIn[] }) {
   const data = profiles.map((profile) => {
@@ -56,17 +64,21 @@ export function WeightTrend({ profiles, weights }: { profiles: Profile[]; weight
           <XAxis dataKey="date" tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <YAxis tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip />
-          {profiles.map((profile, index) => (
+          {profiles.map((profile) => {
+            const color = getProfileChartColor(profile.id);
+            return (
             <Line
               key={profile.id}
               type="monotone"
               dataKey={profile.display_name}
-              stroke={palette[index % palette.length]}
+              stroke={color}
               strokeWidth={3}
               connectNulls
-              dot={{ r: 4 }}
+              dot={{ r: 4, fill: color, stroke: "var(--surface-strong)", strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: color, stroke: "var(--text)", strokeWidth: 2 }}
             />
-          ))}
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

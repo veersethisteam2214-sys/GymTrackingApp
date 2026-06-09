@@ -17,7 +17,7 @@ export function TopNavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 overflow-x-auto rounded-3xl p-1" style={{ background: "var(--surface-soft)" }}>
+    <nav className="grid w-full grid-cols-6 gap-1 rounded-3xl p-1 lg:w-auto" style={{ background: "var(--surface-soft)" }}>
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -25,16 +25,16 @@ export function TopNavLinks() {
           <Link
             key={item.href}
             href={item.href}
-            className="app-button inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl px-3 text-xs font-extrabold sm:px-4 sm:text-sm"
+            className="app-button flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-extrabold leading-none sm:min-h-11 sm:flex-row sm:px-2 sm:text-xs xl:px-3"
             style={{
               background: active ? "linear-gradient(135deg, var(--brand), var(--brand-2))" : "transparent",
               color: active ? "var(--bg)" : "var(--muted)"
             }}
           >
-            <span className="grid size-7 place-items-center rounded-xl" style={{ background: active ? "rgba(0,0,0,.1)" : "var(--surface-soft)" }}>
+            <span className="grid size-7 shrink-0 place-items-center rounded-xl" style={{ background: active ? "rgba(0,0,0,.1)" : "var(--surface-soft)" }}>
               <Icon className="size-4" aria-hidden />
             </span>
-            <span>{item.label}</span>
+            <span className="w-full truncate text-center sm:w-auto">{item.label}</span>
           </Link>
         );
       })}

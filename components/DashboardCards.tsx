@@ -70,13 +70,15 @@ export function DashboardCards({
   currentUserId,
   today,
   monthCheckins,
-  monthItems
+  monthItems,
+  statsChat
 }: {
   people: Person[];
   currentUserId: string;
   today: string;
   monthCheckins: DailyCheckIn[];
   monthItems: CheckInItem[];
+  statsChat?: React.ReactNode;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openPoint, setOpenPoint] = useState<{ person: Person; point: DataPoint } | null>(null);
@@ -117,6 +119,8 @@ export function DashboardCards({
           </div>
         </div>
       </section>
+
+      {statsChat ? <div className="reveal-in">{statsChat}</div> : null}
 
       <section className="app-surface rounded-[2rem] p-5">
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

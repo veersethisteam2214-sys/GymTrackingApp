@@ -3,6 +3,7 @@ import { ChallengePreview } from "@/components/ChallengePreview";
 import { DashboardCards } from "@/components/DashboardCards";
 import { RecommendationBoard } from "@/components/RecommendationBoard";
 import { SetupMissing } from "@/components/SetupMissing";
+import { StatsDataChat } from "@/components/StatsDataChat";
 import { requireAppProfile } from "@/lib/auth";
 import { fetchChallenges, fetchDashboardData, fetchRecommendations } from "@/lib/data";
 
@@ -26,6 +27,7 @@ export default async function DashboardPage() {
         today={data.today}
         monthCheckins={data.monthCheckins}
         monthItems={data.monthItems}
+        statsChat={<StatsDataChat profiles={data.people.map((person) => person.profile)} checkins={data.monthCheckins} items={data.monthItems} />}
       />
       <ChallengePreview challenges={challenges} />
       <RecommendationBoard initialRecommendations={recommendations} currentProfile={session.profile} />
