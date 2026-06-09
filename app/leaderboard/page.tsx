@@ -16,7 +16,7 @@ export default async function LeaderboardPage() {
   const ranked = rankPeople(data.people, data.monthCheckins, data.monthItems);
 
   const maxScore = Math.max(...ranked.map((person) => person.score), 1);
-  const maxDailyPoints = getMaxDailyPoints();
+  const maxDailyPoints = getMaxDailyPoints(data.today);
 
   return (
     <AppShell title="Leaderboard" subtitle={`Consistency rankings for ${formatDisplayDate(data.today)}`} profile={session.profile}>

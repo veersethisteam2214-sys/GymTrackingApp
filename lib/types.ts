@@ -2,7 +2,8 @@ export type CheckInCategory =
   | "progress_photo"
   | "treadmill_photo"
   | "weight_scale_photo"
-  | "protein_shake_photo";
+  | "protein_shake_photo"
+  | "group_challenge_ab_photo";
 
 export type ItemStatus = "missing" | "uploaded" | "excused";
 export type DailyStatus = "missing" | "partial" | "complete" | "excused";

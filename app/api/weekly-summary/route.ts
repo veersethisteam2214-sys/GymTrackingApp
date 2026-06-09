@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
+import { ALL_CATEGORY_IDS, getCategoryIdsForDate } from "@/lib/categories";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
@@ -53,7 +53,8 @@ function buildRows(
   return profiles.map((profile) => {
     const userCheckins = checkins.filter((checkin) => checkin.user_id === profile.id);
     const userCheckinIds = new Set(userCheckins.map((checkin) => checkin.id));
-    const userItems = items.filter((item) => userCheckinIds.has(item.checkin_id) && CATEGORY_IDS.includes(item.category));
+    const userItems = items.filter((item) => userCheckinIds.has(item.checkin_id) && ALL_CATEGORY_IDS.includes(item.category));
+    const possibleTasks = userCheckins.reduce((sum, checkin) => sum + getCategoryIdsForDate(checkin.checkin_date).length, 0);
 
     return {
       profile,
@@ -61,7 +62,7 @@ function buildRows(
       partialDays: userCheckins.filter((checkin) => checkin.overall_status === "partial").length,
       excusedDays: userCheckins.filter((checkin) => checkin.overall_status === "excused").length,
       taskCount: userItems.filter((item) => item.status === "uploaded" || item.status === "excused").length,
-      possibleTasks: userCheckins.length * CATEGORIES.length,
+      possibleTasks,
       latestWeight: latestByUser(weights, profile.id),
       latestCardio: latestByUser(cardio, profile.id)
     };

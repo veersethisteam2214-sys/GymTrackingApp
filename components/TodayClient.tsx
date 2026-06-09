@@ -10,13 +10,13 @@ import {
   Gauge,
   ImagePlus,
   Loader2,
+  Trophy,
   ShieldCheck,
   Trash2,
   X
 } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
 import { calculateDailyStatus } from "@/lib/status";
-import type { CardioEntry, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
+import type { CardioEntry, CategoryMeta, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
@@ -24,19 +24,22 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   progress_photo: <BicepsFlexed className="size-5" />,
   treadmill_photo: <Footprints className="size-5" />,
   weight_scale_photo: <Gauge className="size-5" />,
-  protein_shake_photo: <Dna className="size-5" />
+  protein_shake_photo: <Dna className="size-5" />,
+  group_challenge_ab_photo: <Trophy className="size-5" />
 };
 
 export function TodayClient({
   checkin,
   initialItems,
   initialWeight,
-  initialCardio
+  initialCardio,
+  categories
 }: {
   checkin: DailyCheckIn;
   initialItems: CheckInItem[];
   initialWeight: WeightEntry | null;
   initialCardio: CardioEntry | null;
+  categories: CategoryMeta[];
 }) {
   const [items, setItems] = useState(initialItems);
   const [restDay, setRestDay] = useState(checkin.is_rest_day);
@@ -48,11 +51,14 @@ export function TodayClient({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CheckInCategory>(
-    items.find((item) => item.status === "missing")?.category ?? CATEGORIES[0].id
+    items.find((item) => item.status === "missing")?.category ?? categories[0].id
   );
 
-  const completionCount = items.filter((item) => item.status === "uploaded" || item.status === "excused").length;
-  const selectedMeta = CATEGORIES.find((category) => category.id === selectedCategory) ?? CATEGORIES[0];
+  const categoryIds = categories.map((category) => category.id);
+  const completionCount = items.filter(
+    (item) => categoryIds.includes(item.category) && (item.status === "uploaded" || item.status === "excused")
+  ).length;
+  const selectedMeta = categories.find((category) => category.id === selectedCategory) ?? categories[0];
   const selectedItem = items.find((entry) => entry.category === selectedCategory);
 
   async function upload(category: CheckInItem["category"], file: File | null, note: string) {
@@ -145,7 +151,7 @@ export function TodayClient({
       body: JSON.stringify({
         is_rest_day: next,
         rest_day_reason: next ? nextReason : null,
-        overall_status: calculateDailyStatus(items, next)
+        overall_status: calculateDailyStatus(items, next, categoryIds)
       })
     });
   }
@@ -159,7 +165,7 @@ export function TodayClient({
             <div>
               <p className="text-sm text-muted">Completion</p>
               <h2 className="display-font text-5xl font-extrabold text-app">
-                {completionCount}/{CATEGORIES.length}
+                {completionCount}/{categories.length}
               </h2>
             </div>
             <button
@@ -175,7 +181,7 @@ export function TodayClient({
             </button>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-soft)" }}>
-            <div className="h-full rounded-full brand-gradient" style={{ width: `${(completionCount / CATEGORIES.length) * 100}%` }} />
+            <div className="h-full rounded-full brand-gradient" style={{ width: `${(completionCount / categories.length) * 100}%` }} />
           </div>
           {restDay ? (
             <input
@@ -188,8 +194,8 @@ export function TodayClient({
             />
           ) : null}
         </div>
-        <div className="grid grid-cols-4 gap-px" style={{ background: "var(--faint)" }}>
-          {CATEGORIES.map((category) => {
+        <div className="grid gap-px" style={{ background: "var(--faint)", gridTemplateColumns: `repeat(${categories.length}, minmax(0, 1fr))` }}>
+          {categories.map((category) => {
             const item = items.find((entry) => entry.category === category.id);
             const isSelected = category.id === selectedCategory;
             return (
@@ -237,7 +243,7 @@ export function TodayClient({
       <section className="app-surface rounded-[2rem] p-4">
         <h3 className="text-lg font-extrabold text-app">All criteria</h3>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          {CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const item = items.find((entry) => entry.category === category.id);
             return (
               <button
@@ -324,7 +330,7 @@ function UploadPanel({
   onDelete
 }: {
   item?: CheckInItem;
-  category: (typeof CATEGORIES)[number];
+  category: CategoryMeta;
   busy: boolean;
   weight: string;
   minutes: string;

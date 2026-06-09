@@ -3,21 +3,22 @@ import type { CheckInItem, DailyCheckIn, DailyStatus } from "@/lib/types";
 
 type CountableItem = Pick<CheckInItem, "status"> & Partial<Pick<CheckInItem, "category">>;
 
-function isActiveItem(item: CountableItem) {
-  return !item.category || CATEGORY_IDS.includes(item.category);
+function isActiveItem(item: CountableItem, categoryIds: string[] = CATEGORY_IDS) {
+  return !item.category || categoryIds.includes(item.category);
 }
 
-export function getCompletionCount(items: CountableItem[] = []) {
-  return items.filter((item) => isActiveItem(item) && (item.status === "uploaded" || item.status === "excused")).length;
+export function getCompletionCount(items: CountableItem[] = [], categoryIds: string[] = CATEGORY_IDS) {
+  return items.filter((item) => isActiveItem(item, categoryIds) && (item.status === "uploaded" || item.status === "excused")).length;
 }
 
 export function calculateDailyStatus(
   items: CountableItem[] = [],
-  isRestDay = false
+  isRestDay = false,
+  categoryIds: string[] = CATEGORY_IDS
 ): DailyStatus {
   if (isRestDay) return "excused";
-  const completionCount = getCompletionCount(items);
-  if (completionCount >= CATEGORY_IDS.length) return "complete";
+  const completionCount = getCompletionCount(items, categoryIds);
+  if (completionCount >= categoryIds.length) return "complete";
   if (completionCount > 0) return "partial";
   return "missing";
 }

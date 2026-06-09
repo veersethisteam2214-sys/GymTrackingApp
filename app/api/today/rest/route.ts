@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTodayContext } from "@/app/api/today/_helpers";
+import { getCategoryIdsForDate } from "@/lib/categories";
 import { calculateDailyStatus } from "@/lib/status";
 import type { CheckInItem } from "@/lib/types";
 
@@ -11,13 +12,14 @@ export async function PATCH(request: Request) {
   const isRestDay = Boolean(payload.is_rest_day);
   const reason = payload.rest_day_reason ? String(payload.rest_day_reason) : null;
   const { data: items } = await context.supabase.from("checkin_items").select("*").eq("checkin_id", context.checkin.id);
+  const categoryIds = getCategoryIdsForDate(context.checkin.checkin_date);
 
   const { data, error } = await context.supabase
     .from("daily_checkins")
     .update({
       is_rest_day: isRestDay,
       rest_day_reason: isRestDay ? reason : null,
-      overall_status: calculateDailyStatus((items ?? []) as CheckInItem[], isRestDay),
+      overall_status: calculateDailyStatus((items ?? []) as CheckInItem[], isRestDay, categoryIds),
       updated_at: new Date().toISOString()
     })
     .eq("id", context.checkin.id)
@@ -30,4 +32,3 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ checkin: data });
 }
-

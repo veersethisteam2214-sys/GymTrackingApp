@@ -20,6 +20,7 @@ export default async function TodayPage() {
         initialItems={data.items}
         initialWeight={data.weightEntry}
         initialCardio={data.cardioEntry}
+        categories={data.categories}
       />
     </AppShell>
   );

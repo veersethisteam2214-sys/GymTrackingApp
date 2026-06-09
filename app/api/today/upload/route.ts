@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTodayContext, isValidCategory, recalculateTodayStatus, withSignedUrl } from "@/app/api/today/_helpers";
+import { getCategoryIdsForDate } from "@/lib/categories";
 import { createUploadNotification } from "@/lib/notifications";
 import type { CheckInItem } from "@/lib/types";
 
@@ -15,7 +16,8 @@ export async function POST(request: Request) {
   const note = String(formData.get("note") ?? "");
   const file = formData.get("file");
 
-  if (!isValidCategory(category)) {
+  const activeCategoryIds = getCategoryIdsForDate(context.checkin.checkin_date);
+  if (!isValidCategory(category) || !activeCategoryIds.includes(category)) {
     return NextResponse.json({ error: "Unknown check-in category." }, { status: 400 });
   }
 

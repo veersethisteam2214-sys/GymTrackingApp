@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import { ensureTodayCheckin, getSignedUrl } from "@/lib/data";
+import { ALL_CATEGORY_IDS, getCategoryIdsForDate } from "@/lib/categories";
 import { calculateDailyStatus } from "@/lib/status";
 import type { CheckInCategory, CheckInItem } from "@/lib/types";
 
@@ -24,7 +25,8 @@ export async function getTodayContext() {
 export async function recalculateTodayStatus(supabase: NonNullable<ReturnType<typeof createAdminSupabase>>, checkinId: string) {
   const { data: items } = await supabase.from("checkin_items").select("*").eq("checkin_id", checkinId);
   const { data: checkin } = await supabase.from("daily_checkins").select("*").eq("id", checkinId).single();
-  const overallStatus = calculateDailyStatus((items ?? []) as CheckInItem[], Boolean(checkin?.is_rest_day));
+  const categoryIds = checkin?.checkin_date ? getCategoryIdsForDate(String(checkin.checkin_date)) : undefined;
+  const overallStatus = calculateDailyStatus((items ?? []) as CheckInItem[], Boolean(checkin?.is_rest_day), categoryIds);
 
   await supabase
     .from("daily_checkins")
@@ -35,12 +37,7 @@ export async function recalculateTodayStatus(supabase: NonNullable<ReturnType<ty
 }
 
 export function isValidCategory(value: unknown): value is CheckInCategory {
-  return (
-    value === "progress_photo" ||
-    value === "treadmill_photo" ||
-    value === "weight_scale_photo" ||
-    value === "protein_shake_photo"
-  );
+  return typeof value === "string" && ALL_CATEGORY_IDS.includes(value as CheckInCategory);
 }
 
 export async function withSignedUrl(supabase: NonNullable<ReturnType<typeof createAdminSupabase>>, item: CheckInItem) {

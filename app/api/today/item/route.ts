@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTodayContext, isValidCategory, recalculateTodayStatus, withSignedUrl } from "@/app/api/today/_helpers";
+import { getCategoryIdsForDate } from "@/lib/categories";
 import type { CheckInItem } from "@/lib/types";
 
 export async function PATCH(request: Request) {
@@ -10,7 +11,8 @@ export async function PATCH(request: Request) {
   const category = String(payload.category ?? "");
   const action = String(payload.action ?? "");
 
-  if (!isValidCategory(category) || !["excuse", "clear"].includes(action)) {
+  const activeCategoryIds = getCategoryIdsForDate(context.checkin.checkin_date);
+  if (!isValidCategory(category) || !activeCategoryIds.includes(category) || !["excuse", "clear"].includes(action)) {
     return NextResponse.json({ error: "Invalid item update." }, { status: 400 });
   }
 

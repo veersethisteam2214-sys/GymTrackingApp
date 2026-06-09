@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Bot, Send } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, getCategoriesForDate } from "@/lib/categories";
 import { getCurrentStreak, getStats } from "@/lib/status";
 import type { CheckInItem, DailyCheckIn, Profile } from "@/lib/types";
 
@@ -28,14 +28,19 @@ const monthNames = [
 ];
 
 const categoryAliases = new Map(
-  CATEGORIES.flatMap((category) => {
+  [
+    ...CATEGORIES.flatMap((category) => {
     const aliases = [category.shortLabel.toLowerCase(), category.label.toLowerCase()];
     if (category.id === "progress_photo") aliases.push("progress", "picture", "photo", "gym");
     if (category.id === "treadmill_photo") aliases.push("cardio", "run", "running", "treadmill");
     if (category.id === "weight_scale_photo") aliases.push("weight", "scale");
     if (category.id === "protein_shake_photo") aliases.push("protein", "shake");
     return aliases.map((alias) => [alias, category.id] as const);
-  })
+    }),
+    ["group challenge", "group_challenge_ab_photo"] as const,
+    ["ab", "group_challenge_ab_photo"] as const,
+    ["challenge", "group_challenge_ab_photo"] as const
+  ]
 );
 
 function toIsoDate(date: Date) {
@@ -128,22 +133,24 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
   const categoryId = findCategory(question);
 
   if (!checkin) {
+    const categories = getCategoriesForDate(date);
     if (categoryId) {
-      const label = CATEGORIES.find((category) => category.id === categoryId)?.shortLabel ?? "that task";
+      const label = categories.find((category) => category.id === categoryId)?.shortLabel ?? "that task";
       return `${profile.display_name} has no check-in saved for ${formatDate(date)}, so ${label} is missing.`;
     }
-    return `${profile.display_name} has no check-in saved for ${formatDate(date)}, so that counts as 0/${CATEGORIES.length}. Missing: ${CATEGORIES.map((category) => category.shortLabel).join(", ")}.`;
+    return `${profile.display_name} has no check-in saved for ${formatDate(date)}, so that counts as 0/${categories.length}. Missing: ${categories.map((category) => category.shortLabel).join(", ")}.`;
   }
 
+  const categories = getCategoriesForDate(date);
   const dayItems = items.filter((item) => item.checkin_id === checkin.id);
-  const covered = CATEGORIES.filter((category) => {
+  const covered = categories.filter((category) => {
     const item = dayItems.find((entry) => entry.category === category.id);
     return item?.status === "uploaded" || item?.status === "excused";
   });
-  const missed = CATEGORIES.filter((category) => !covered.some((done) => done.id === category.id));
+  const missed = categories.filter((category) => !covered.some((done) => done.id === category.id));
 
   if (categoryId) {
-    const category = CATEGORIES.find((entry) => entry.id === categoryId);
+    const category = categories.find((entry) => entry.id === categoryId);
     const item = dayItems.find((entry) => entry.category === categoryId);
     const status = item?.status ?? "missing";
     return `${profile.display_name}'s ${category?.shortLabel ?? "task"} on ${formatDate(date)} is ${status}.`;
@@ -151,7 +158,7 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
 
   const missedText = missed.length ? missed.map((category) => category.shortLabel).join(", ") : "nothing";
   const coveredText = covered.length ? covered.map((category) => category.shortLabel).join(", ") : "nothing";
-  return `${profile.display_name} completed ${covered.length}/${CATEGORIES.length} on ${formatDate(date)}. Completed: ${coveredText}. Missed: ${missedText}. Overall status: ${checkin.overall_status}.`;
+  return `${profile.display_name} completed ${covered.length}/${categories.length} on ${formatDate(date)}. Completed: ${coveredText}. Missed: ${missedText}. Overall status: ${checkin.overall_status}.`;
 }
 
 export function StatsDataChat({

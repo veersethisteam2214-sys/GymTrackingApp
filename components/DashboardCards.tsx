@@ -13,13 +13,14 @@ import {
   Flame,
   ImageIcon,
   Scale,
+  ShieldCheck,
   Trophy,
   X
 } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
 import { getRankBadge, rankPeople, type LeaderboardPerson } from "@/lib/leaderboard";
 import { getCompletionCount } from "@/lib/status";
 import type {
+  CategoryMeta,
   CheckInCategory,
   CheckInItem,
   DailyCheckIn,
@@ -54,7 +55,8 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   progress_photo: <BicepsFlexed className="size-4" />,
   treadmill_photo: <Footprints className="size-4" />,
   weight_scale_photo: <Gauge className="size-4" />,
-  protein_shake_photo: <Dna className="size-4" />
+  protein_shake_photo: <Dna className="size-4" />,
+  group_challenge_ab_photo: <ShieldCheck className="size-4" />
 };
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -64,19 +66,22 @@ export function DashboardCards({
   currentUserId,
   today,
   monthCheckins,
-  monthItems
+  monthItems,
+  todayCategories
 }: {
   people: Person[];
   currentUserId: string;
   today: string;
   monthCheckins: DailyCheckIn[];
   monthItems: CheckInItem[];
+  todayCategories: CategoryMeta[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openPoint, setOpenPoint] = useState<{ person: Person; point: DataPoint } | null>(null);
   const selectedPerson = people.find((person) => person.profile.id === selectedId) ?? null;
-  const totalCompleted = people.reduce((sum, person) => sum + getCompletionCount(person.todayItems), 0);
-  const totalPossible = Math.max(people.length * CATEGORIES.length, 1);
+  const todayCategoryIds = todayCategories.map((category) => category.id);
+  const totalCompleted = people.reduce((sum, person) => sum + getCompletionCount(person.todayItems, todayCategoryIds), 0);
+  const totalPossible = Math.max(people.length * todayCategories.length, 1);
   const todayDate = new Date(`${today}T00:00:00`);
   const weekday = weekdayNames[todayDate.getDay()] ?? "Today";
   const rankedPeople = rankPeople(people, monthCheckins, monthItems);
@@ -147,7 +152,7 @@ export function DashboardCards({
                 >
                   Click to see {userLabel}&apos;s image
                 </span>
-                <ProfileCard person={person} isMe={person.profile.id === currentUserId} />
+                <ProfileCard person={person} isMe={person.profile.id === currentUserId} categories={todayCategories} />
               </button>
             );
           })}
@@ -157,6 +162,7 @@ export function DashboardCards({
       {selectedPerson ? (
         <PersonDataDialog
           person={selectedPerson}
+          categories={todayCategories}
           onClose={() => setSelectedId(null)}
           onOpenPoint={(point) => setOpenPoint({ person: selectedPerson, point })}
         />
@@ -167,16 +173,17 @@ export function DashboardCards({
   );
 }
 
-function ProfileCard({ person, isMe }: { person: Person; isMe: boolean }) {
-  const count = getCompletionCount(person.todayItems);
-  const percent = Math.round((count / CATEGORIES.length) * 100);
+function ProfileCard({ person, isMe, categories }: { person: Person; isMe: boolean; categories: CategoryMeta[] }) {
+  const categoryIds = categories.map((category) => category.id);
+  const count = getCompletionCount(person.todayItems, categoryIds);
+  const percent = Math.round((count / categories.length) * 100);
 
   return (
     <>
       <div className="flex items-start justify-between gap-3">
         <Avatar profile={person.profile} size="lg" />
         <div className="completion-ring grid size-16 place-items-center rounded-full" style={{ "--ring-value": `${percent}%` } as React.CSSProperties}>
-          <span className="display-font text-xl font-extrabold text-app">{count}/{CATEGORIES.length}</span>
+          <span className="display-font text-xl font-extrabold text-app">{count}/{categories.length}</span>
         </div>
       </div>
       <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
@@ -193,14 +200,16 @@ function ProfileCard({ person, isMe }: { person: Person; isMe: boolean }) {
 
 function PersonDataDialog({
   person,
+  categories,
   onClose,
   onOpenPoint
 }: {
   person: Person;
+  categories: CategoryMeta[];
   onClose: () => void;
   onOpenPoint: (point: DataPoint) => void;
 }) {
-  const points = useMemo(() => buildDataPoints(person), [person]);
+  const points = useMemo(() => buildDataPoints(person, categories), [person, categories]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
@@ -383,9 +392,9 @@ function MiniLeaderboard({ rankedPeople }: { rankedPeople: LeaderboardPerson<Per
   );
 }
 
-function buildDataPoints(person: Person): DataPoint[] {
+function buildDataPoints(person: Person, categories: CategoryMeta[]): DataPoint[] {
   const latestWeight = person.latestWeight?.weight_value ?? person.profile.starting_weight;
-  return CATEGORIES.map((category) => {
+  return categories.map((category) => {
     const item = person.todayItems.find((entry) => entry.category === category.id);
     const complete = item?.status === "uploaded";
     const text =

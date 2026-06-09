@@ -1,4 +1,4 @@
-import { CATEGORIES } from "@/lib/categories";
+import { getCategoryById } from "@/lib/categories";
 import { getSignedUrl } from "@/lib/data";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import type { CheckInCategory, FeatureAnnouncement, GroupNotification, Profile } from "@/lib/types";
@@ -36,7 +36,7 @@ export async function createUploadNotification(
   category: CheckInCategory,
   checkinDate: string
 ) {
-  const categoryLabel = CATEGORIES.find((item) => item.id === category)?.shortLabel ?? "proof";
+  const categoryLabel = getCategoryById(category)?.shortLabel ?? "proof";
   const actorName = await getProfileName(supabase, actorProfileId);
   const { data, error } = await supabase
     .from("group_notifications")

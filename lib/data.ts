@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
+import { ALL_CATEGORY_IDS, getCategoriesForDate, getCategoryIdsForDate } from "@/lib/categories";
 import { getLocalDateString, getMonthRange, getWeekRange } from "@/lib/dates";
 import { calculateDailyStatus, getCurrentStreak, getStats } from "@/lib/status";
 import type {
@@ -34,8 +34,31 @@ async function signProfiles(supabase: Client, profiles: Profile[]) {
   return Promise.all(profiles.map((profile) => signProfile(supabase, profile)));
 }
 
+async function fetchLatestChallengeCreatorName(supabase: Client) {
+  const { data: challenge } = await supabase
+    .from("challenges")
+    .select("created_by_profile_id")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const creatorId = challenge?.created_by_profile_id;
+  if (!creatorId) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", creatorId)
+    .maybeSingle();
+
+  return typeof profile?.display_name === "string" ? profile.display_name : null;
+}
+
 export async function fetchDashboardData(supabase: Client, profileId: string) {
   const today = getLocalDateString();
+  const challengeCreatorName = await fetchLatestChallengeCreatorName(supabase);
+  const todayCategories = getCategoriesForDate(today, challengeCreatorName);
+  const todayCategoryIds = todayCategories.map((category) => category.id);
   const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();
 
@@ -63,7 +86,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     ]);
 
   const signedMonthItems = await Promise.all(
-    ((items ?? []) as CheckInItem[]).filter((item) => CATEGORY_IDS.includes(item.category)).map(async (item) => ({
+    ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category)).map(async (item) => ({
       ...item,
       signedUrl: await getSignedUrl(supabase, item.storage_path)
     }))
@@ -90,13 +113,14 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
       monthStats: getStats(checkinsForUser),
       weekStats: getStats(weekCheckins),
       currentStreak: getCurrentStreak(checkinsForUser),
-      todayStatus: todayCheckin?.overall_status ?? calculateDailyStatus(todayItems, false)
+      todayStatus: todayCheckin?.overall_status ?? calculateDailyStatus(todayItems, false, todayCategoryIds)
     };
   });
 
   return {
     currentUserId: profileId,
     today,
+    todayCategories,
     people,
     monthCheckins: (monthCheckins ?? []) as DailyCheckIn[],
     monthItems: signedMonthItems
@@ -105,6 +129,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
 
 export async function ensureTodayCheckin(supabase: Client, profileId: string) {
   const today = getLocalDateString();
+  const categoryIds = getCategoryIdsForDate(today);
   const { data: checkin } = await supabase
     .from("daily_checkins")
     .upsert(
@@ -120,7 +145,7 @@ export async function ensureTodayCheckin(supabase: Client, profileId: string) {
   const dailyCheckin = checkin as DailyCheckIn;
 
   await Promise.all(
-    CATEGORY_IDS.map((category) =>
+    categoryIds.map((category) =>
       supabase.from("checkin_items").upsert(
         {
           checkin_id: dailyCheckin.id,
@@ -137,6 +162,9 @@ export async function ensureTodayCheckin(supabase: Client, profileId: string) {
 
 export async function fetchTodayData(supabase: Client, profile: Profile) {
   const dailyCheckin = await ensureTodayCheckin(supabase, profile.id);
+  const challengeCreatorName = await fetchLatestChallengeCreatorName(supabase);
+  const categories = getCategoriesForDate(dailyCheckin.checkin_date, challengeCreatorName);
+  const categoryIds = categories.map((category) => category.id);
 
   const [{ data: items }, { data: weightEntries }, { data: cardioEntries }] = await Promise.all([
     supabase.from("checkin_items").select("*").eq("checkin_id", dailyCheckin.id),
@@ -145,7 +173,7 @@ export async function fetchTodayData(supabase: Client, profile: Profile) {
   ]);
 
   const signedItems = await Promise.all(
-    ((items ?? []) as CheckInItem[]).filter((item) => CATEGORY_IDS.includes(item.category)).map(async (item) => ({
+    ((items ?? []) as CheckInItem[]).filter((item) => categoryIds.includes(item.category)).map(async (item) => ({
       ...item,
       signedUrl: await getSignedUrl(supabase, item.storage_path)
     }))
@@ -157,7 +185,7 @@ export async function fetchTodayData(supabase: Client, profile: Profile) {
     items: signedItems,
     weightEntry: ((weightEntries ?? []) as WeightEntry[])[0] ?? null,
     cardioEntry: ((cardioEntries ?? []) as CardioEntry[])[0] ?? null,
-    categories: CATEGORIES
+    categories
   };
 }
 
@@ -185,7 +213,7 @@ export async function fetchAnalyticsData(supabase: Client) {
     weekCheckins: ((checkins ?? []) as DailyCheckIn[]).filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd
     ),
-    items: ((items ?? []) as CheckInItem[]).filter((item) => CATEGORY_IDS.includes(item.category)),
+    items: ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category)),
     weights: (weights ?? []) as WeightEntry[],
     cardio: (cardio ?? []) as CardioEntry[]
   };

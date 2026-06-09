@@ -1,4 +1,4 @@
-import { CATEGORIES, CATEGORY_IDS } from "@/lib/categories";
+import { ALL_CATEGORY_IDS, getCategoryIdsForDate } from "@/lib/categories";
 import type { CheckInItem, DailyCheckIn, Profile } from "@/lib/types";
 
 export type LeaderboardPerson<T extends { profile: Profile; todayItems: CheckInItem[]; currentStreak: number }> = T & {
@@ -15,7 +15,7 @@ export function getLeaderboardScore(userId: string, checkins: DailyCheckIn[], it
 }
 
 export function getUploadCount(items: CheckInItem[]) {
-  return items.filter((item) => CATEGORY_IDS.includes(item.category) && item.status === "uploaded").length;
+  return items.filter((item) => ALL_CATEGORY_IDS.includes(item.category) && item.status === "uploaded").length;
 }
 
 export function rankPeople<T extends { profile: Profile; todayItems: CheckInItem[]; currentStreak: number }>(
@@ -32,8 +32,8 @@ export function rankPeople<T extends { profile: Profile; todayItems: CheckInItem
     .sort((a, b) => b.score - a.score || b.currentStreak - a.currentStreak || b.todayTasks - a.todayTasks);
 }
 
-export function getMaxDailyPoints() {
-  return CATEGORIES.length;
+export function getMaxDailyPoints(dateString?: string) {
+  return dateString ? getCategoryIdsForDate(dateString).length : 4;
 }
 
 export function getRankBadge(index: number) {
