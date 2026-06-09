@@ -145,7 +145,7 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
   const dayItems = items.filter((item) => item.checkin_id === checkin.id);
   const covered = categories.filter((category) => {
     const item = dayItems.find((entry) => entry.category === category.id);
-    return item?.status === "uploaded" || item?.status === "excused";
+    return item?.status === "uploaded";
   });
   const missed = categories.filter((category) => !covered.some((done) => done.id === category.id));
 

@@ -54,19 +54,30 @@ async function fetchLatestChallengeCreatorName(supabase: Client) {
   return typeof profile?.display_name === "string" ? profile.display_name : null;
 }
 
+function normalizeCheckinStatuses(checkins: DailyCheckIn[], items: CheckInItem[]) {
+  return checkins.map((checkin) => {
+    const categoryIds = getCategoryIdsForDate(checkin.checkin_date);
+    const dayItems = items.filter((item) => item.checkin_id === checkin.id);
+
+    return {
+      ...checkin,
+      overall_status: calculateDailyStatus(dayItems, checkin.is_rest_day, categoryIds)
+    };
+  });
+}
+
 export async function fetchDashboardData(supabase: Client, profileId: string) {
   const today = getLocalDateString();
   const challengeCreatorName = await fetchLatestChallengeCreatorName(supabase);
   const todayCategories = getCategoriesForDate(today, challengeCreatorName);
   const todayCategoryIds = todayCategories.map((category) => category.id);
-  const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
+  const { startDate: monthStart } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();
 
   const [
     { data: profiles },
     { data: todayCheckins },
     { data: monthCheckins },
-    { data: items },
     { data: weights }
   ] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: true }),
@@ -75,15 +86,16 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
         .from("daily_checkins")
         .select("*")
         .gte("checkin_date", monthStart)
-        .lte("checkin_date", monthEnd)
+        .lte("checkin_date", today)
         .order("checkin_date", { ascending: true }),
-      supabase
-        .from("checkin_items")
-        .select("*")
-        .gte("created_at", `${monthStart}T00:00:00`)
-        .lte("created_at", `${monthEnd}T23:59:59`),
       supabase.from("weight_entries").select("*").order("measured_at", { ascending: false }).limit(80)
     ]);
+
+  const rawMonthCheckins = (monthCheckins ?? []) as DailyCheckIn[];
+  const checkinIds = rawMonthCheckins.map((checkin) => checkin.id);
+  const { data: items } = checkinIds.length
+    ? await supabase.from("checkin_items").select("*").in("checkin_id", checkinIds)
+    : { data: [] };
 
   const signedMonthItems = await Promise.all(
     ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category)).map(async (item) => ({
@@ -93,10 +105,12 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
   );
 
   const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
+  const normalizedMonthCheckins = normalizeCheckinStatuses(rawMonthCheckins, signedMonthItems);
+  const normalizedTodayCheckins = normalizeCheckinStatuses((todayCheckins ?? []) as DailyCheckIn[], signedMonthItems);
 
   const people = signedProfiles.map((profile) => {
-    const checkinsForUser = ((monthCheckins ?? []) as DailyCheckIn[]).filter((item) => item.user_id === profile.id);
-    const todayCheckin = ((todayCheckins ?? []) as DailyCheckIn[]).find((item) => item.user_id === profile.id) ?? null;
+    const checkinsForUser = normalizedMonthCheckins.filter((item) => item.user_id === profile.id);
+    const todayCheckin = normalizedTodayCheckins.find((item) => item.user_id === profile.id) ?? null;
     const todayItems = todayCheckin
       ? signedMonthItems.filter((item) => item.checkin_id === todayCheckin.id)
       : [];
@@ -122,7 +136,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     today,
     todayCategories,
     people,
-    monthCheckins: (monthCheckins ?? []) as DailyCheckIn[],
+    monthCheckins: normalizedMonthCheckins,
     monthItems: signedMonthItems
   };
 }
@@ -190,7 +204,8 @@ export async function fetchTodayData(supabase: Client, profile: Profile) {
 }
 
 export async function fetchAnalyticsData(supabase: Client) {
-  const { startDate: monthStart, endDate: monthEnd } = getMonthRange();
+  const today = getLocalDateString();
+  const { startDate: monthStart } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();
 
   const [{ data: profiles }, { data: checkins }, { data: items }, { data: weights }, { data: cardio }] =
@@ -200,7 +215,7 @@ export async function fetchAnalyticsData(supabase: Client) {
         .from("daily_checkins")
         .select("*")
         .gte("checkin_date", monthStart)
-        .lte("checkin_date", monthEnd)
+        .lte("checkin_date", today)
         .order("checkin_date", { ascending: true }),
       supabase.from("checkin_items").select("*"),
       supabase.from("weight_entries").select("*").order("measured_at", { ascending: true }),
@@ -209,8 +224,8 @@ export async function fetchAnalyticsData(supabase: Client) {
 
   return {
     profiles: await signProfiles(supabase, (profiles ?? []) as Profile[]),
-    checkins: (checkins ?? []) as DailyCheckIn[],
-    weekCheckins: ((checkins ?? []) as DailyCheckIn[]).filter(
+    checkins: normalizeCheckinStatuses((checkins ?? []) as DailyCheckIn[], ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category))),
+    weekCheckins: normalizeCheckinStatuses((checkins ?? []) as DailyCheckIn[], ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category))).filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd
     ),
     items: ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category)),

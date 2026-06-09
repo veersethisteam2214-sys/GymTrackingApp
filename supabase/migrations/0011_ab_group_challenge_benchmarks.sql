@@ -38,7 +38,7 @@ item_counts as (
   select
     checkin_id,
     count(*) filter (
-      where status in ('uploaded', 'excused')
+      where status = 'uploaded'
       and category in (
         'progress_photo',
         'treadmill_photo',

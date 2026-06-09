@@ -15,7 +15,7 @@ import {
   Trash2,
   X
 } from "lucide-react";
-import { calculateDailyStatus } from "@/lib/status";
+import { calculateDailyStatus, getCompletionCount } from "@/lib/status";
 import type { CardioEntry, CategoryMeta, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -55,9 +55,7 @@ export function TodayClient({
   );
 
   const categoryIds = categories.map((category) => category.id);
-  const completionCount = items.filter(
-    (item) => categoryIds.includes(item.category) && (item.status === "uploaded" || item.status === "excused")
-  ).length;
+  const completionCount = getCompletionCount(items, categoryIds);
   const selectedMeta = categories.find((category) => category.id === selectedCategory) ?? categories[0];
   const selectedItem = items.find((entry) => entry.category === selectedCategory);
 

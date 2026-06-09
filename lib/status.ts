@@ -8,7 +8,7 @@ function isActiveItem(item: CountableItem, categoryIds: string[] = CATEGORY_IDS)
 }
 
 export function getCompletionCount(items: CountableItem[] = [], categoryIds: string[] = CATEGORY_IDS) {
-  return items.filter((item) => isActiveItem(item, categoryIds) && (item.status === "uploaded" || item.status === "excused")).length;
+  return items.filter((item) => isActiveItem(item, categoryIds) && item.status === "uploaded").length;
 }
 
 export function calculateDailyStatus(
