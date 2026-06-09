@@ -26,7 +26,7 @@ export function AppShell({
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="min-w-0">
-                <p className="display-font truncate text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
+                <p className="display-font truncate text-xl font-extrabold uppercase leading-none tracking-[0.18em] sm:text-2xl" style={{ color: "var(--brand)" }}>
                   Discipline Tracker
                 </p>
                 <h1 className="truncate text-xl font-extrabold text-app">{title}</h1>

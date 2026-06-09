@@ -373,15 +373,24 @@ function LeaderboardEntry() {
   return (
     <Link
       href="/leaderboard"
-      className="app-button group flex items-center justify-between gap-4 rounded-3xl p-4 hover:-translate-y-0.5"
-      style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, var(--surface)), var(--surface-soft))", border: "1px solid var(--faint)" }}
+      className="app-button group relative flex min-h-36 items-center justify-between gap-4 overflow-hidden rounded-3xl p-5 hover:-translate-y-0.5"
+      style={{
+        background: "linear-gradient(135deg, var(--brand), var(--brand-2))",
+        border: "1px solid color-mix(in srgb, var(--brand) 72%, transparent)",
+        boxShadow: "0 24px 70px color-mix(in srgb, var(--brand) 28%, transparent)"
+      }}
     >
-      <div>
-        <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>Leaderboard</p>
-        <p className="mt-1 text-sm font-bold text-app">Open rankings and discipline scores</p>
+      <div className="absolute -right-8 -top-8 size-28 rounded-full bg-white/16" />
+      <div className="min-w-0">
+        <p className="display-font text-5xl font-extrabold uppercase leading-none text-black sm:text-6xl">
+          Leaderboard
+        </p>
+        <p className="display-font text-4xl font-extrabold uppercase leading-none text-black/80 sm:text-5xl">
+          Rankings
+        </p>
       </div>
-      <span className="grid size-12 place-items-center rounded-2xl brand-gradient text-black">
-        <Trophy className="size-5" aria-hidden />
+      <span className="grid size-16 shrink-0 place-items-center rounded-3xl bg-black/14 text-black shadow-sm">
+        <Trophy className="size-8" aria-hidden />
       </span>
     </Link>
   );
