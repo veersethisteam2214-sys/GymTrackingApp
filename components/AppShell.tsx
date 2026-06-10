@@ -47,14 +47,14 @@ export async function AppShell({
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div
-                className="brand-gradient relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl text-black shadow-soft sm:size-12"
+                className="brand-gradient brand-mark relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl text-black sm:size-12"
                 aria-hidden
               >
                 <div className="absolute inset-0 bg-white/18" />
                 <LockKeyhole className="relative z-10 size-5 drop-shadow-sm sm:size-6" strokeWidth={3} />
               </div>
               <div className="min-w-0">
-                <p className="display-font truncate text-2xl font-extrabold uppercase leading-none tracking-[0.16em] sm:text-3xl" style={{ color: "var(--brand)" }}>
+                <p className="display-font brand-wordmark truncate text-2xl font-extrabold uppercase leading-none tracking-[0.16em] sm:text-3xl" style={{ color: "var(--brand)" }}>
                   LOCKED IN
                 </p>
                 <h1 className="truncate text-xl font-extrabold text-app">{title}</h1>
