@@ -11,16 +11,18 @@ const STORAGE_KEY = "discipline-today-reminder-seen";
 export function TodayReminder({ completion }: { completion: TodayCompletionSummary | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const shouldShow = Boolean(completion && completion.completed < completion.required);
+  const shouldShow = Boolean(completion);
   const hasStarted = Boolean(completion && completion.completed > 0);
+  const isComplete = Boolean(completion && completion.completed >= completion.required);
+  const storageKey = completion ? `${STORAGE_KEY}:${completion.completed}/${completion.required}` : STORAGE_KEY;
 
   useEffect(() => {
     if (!shouldShow) return;
     if (pathname === "/today") return;
-    if (window.sessionStorage.getItem(STORAGE_KEY) === "true") return;
-    window.sessionStorage.setItem(STORAGE_KEY, "true");
+    if (window.sessionStorage.getItem(storageKey) === "true") return;
+    window.sessionStorage.setItem(storageKey, "true");
     setOpen(true);
-  }, [pathname, shouldShow]);
+  }, [pathname, shouldShow, storageKey]);
 
   if (!open) return null;
 
@@ -41,12 +43,14 @@ export function TodayReminder({ completion }: { completion: TodayCompletionSumma
           </button>
         </div>
         <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">
-          {hasStarted ? "Finish Daily Uploads" : "Cmon, lock in"}
+          {isComplete ? "Well done" : hasStarted ? "Finish Daily Uploads" : "Cmon, lock in"}
         </p>
         <p className="mt-2 text-sm leading-6 text-muted">
-          {hasStarted
-            ? `You're at ${completion?.completed}/${completion?.required}. Finish the remaining proof while it is fresh.`
-            : `0/${completion?.required} is poor. Get today started and upload your first proof now.`}
+          {isComplete
+            ? `${completion?.completed}/${completion?.required} is excellent. That's what locked in looks like.`
+            : hasStarted
+              ? `You're at ${completion?.completed}/${completion?.required}. Finish the remaining proof while it is fresh.`
+              : `0/${completion?.required} is poor. Get today started and upload your first proof now.`}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <button
@@ -57,11 +61,11 @@ export function TodayReminder({ completion }: { completion: TodayCompletionSumma
             Later
           </button>
           <Link
-            href="/today"
+            href={isComplete ? "/dashboard" : "/today"}
             onClick={() => setOpen(false)}
             className="app-button brand-gradient flex min-h-12 items-center justify-center rounded-2xl px-4 text-sm font-extrabold text-black"
           >
-            Go to Uploads
+            {isComplete ? "Dashboard" : "Go to Uploads"}
           </Link>
         </div>
       </section>
