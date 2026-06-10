@@ -67,3 +67,52 @@ export async function POST(request: Request) {
   await createChallengeNotification(supabase, profileId, data);
   return NextResponse.json({ challenge: data });
 }
+
+export async function DELETE(request: Request) {
+  const cookieStore = await cookies();
+  const profileId = cookieStore.get("gym_profile_id")?.value ?? null;
+
+  if (!profileId) {
+    return NextResponse.json({ error: "Set up your profile first." }, { status: 401 });
+  }
+
+  const supabase = createAdminSupabase();
+  if (!supabase) {
+    return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
+  }
+
+  const payload = await request.json().catch(() => ({}));
+  const challengeId = String(payload.id ?? "").trim();
+  const confirmation = String(payload.confirmation ?? "");
+
+  if (!challengeId) {
+    return NextResponse.json({ error: "Challenge id is required." }, { status: 400 });
+  }
+
+  if (confirmation !== "REMOVE") {
+    return NextResponse.json({ error: "Type REMOVE to confirm." }, { status: 400 });
+  }
+
+  const { data, error } = await supabase
+    .from("challenges")
+    .delete()
+    .eq("id", challengeId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingChallengesTable(error)) {
+      return NextResponse.json(
+        { error: "Challenges table is missing. Run supabase/migrations/0010_ensure_challenges_table.sql in Supabase SQL Editor, then try again." },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "Challenge was not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true, id: challengeId });
+}

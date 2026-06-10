@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, ChevronDown, Dumbbell, Loader2, Plus, Target, Trophy } from "lucide-react";
+import { AlertTriangle, CalendarDays, ChevronDown, Dumbbell, Loader2, Plus, Target, Trash2, Trophy, X } from "lucide-react";
 import type { Challenge } from "@/lib/types";
 
 const challengeTypes = [
@@ -21,6 +21,10 @@ export function ChallengesClient({ initialChallenges }: { initialChallenges: Cha
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [busy, setBusy] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<Challenge | null>(null);
+  const [removeConfirmation, setRemoveConfirmation] = useState("");
+  const [removeError, setRemoveError] = useState("");
   const [error, setError] = useState("");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -54,6 +58,33 @@ export function ChallengesClient({ initialChallenges }: { initialChallenges: Cha
     setDescription("");
     setTargetValue("");
     setBusy(false);
+  }
+
+  async function removeChallenge() {
+    if (!removeTarget) return;
+    setRemovingId(removeTarget.id);
+    setRemoveError("");
+
+    const response = await fetch("/api/challenges", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: removeTarget.id,
+        confirmation: removeConfirmation
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setRemoveError(payload.error ?? "Could not remove challenge.");
+      setRemovingId(null);
+      return;
+    }
+
+    setChallenges((current) => current.filter((challenge) => challenge.id !== removeTarget.id));
+    setRemoveTarget(null);
+    setRemoveConfirmation("");
+    setRemovingId(null);
   }
 
   return (
@@ -173,7 +204,19 @@ export function ChallengesClient({ initialChallenges }: { initialChallenges: Cha
         </div>
         <div className="mt-4 grid gap-3">
           {challenges.length ? (
-            challenges.map((challenge) => <ChallengeCard key={challenge.id} challenge={challenge} />)
+            challenges.map((challenge) => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                isRemoving={removingId === challenge.id}
+                onRemove={() => {
+                  setError("");
+                  setRemoveError("");
+                  setRemoveTarget(challenge);
+                  setRemoveConfirmation("");
+                }}
+              />
+            ))
           ) : (
             <div className="rounded-3xl p-5 text-center" style={{ background: "var(--surface-soft)" }}>
               <Trophy className="mx-auto size-8 text-muted" aria-hidden />
@@ -183,6 +226,74 @@ export function ChallengesClient({ initialChallenges }: { initialChallenges: Cha
           )}
         </div>
       </section>
+      {removeTarget ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
+          <section
+            className="reveal-in w-full max-w-md rounded-[2rem] p-5"
+            style={{ background: "var(--surface-strong)", border: "1px solid var(--faint)", boxShadow: "var(--shadow)" }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div
+                  className="grid size-12 shrink-0 place-items-center rounded-2xl"
+                  style={{ background: "color-mix(in srgb, var(--danger) 15%, var(--surface-soft))", color: "var(--danger)" }}
+                >
+                  <AlertTriangle className="size-6" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--danger)" }}>
+                    Remove challenge
+                  </p>
+                  <h3 className="mt-1 text-2xl font-extrabold text-app">{removeTarget.title}</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setRemoveTarget(null);
+                  setRemoveConfirmation("");
+                  setRemoveError("");
+                }}
+                className="app-button grid size-10 shrink-0 place-items-center rounded-2xl"
+                style={{ background: "var(--surface-soft)", color: "var(--text)" }}
+                aria-label="Close remove challenge dialog"
+              >
+                <X className="size-5" aria-hidden />
+              </button>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-muted">
+              This removes the challenge from the group board for everyone. Type <span className="font-black text-app">REMOVE</span> to confirm.
+            </p>
+            <input
+              value={removeConfirmation}
+              onChange={(event) => setRemoveConfirmation(event.target.value)}
+              autoFocus
+              placeholder="Type REMOVE"
+              className="mt-4 min-h-12 w-full rounded-2xl border px-4 text-sm font-extrabold text-app outline-none placeholder:text-muted focus-visible:ring-4"
+              style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
+            />
+            {removeError ? (
+              <p
+                aria-live="polite"
+                className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold"
+                style={{ background: "color-mix(in srgb, var(--danger) 14%, transparent)", color: "var(--danger)" }}
+              >
+                {removeError}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={removeChallenge}
+              disabled={removeConfirmation !== "REMOVE" || removingId === removeTarget.id}
+              className="app-button mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-4 text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ background: "var(--danger)", color: "white" }}
+            >
+              {removingId === removeTarget.id ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
+              Remove Challenge
+            </button>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -238,7 +349,15 @@ function DateInput({ name, value, onChange }: { name: string; value: string; onC
   );
 }
 
-function ChallengeCard({ challenge }: { challenge: Challenge }) {
+function ChallengeCard({
+  challenge,
+  isRemoving,
+  onRemove
+}: {
+  challenge: Challenge;
+  isRemoving: boolean;
+  onRemove: () => void;
+}) {
   return (
     <article className="rounded-3xl border p-4" style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}>
       <div className="flex items-start justify-between gap-3">
@@ -248,9 +367,17 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
           </p>
           <h3 className="mt-1 break-words text-lg font-extrabold text-app">{challenge.title}</h3>
         </div>
-        <div className="brand-gradient grid size-10 shrink-0 place-items-center rounded-2xl text-black">
-          <Trophy className="size-5" aria-hidden />
-        </div>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={isRemoving}
+          className="app-button grid size-10 shrink-0 place-items-center rounded-2xl disabled:cursor-not-allowed disabled:opacity-60"
+          style={{ background: "color-mix(in srgb, var(--danger) 10%, var(--surface-strong))", color: "var(--danger)", border: "1px solid color-mix(in srgb, var(--danger) 28%, transparent)" }}
+          aria-label={`Remove ${challenge.title}`}
+          title="Remove challenge"
+        >
+          {isRemoving ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <X className="size-5" aria-hidden />}
+        </button>
       </div>
       {challenge.description ? <p className="mt-2 break-words text-sm leading-6 text-muted">{challenge.description}</p> : null}
       <div className="mt-3 grid grid-cols-3 gap-2">
