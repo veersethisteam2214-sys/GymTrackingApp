@@ -6,6 +6,8 @@ import type { CheckInCategory, FeatureAnnouncement, GroupNotification, Profile }
 type Supabase = NonNullable<ReturnType<typeof createAdminSupabase>>;
 
 const ANNOUNCEMENT_ID = "2026-06-10-notifications-update";
+const NEW_USER_ANNOUNCEMENT_ID = "new-user-overview-v1";
+const SUNDAY_PROGRESS_PREFIX = "sunday-progress-reminder";
 const APP_TIME_ZONE = "Asia/Bangkok";
 
 function getBangkokDate() {
@@ -28,6 +30,132 @@ function isMissingTableError(error?: { code?: string; message?: string } | null)
 async function getProfileName(supabase: Supabase, profileId: string) {
   const { data } = await supabase.from("profiles").select("display_name").eq("id", profileId).maybeSingle();
   return String(data?.display_name ?? "Someone");
+}
+
+async function getProfile(supabase: Supabase, profileId: string) {
+  const { data } = await supabase.from("profiles").select("*").eq("id", profileId).maybeSingle();
+  return (data ?? null) as Profile | null;
+}
+
+function isMissingTargetColumnError(error?: { message?: string } | null) {
+  return error?.message?.toLowerCase().includes("target_profile_id") ?? false;
+}
+
+function isSunday(dateString: string) {
+  return new Date(`${dateString}T12:00:00`).getDay() === 0;
+}
+
+async function hasAnnouncementView(supabase: Supabase, profileId: string, announcementId: string) {
+  const { data } = await supabase
+    .from("feature_announcement_views")
+    .select("announcement_id")
+    .eq("profile_id", profileId)
+    .eq("announcement_id", announcementId)
+    .maybeSingle();
+
+  return Boolean(data);
+}
+
+async function fetchAnnouncement(supabase: Supabase, announcementId: string) {
+  const { data, error } = await supabase
+    .from("feature_announcements")
+    .select("*")
+    .eq("id", announcementId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as FeatureAnnouncement;
+}
+
+async function upsertSundayAnnouncement(supabase: Supabase, dateString: string) {
+  const announcementId = `${SUNDAY_PROGRESS_PREFIX}-${dateString}`;
+  const { data, error } = await supabase
+    .from("feature_announcements")
+    .upsert(
+      {
+        id: announcementId,
+        title: "Sunday progress picture",
+        body: "Today has an extra benchmark.\n\n- Complete gym attendance, cardio, weight, and protein as usual.\n- Also take your weekly progress picture.\n- Sunday is 5/5 instead of 4/4.",
+        active_on: dateString
+      },
+      { onConflict: "id" }
+    )
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return data as FeatureAnnouncement;
+}
+
+async function ensureTargetedSystemNotification(
+  supabase: Supabase,
+  profileId: string,
+  key: string,
+  title: string,
+  body: string
+) {
+  const { data: existing, error: existingError } = await supabase
+    .from("group_notifications")
+    .select("id")
+    .eq("target_profile_id", profileId)
+    .contains("metadata", { notice_key: key })
+    .limit(1);
+
+  if (existingError) {
+    if (!isMissingTableError(existingError) && !isMissingTargetColumnError(existingError)) {
+      console.error("Could not check targeted notification:", existingError.message);
+    }
+    return;
+  }
+
+  if ((existing ?? []).length > 0) return;
+
+  const { error } = await supabase.from("group_notifications").insert({
+    actor_profile_id: null,
+    target_profile_id: profileId,
+    notification_type: "system",
+    title,
+    body,
+    metadata: { notice_key: key }
+  });
+
+  if (error && !isMissingTableError(error) && !isMissingTargetColumnError(error)) {
+    console.error("Could not create targeted notification:", error.message);
+  }
+}
+
+async function ensurePersonalNotifications(supabase: Supabase, profile: Profile) {
+  const today = getBangkokDate();
+
+  if (!(await hasAnnouncementView(supabase, profile.id, NEW_USER_ANNOUNCEMENT_ID))) {
+    await ensureTargetedSystemNotification(
+      supabase,
+      profile.id,
+      NEW_USER_ANNOUNCEMENT_ID,
+      "Welcome to LOCKED IN",
+      "Read the one-time app overview so you know how to use the tracker properly. For more information please ask 'Veer'."
+    );
+  }
+
+  if (isSunday(today)) {
+    await ensureTargetedSystemNotification(
+      supabase,
+      profile.id,
+      `${SUNDAY_PROGRESS_PREFIX}-${today}`,
+      "Sunday has 5 benchmarks",
+      "Do the 4 normal benchmarks plus the weekly progress picture today."
+    );
+  }
+
+  if (!profile.avatar_url) {
+    await ensureTargetedSystemNotification(
+      supabase,
+      profile.id,
+      "profile-photo-reminder-v1",
+      "Add your profile picture",
+      "Your profile does not have a photo yet. Open your profile settings and add one."
+    );
+  }
 }
 
 export async function createUploadNotification(
@@ -116,11 +244,25 @@ export async function fetchNotificationCenter(
   supabase: Supabase,
   profileId: string
 ): Promise<{ notifications: GroupNotification[]; unreadCount: number }> {
-  const { data: notifications, error } = await supabase
+  const profile = await getProfile(supabase, profileId);
+  if (profile) await ensurePersonalNotifications(supabase, profile);
+
+  let { data: notifications, error } = await supabase
     .from("group_notifications")
     .select("*")
+    .or(`target_profile_id.is.null,target_profile_id.eq.${profileId}`)
     .order("created_at", { ascending: false })
     .limit(25);
+
+  if (error && isMissingTargetColumnError(error)) {
+    const fallback = await supabase
+      .from("group_notifications")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(25);
+    notifications = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     if (!isMissingTableError(error)) console.error("Could not load notifications:", error.message);
@@ -172,19 +314,24 @@ export async function fetchNotificationCenter(
 
 export async function getActiveAnnouncement(supabase: Supabase, profileId: string) {
   const today = getBangkokDate();
+
+  const newUserAnnouncement = await fetchAnnouncement(supabase, NEW_USER_ANNOUNCEMENT_ID);
+  if (newUserAnnouncement && !(await hasAnnouncementView(supabase, profileId, NEW_USER_ANNOUNCEMENT_ID))) {
+    return newUserAnnouncement;
+  }
+
+  if (isSunday(today)) {
+    const sundayAnnouncement = await upsertSundayAnnouncement(supabase, today);
+    if (sundayAnnouncement && !(await hasAnnouncementView(supabase, profileId, sundayAnnouncement.id))) {
+      return sundayAnnouncement;
+    }
+  }
+
   if (today !== "2026-06-10") return null;
 
-  const { data: announcement, error } = await supabase
-    .from("feature_announcements")
-    .select("*")
-    .eq("id", ANNOUNCEMENT_ID)
-    .eq("active_on", today)
-    .maybeSingle();
+  const announcement = await fetchAnnouncement(supabase, ANNOUNCEMENT_ID);
 
-  if (error || !announcement) {
-    if (error && !isMissingTableError(error)) console.error("Could not load announcement:", error.message);
-    return null;
-  }
+  if (!announcement) return null;
 
   const { data: view } = await supabase
     .from("feature_announcement_views")
@@ -197,11 +344,22 @@ export async function getActiveAnnouncement(supabase: Supabase, profileId: strin
 }
 
 export async function markNotificationsRead(supabase: Supabase, profileId: string) {
-  const { data: notifications, error } = await supabase
+  let { data: notifications, error } = await supabase
     .from("group_notifications")
     .select("id")
+    .or(`target_profile_id.is.null,target_profile_id.eq.${profileId}`)
     .order("created_at", { ascending: false })
     .limit(100);
+
+  if (error && isMissingTargetColumnError(error)) {
+    const fallback = await supabase
+      .from("group_notifications")
+      .select("id")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    notifications = fallback.data;
+    error = fallback.error;
+  }
   if (error) return;
 
   const rows = (notifications ?? []).map((notification) => ({

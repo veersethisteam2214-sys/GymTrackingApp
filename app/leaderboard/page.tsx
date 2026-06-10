@@ -3,7 +3,7 @@ import { SetupMissing } from "@/components/SetupMissing";
 import { requireAppProfile } from "@/lib/auth";
 import { fetchDashboardData } from "@/lib/data";
 import { formatDisplayDate } from "@/lib/dates";
-import { getMaxDailyPoints, getRankBadge, rankPeople } from "@/lib/leaderboard";
+import { getDenseRank, getMaxDailyPoints, getRankBadge, rankPeople } from "@/lib/leaderboard";
 import { Trophy } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,8 @@ export default async function LeaderboardPage() {
         {ranked.map((person, index) => {
           const percent = Math.round((person.score / maxScore) * 100);
           const isMe = person.profile.id === data.currentUserId;
-          const rankBadge = getRankBadge(index);
+          const rank = getDenseRank(ranked, index);
+          const rankBadge = getRankBadge(rank);
           return (
             <article
               key={person.profile.id}
@@ -53,12 +54,12 @@ export default async function LeaderboardPage() {
                 <div
                   className="display-font grid size-12 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold"
                   style={{
-                    background: index < 3 ? rankBadge.color : "var(--surface-soft)",
-                    color: index < 3 ? "#101010" : "var(--text)"
+                    background: rank <= 3 ? rankBadge.color : "var(--surface-soft)",
+                    color: rank <= 3 ? "#101010" : "var(--text)"
                   }}
                   title={rankBadge.label}
                 >
-                  {index < 3 ? <Trophy className="size-6" aria-hidden /> : rankBadge.symbol}
+                  {rank <= 3 ? <Trophy className="size-6" aria-hidden /> : rankBadge.symbol}
                 </div>
                 <Avatar name={person.profile.display_name} src={person.profile.avatarSignedUrl} />
                 <div className="min-w-0 flex-1">

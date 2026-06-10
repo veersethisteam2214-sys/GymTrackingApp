@@ -114,6 +114,7 @@ export type Recommendation = {
 export type GroupNotification = {
   id: string;
   actor_profile_id: string | null;
+  target_profile_id: string | null;
   notification_type: "upload" | "recommendation" | "challenge" | "system";
   title: string;
   body: string;

@@ -126,7 +126,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
       latestWeight,
       monthStats: getStats(checkinsForUser),
       weekStats: getStats(weekCheckins),
-      currentStreak: getCurrentStreak(checkinsForUser),
+      currentStreak: getCurrentStreak(checkinsForUser, today),
       todayStatus: todayCheckin?.overall_status ?? calculateDailyStatus(todayItems, false, todayCategoryIds)
     };
   });

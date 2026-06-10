@@ -18,7 +18,7 @@ import {
   Trophy,
   X
 } from "lucide-react";
-import { getRankBadge, rankPeople, type LeaderboardPerson } from "@/lib/leaderboard";
+import { getDenseRank, getRankBadge, rankPeople, type LeaderboardPerson } from "@/lib/leaderboard";
 import { getCompletionCount } from "@/lib/status";
 import type {
   CategoryMeta,
@@ -376,12 +376,13 @@ function MiniLeaderboard({ rankedPeople }: { rankedPeople: LeaderboardPerson<Per
       </div>
       <div className="space-y-2">
         {rankedPeople.slice(0, 3).map((person, index) => {
-          const badge = getRankBadge(index);
+          const rank = getDenseRank(rankedPeople, index);
+          const badge = getRankBadge(rank);
           return (
             <div key={person.profile.id} className="flex items-center justify-between gap-3 rounded-2xl px-3 py-2" style={{ background: "var(--surface-soft)" }}>
               <span className="flex min-w-0 items-center gap-2">
                 <span className="grid size-8 shrink-0 place-items-center rounded-xl text-xs font-black" style={{ background: badge.color, color: "#101010" }}>
-                  {index < 3 ? <Trophy className="size-4" aria-hidden /> : badge.symbol}
+                  {rank <= 3 ? <Trophy className="size-4" aria-hidden /> : badge.symbol}
                 </span>
                 <span className="truncate text-sm font-extrabold text-app">{person.profile.display_name}</span>
               </span>

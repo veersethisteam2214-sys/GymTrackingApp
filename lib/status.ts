@@ -37,16 +37,37 @@ export function statusTone(status: DailyStatus | "uploaded" | "excused") {
   }
 }
 
-export function getCurrentStreak(checkins: Pick<DailyCheckIn, "checkin_date" | "overall_status">[]) {
-  const sorted = [...checkins].sort((a, b) => b.checkin_date.localeCompare(a.checkin_date));
+function getTodayString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function shiftDate(dateString: string, amount: number) {
+  const date = new Date(`${dateString}T12:00:00`);
+  date.setDate(date.getDate() + amount);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isStreakStatus(status: DailyStatus) {
+  return status === "complete" || status === "excused";
+}
+
+export function getCurrentStreak(checkins: Pick<DailyCheckIn, "checkin_date" | "overall_status">[], anchorDate = getTodayString()) {
+  const byDate = new Map(checkins.map((checkin) => [checkin.checkin_date, checkin.overall_status]));
+  let cursor = anchorDate;
   let streak = 0;
 
-  for (const checkin of sorted) {
-    if (checkin.overall_status === "complete" || checkin.overall_status === "excused") {
-      streak += 1;
-      continue;
-    }
-    break;
+  while (true) {
+    const status = byDate.get(cursor);
+    if (!status || !isStreakStatus(status)) break;
+    streak += 1;
+    cursor = shiftDate(cursor, -1);
   }
 
   return streak;
@@ -57,7 +78,7 @@ export function getLongestStreak(checkins: Pick<DailyCheckIn, "overall_status">[
   let current = 0;
 
   for (const checkin of checkins) {
-    if (checkin.overall_status === "complete" || checkin.overall_status === "excused") {
+    if (isStreakStatus(checkin.overall_status)) {
       current += 1;
       longest = Math.max(longest, current);
     } else {

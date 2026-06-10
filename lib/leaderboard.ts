@@ -36,9 +36,16 @@ export function getMaxDailyPoints(dateString?: string) {
   return dateString ? getCategoryIdsForDate(dateString).length : 4;
 }
 
-export function getRankBadge(index: number) {
-  if (index === 0) return { label: "Trophy", symbol: "1", color: "#f6c453" };
-  if (index === 1) return { label: "Silver trophy", symbol: "2", color: "#cbd5e1" };
-  if (index === 2) return { label: "Bronze trophy", symbol: "3", color: "#c08457" };
-  return { label: `Rank ${index + 1}`, symbol: String(index + 1), color: "var(--text)" };
+export function getDenseRank<T extends { score: number }>(people: T[], index: number) {
+  const score = people[index]?.score;
+  if (score === undefined) return index + 1;
+  const higherScores = new Set(people.slice(0, index).filter((person) => person.score > score).map((person) => person.score));
+  return higherScores.size + 1;
+}
+
+export function getRankBadge(rank: number) {
+  if (rank === 1) return { label: "Trophy", symbol: "1", color: "#f6c453" };
+  if (rank === 2) return { label: "Silver trophy", symbol: "2", color: "#cbd5e1" };
+  if (rank === 3) return { label: "Bronze trophy", symbol: "3", color: "#c08457" };
+  return { label: `Rank ${rank}`, symbol: String(rank), color: "var(--text)" };
 }
