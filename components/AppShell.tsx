@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodayReminder } from "@/components/TodayReminder";
 import { TopNavLinks } from "@/components/TopNavLinks";
 import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
-import { fetchStreakBreakNotice } from "@/lib/data";
+import { fetchStreakBreakNotice, fetchTodayCompletionSummary } from "@/lib/data";
 import { getFeedbackPromptForProfile } from "@/lib/feedback";
 import { fetchNotificationCenter, getActiveAnnouncement } from "@/lib/notifications";
 import { createAdminSupabase } from "@/lib/supabase/server";
@@ -26,15 +26,16 @@ export async function AppShell({
   profile?: Profile | null;
 }) {
   const supabase = profile ? createAdminSupabase() : null;
-  const [{ notifications, unreadCount }, announcement, streakBreakNotice, feedbackPrompt] =
+  const [{ notifications, unreadCount }, announcement, streakBreakNotice, feedbackPrompt, todayCompletion] =
     profile && supabase
       ? await Promise.all([
           fetchNotificationCenter(supabase, profile.id),
           getActiveAnnouncement(supabase, profile.id),
           fetchStreakBreakNotice(supabase, profile.id),
-          getFeedbackPromptForProfile(supabase, profile.id)
+          getFeedbackPromptForProfile(supabase, profile.id),
+          fetchTodayCompletionSummary(supabase, profile.id)
         ])
-      : [{ notifications: [], unreadCount: 0 }, null, null, null];
+      : [{ notifications: [], unreadCount: 0 }, null, null, null, null];
 
   return (
     <div className="min-h-screen pb-8">
@@ -78,7 +79,7 @@ export async function AppShell({
         </div>
       </header>
       <UpdateAnnouncementModal announcement={announcement} />
-      {profile ? <TodayReminder /> : null}
+      {profile ? <TodayReminder completion={todayCompletion} /> : null}
       {profile ? <StreakBreakModal notice={streakBreakNotice} profileId={profile.id} /> : null}
       {profile ? <FeedbackPromptModal prompt={feedbackPrompt} /> : null}
       <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 py-6">

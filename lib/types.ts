@@ -135,6 +135,11 @@ export type FeedbackPrompt = {
   responded_at: string | null;
 };
 
+export type TodayCompletionSummary = {
+  completed: number;
+  required: number;
+};
+
 export type FeatureAnnouncement = {
   id: string;
   title: string;

@@ -4,19 +4,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Camera, X } from "lucide-react";
+import type { TodayCompletionSummary } from "@/lib/types";
 
 const STORAGE_KEY = "discipline-today-reminder-seen";
 
-export function TodayReminder() {
+export function TodayReminder({ completion }: { completion: TodayCompletionSummary | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const shouldShow = Boolean(completion && completion.completed > 0 && completion.completed < completion.required);
 
   useEffect(() => {
+    if (!shouldShow) return;
     if (pathname === "/today") return;
     if (window.sessionStorage.getItem(STORAGE_KEY) === "true") return;
     window.sessionStorage.setItem(STORAGE_KEY, "true");
     setOpen(true);
-  }, [pathname]);
+  }, [pathname, shouldShow]);
 
   if (!open) return null;
 
@@ -38,7 +41,7 @@ export function TodayReminder() {
         </div>
         <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">Finish Daily Uploads</p>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Add today&apos;s proof while it is fresh. Gym attendance, cardio, weight, and protein all live in Daily Uploads.
+          You&apos;re at {completion?.completed}/{completion?.required}. Finish the remaining proof while it is fresh.
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <button

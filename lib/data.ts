@@ -10,6 +10,7 @@ import type {
   Profile,
   Recommendation,
   StreakBreakNotice,
+  TodayCompletionSummary,
   WeightEntry
 } from "@/lib/types";
 
@@ -190,6 +191,31 @@ export async function fetchStreakBreakNotice(supabase: Client, profileId: string
     completed: getCompletionCount(yesterdayItems, requiredCategoryIds),
     required: requiredCategoryIds.length,
     previousStreak: priorStreak
+  };
+}
+
+export async function fetchTodayCompletionSummary(supabase: Client, profileId: string): Promise<TodayCompletionSummary> {
+  const today = getLocalDateString();
+  const categoryIds = getCategoryIdsForDate(today);
+  const fallback = { completed: 0, required: categoryIds.length };
+
+  const { data: checkin } = await supabase
+    .from("daily_checkins")
+    .select("id")
+    .eq("user_id", profileId)
+    .eq("checkin_date", today)
+    .maybeSingle();
+
+  if (!checkin?.id) return fallback;
+
+  const { data: items } = await supabase
+    .from("checkin_items")
+    .select("status,category")
+    .eq("checkin_id", String(checkin.id));
+
+  return {
+    completed: getCompletionCount((items ?? []) as CheckInItem[], categoryIds),
+    required: categoryIds.length
   };
 }
 
