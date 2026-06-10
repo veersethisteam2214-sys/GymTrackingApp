@@ -60,7 +60,7 @@ export function TodayClient({
   const selectedItem = items.find((entry) => entry.category === selectedCategory);
 
   async function upload(category: CheckInItem["category"], file: File | null, note: string) {
-    if (!file) return setToast(category === "weight_scale_photo" ? "Take a scale photo first." : "Take a proof photo first.");
+    if (!file) return setToast(category === "weight_scale_photo" ? "Add a scale photo first." : "Add a proof photo first.");
     if (!ACCEPTED_TYPES.includes(file.type)) return setToast("Use JPG, PNG, WEBP, HEIC, or HEIF images.");
     if (file.size > MAX_FILE_SIZE) return setToast("Image must be 10 MB or smaller.");
 
@@ -342,6 +342,7 @@ function UploadPanel({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [preview, setPreview] = useState<string | null>(item?.signedUrl ?? null);
   const [file, setFile] = useState<File | null>(null);
@@ -388,6 +389,14 @@ function UploadPanel({
     } catch {
       setCameraError("Camera permission is required. Allow camera access, then try again.");
     }
+  }
+
+  function chooseLibraryPhoto(file?: File) {
+    if (!file) return;
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    setFile(file);
+    setPreview(URL.createObjectURL(file));
+    stopCamera();
   }
 
   function capturePhoto() {
@@ -464,31 +473,48 @@ function UploadPanel({
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={openCamera}
-            className="app-button relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden"
-          >
+          <div className="relative aspect-[4/3] overflow-hidden">
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
             ) : (
-              <div className="text-center">
+              <div className="flex h-full w-full flex-col items-center justify-center px-4 text-center">
                 <Camera className="mx-auto size-10 text-muted" aria-hidden />
-                <p className="mt-2 text-sm font-extrabold text-app">
-                  {isWeightEntry ? "Open camera for scale photo" : "Open camera to take proof"}
-                </p>
-                <p className="mt-1 text-xs font-bold text-muted">Library uploads are disabled.</p>
+                <div>
+                  <p className="mt-2 text-sm font-extrabold text-app">
+                    {isWeightEntry ? "Add scale photo" : "Add proof photo"}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-muted">Take a new photo or choose from library.</p>
+                </div>
               </div>
             )}
-            {preview ? (
-              <span className="absolute bottom-3 left-3 right-3 rounded-2xl px-4 py-3 text-center text-sm font-extrabold shadow-soft" style={{ background: "var(--text)", color: "var(--bg)" }}>
-                Retake with camera
-              </span>
-            ) : null}
-          </button>
+            <div className="absolute inset-x-3 bottom-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={openCamera}
+                className="app-button min-h-12 rounded-2xl px-4 text-sm font-extrabold shadow-soft"
+                style={{ background: "var(--text)", color: "var(--bg)" }}
+              >
+                {preview ? "Retake" : "Camera"}
+              </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="app-button brand-gradient min-h-12 rounded-2xl px-4 text-sm font-extrabold text-black shadow-soft"
+              >
+                Library
+              </button>
+            </div>
+          </div>
         )}
         <canvas ref={canvasRef} className="hidden" />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          className="sr-only"
+          onChange={(event) => chooseLibraryPhoto(event.target.files?.[0])}
+        />
       </div>
       {cameraError ? (
         <p className="mt-3 rounded-2xl px-4 py-3 text-sm font-bold" style={{ background: "color-mix(in srgb, var(--danger) 12%, transparent)", color: "var(--danger)" }}>
