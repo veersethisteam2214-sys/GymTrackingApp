@@ -23,19 +23,19 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #dbe8f4;
-  --bg-grid: rgba(22, 61, 117, 0.085);
-  --surface: rgba(229, 239, 249, 0.94);
-  --surface-strong: rgba(240, 246, 252, 0.98);
-  --surface-soft: rgba(32, 54, 84, 0.105);
-  --text: #0b1728;
-  --muted: rgba(11, 23, 40, 0.66);
-  --faint: rgba(11, 23, 40, 0.2);
-  --brand: #1e64c8;
-  --brand-2: #113b86;
-  --accent: #047f9f;
+  --bg: #f6f8fb;
+  --bg-grid: rgba(10, 15, 26, 0.055);
+  --surface: rgba(255, 255, 255, 0.94);
+  --surface-strong: rgba(255, 255, 255, 0.98);
+  --surface-soft: rgba(10, 15, 26, 0.065);
+  --text: #090d16;
+  --muted: rgba(9, 13, 22, 0.64);
+  --faint: rgba(9, 13, 22, 0.16);
+  --brand: #101521;
+  --brand-2: #02050c;
+  --accent: #2478ff;
   --danger: #d84b35;
-  --shadow: 0 18px 50px rgba(24, 48, 80, 0.18);
+  --shadow: 0 18px 52px rgba(9, 13, 22, 0.13);
 }
 
 * {
@@ -57,6 +57,15 @@ body {
   background-size: auto, auto, 32px 32px, 32px 32px, auto;
   color: var(--text);
   font-family: "Manrope", "Segoe UI", sans-serif;
+}
+
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(circle at top left, rgba(10, 15, 26, 0.08) 0, transparent 34rem),
+    radial-gradient(circle at 80% 15%, rgba(36, 120, 255, 0.11) 0, transparent 28rem),
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px),
+    var(--bg);
 }
 
 button,
@@ -119,6 +128,28 @@ select option {
 
 .brand-gradient {
   background: linear-gradient(135deg, var(--brand), var(--brand-2));
+}
+
+:root[data-theme="light"] .brand-gradient.text-black,
+:root[data-theme="light"] .brand-gradient .text-black {
+  color: #f8fafc !important;
+}
+
+:root[data-theme="light"] .brand-gradient svg {
+  color: var(--accent);
+  stroke: currentColor;
+}
+
+:root[data-theme="light"] [style*="color: var(--brand)"] {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="light"] [style*="background: var(--brand)"] {
+  background: var(--accent) !important;
+}
+
+:root[data-theme="light"] [style*="background: linear-gradient(135deg, var(--brand), var(--brand-2))"] {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2)) !important;
 }
 
 .bg-white {
