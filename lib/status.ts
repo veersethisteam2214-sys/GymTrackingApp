@@ -60,7 +60,8 @@ function isStreakStatus(status: DailyStatus) {
 
 export function getCurrentStreak(checkins: Pick<DailyCheckIn, "checkin_date" | "overall_status">[], anchorDate = getTodayString()) {
   const byDate = new Map(checkins.map((checkin) => [checkin.checkin_date, checkin.overall_status]));
-  let cursor = anchorDate;
+  const anchorStatus = byDate.get(anchorDate);
+  let cursor = anchorStatus && isStreakStatus(anchorStatus) ? anchorDate : shiftDate(anchorDate, -1);
   let streak = 0;
 
   while (true) {

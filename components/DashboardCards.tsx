@@ -63,6 +63,14 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
 
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+function formatBlockDate(dateString: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric"
+  }).format(new Date(`${dateString}T12:00:00`));
+}
+
 export function DashboardCards({
   people,
   currentUserId,
@@ -128,7 +136,8 @@ export function DashboardCards({
             <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
               Users
             </p>
-            <h2 className="display-font text-5xl font-extrabold leading-none text-app">See your friends Today uploads!</h2>
+            <h2 className="display-font text-4xl font-extrabold leading-none text-app sm:text-5xl">Check your friends progress and their Proof Pictures.</h2>
+            <p className="mt-2 text-sm font-extrabold text-muted">{formatBlockDate(today)}</p>
           </div>
           <p className="text-sm font-bold text-muted">Tap a username to open their data and proof images.</p>
         </div>

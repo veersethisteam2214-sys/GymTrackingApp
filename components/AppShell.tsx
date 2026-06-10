@@ -55,7 +55,6 @@ export async function AppShell({
               </div>
             </div>
             <div className="flex items-center gap-2 lg:hidden">
-              <HeaderClock />
               <ThemeToggle />
               {profile ? <NotificationBell initialNotifications={notifications} initialUnreadCount={unreadCount} /> : null}
               <ProfileButton profile={profile} />
