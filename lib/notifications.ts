@@ -289,6 +289,46 @@ export async function createProfileJoinedNotification(supabase: Supabase, actorP
   if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
 }
 
+export async function createFeedbackNotification(supabase: Supabase, actorProfileId: string, responseText: string) {
+  const [{ data: actor }, { data: profiles }] = await Promise.all([
+    supabase.from("profiles").select("display_name").eq("id", actorProfileId).maybeSingle(),
+    supabase.from("profiles").select("id,display_name,username")
+  ]);
+  const veer = ((profiles ?? []) as Pick<Profile, "id" | "display_name" | "username">[]).find((profile) => {
+    const displayName = profile.display_name.trim().toLowerCase();
+    const username = profile.username?.trim().toLowerCase() ?? "";
+    return displayName === "veer sethi" || username === "veer" || username === "veersethi";
+  });
+
+  if (!veer?.id) {
+    console.error("Could not create feedback notification: Veer Sethi profile was not found.");
+    return;
+  }
+
+  const actorName = String(actor?.display_name ?? "Someone");
+  const preview = responseText.length > 180 ? `${responseText.slice(0, 180)}...` : responseText;
+  const { data, error } = await supabase
+    .from("group_notifications")
+    .insert({
+      actor_profile_id: actorProfileId,
+      target_profile_id: String(veer.id),
+      notification_type: "system",
+      title: `${actorName} sent app feedback`,
+      body: preview,
+      metadata: { notice_key: "app-feedback", submitted_by_profile_id: actorProfileId }
+    })
+    .select("id")
+    .single();
+
+  if (error && !isMissingTableError(error)) {
+    console.error("Could not create feedback notification:", error.message);
+  }
+
+  if (data?.id && String(veer.id) === actorProfileId) {
+    await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
+  }
+}
+
 export async function fetchNotificationCenter(
   supabase: Supabase,
   profileId: string

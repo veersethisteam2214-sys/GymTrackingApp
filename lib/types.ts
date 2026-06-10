@@ -126,6 +126,15 @@ export type GroupNotification = {
   read: boolean;
 };
 
+export type FeedbackPrompt = {
+  id: string;
+  profile_id: string;
+  prompt_text: string;
+  response_text: string | null;
+  prompted_at: string;
+  responded_at: string | null;
+};
+
 export type FeatureAnnouncement = {
   id: string;
   title: string;
