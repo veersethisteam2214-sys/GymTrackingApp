@@ -36,9 +36,9 @@ export function TodayReminder() {
             <X className="size-4" aria-hidden />
           </button>
         </div>
-        <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">Upload picture in Today</p>
+        <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">Finish Daily Uploads</p>
         <p className="mt-2 text-sm leading-6 text-muted">
-          Add today&apos;s proof while it is fresh. Progress, cardio, weight, and protein all live in the Today section.
+          Add today&apos;s proof while it is fresh. Gym attendance, cardio, weight, and protein all live in Daily Uploads.
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <button
@@ -53,7 +53,7 @@ export function TodayReminder() {
             onClick={() => setOpen(false)}
             className="app-button brand-gradient flex min-h-12 items-center justify-center rounded-2xl px-4 text-sm font-extrabold text-black"
           >
-            Go to Today
+            Go to Uploads
           </Link>
         </div>
       </section>

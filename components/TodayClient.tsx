@@ -158,7 +158,7 @@ export function TodayClient({
     <div className="space-y-4">
       <section className="app-surface-strong overflow-hidden rounded-[2rem]">
         <div className="p-4" style={{ borderBottom: "1px solid var(--faint)" }}>
-          <p className="display-font text-sm font-extrabold uppercase tracking-[0.22em]" style={{ color: "var(--brand)" }}>Today upload deck</p>
+          <p className="display-font text-sm font-extrabold uppercase tracking-[0.22em]" style={{ color: "var(--brand)" }}>Daily uploads</p>
           <div className="mt-3 flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-muted">Completion</p>

@@ -6,7 +6,7 @@ import { Flag, Home, LineChart, Trophy, UploadCloud } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/today", label: "Today", icon: UploadCloud },
+  { href: "/today", label: "Uploads", icon: UploadCloud },
   { href: "/analytics", label: "Stats", icon: LineChart },
   { href: "/leaderboard", label: "Ranks", icon: Trophy },
   { href: "/challenges", label: "Challenges", icon: Flag }

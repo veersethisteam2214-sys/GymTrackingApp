@@ -240,6 +240,25 @@ export async function createChallengeNotification(
   if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
 }
 
+export async function createProfileJoinedNotification(supabase: Supabase, actorProfileId: string, displayName: string) {
+  const { data, error } = await supabase
+    .from("group_notifications")
+    .insert({
+      actor_profile_id: actorProfileId,
+      notification_type: "system",
+      title: `Welcome new user: ${displayName}`,
+      body: `${displayName} joined LOCKED IN.`,
+      metadata: { notice_key: "user-joined", joined_profile_id: actorProfileId, joined_display_name: displayName }
+    })
+    .select("id")
+    .single();
+
+  if (error && !isMissingTableError(error)) {
+    console.error("Could not create joined notification:", error.message);
+  }
+  if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
+}
+
 export async function fetchNotificationCenter(
   supabase: Supabase,
   profileId: string

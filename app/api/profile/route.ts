@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createProfileJoinedNotification } from "@/lib/notifications";
 import { createAdminSupabase } from "@/lib/supabase/server";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -131,6 +132,10 @@ export async function POST(request: Request) {
     }
 
     profile = updated.data;
+  }
+
+  if (shouldInsert) {
+    await createProfileJoinedNotification(supabase, profile.id, profile.display_name);
   }
 
   const response = NextResponse.json({

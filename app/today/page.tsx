@@ -14,7 +14,7 @@ export default async function TodayPage() {
   const data = await fetchTodayData(session.supabase, session.profile);
 
   return (
-    <AppShell title="Upload proof" subtitle={formatDisplayDate(data.checkin.checkin_date)} profile={data.profile}>
+    <AppShell title="Daily Uploads" subtitle={formatDisplayDate(data.checkin.checkin_date)} profile={data.profile}>
       <TodayClient
         checkin={data.checkin}
         initialItems={data.items}
