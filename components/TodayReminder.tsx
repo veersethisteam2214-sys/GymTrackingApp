@@ -11,7 +11,8 @@ const STORAGE_KEY = "discipline-today-reminder-seen";
 export function TodayReminder({ completion }: { completion: TodayCompletionSummary | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const shouldShow = Boolean(completion && completion.completed > 0 && completion.completed < completion.required);
+  const shouldShow = Boolean(completion && completion.completed < completion.required);
+  const hasStarted = Boolean(completion && completion.completed > 0);
 
   useEffect(() => {
     if (!shouldShow) return;
@@ -39,9 +40,13 @@ export function TodayReminder({ completion }: { completion: TodayCompletionSumma
             <X className="size-4" aria-hidden />
           </button>
         </div>
-        <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">Finish Daily Uploads</p>
+        <p className="display-font mt-4 text-5xl font-extrabold leading-none text-app">
+          {hasStarted ? "Finish Daily Uploads" : "Cmon, lock in"}
+        </p>
         <p className="mt-2 text-sm leading-6 text-muted">
-          You&apos;re at {completion?.completed}/{completion?.required}. Finish the remaining proof while it is fresh.
+          {hasStarted
+            ? `You're at ${completion?.completed}/${completion?.required}. Finish the remaining proof while it is fresh.`
+            : `0/${completion?.required} is poor. Get today started and upload your first proof now.`}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <button
