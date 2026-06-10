@@ -15,7 +15,7 @@ export function getLeaderboardScore(userId: string, checkins: DailyCheckIn[], it
 }
 
 export function getUploadCount(items: CheckInItem[]) {
-  return items.filter((item) => ALL_CATEGORY_IDS.includes(item.category) && item.status === "uploaded").length;
+  return items.filter((item) => ALL_CATEGORY_IDS.includes(item.category) && (item.status === "uploaded" || item.status === "excused")).length;
 }
 
 export function rankPeople<T extends { profile: Profile; todayItems: CheckInItem[]; currentStreak: number }>(

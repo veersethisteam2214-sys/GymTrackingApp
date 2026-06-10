@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ALL_CATEGORY_IDS, getCategoriesForDate, getCategoryIdsForDate } from "@/lib/categories";
 import { getLocalDateString, getMonthRange, getWeekRange } from "@/lib/dates";
+import { applyGymRestDayExcuses } from "@/lib/rest-days";
 import { calculateDailyStatus, getCompletionCount, getCurrentStreak, getStats, getStreakEndingOn, isStreakStatus, shiftDate } from "@/lib/status";
 import type {
   CardioEntry,
@@ -16,6 +17,19 @@ import type {
 
 type Client = SupabaseClient<any>;
 const RECOMMENDATIONS_RESET_AT = "2026-06-10T07:40:14.000Z";
+
+function createVirtualCheckin(profileId: string, dateString: string): DailyCheckIn {
+  return {
+    id: `virtual-${profileId}-${dateString}`,
+    user_id: profileId,
+    checkin_date: dateString,
+    overall_status: "missing",
+    is_rest_day: false,
+    rest_day_reason: null,
+    created_at: "",
+    updated_at: ""
+  };
+}
 
 export async function getSignedUrl(supabase: Client, storagePath?: string | null) {
   if (!storagePath) return null;
@@ -57,9 +71,10 @@ async function fetchLatestChallengeCreatorName(supabase: Client) {
   return typeof profile?.display_name === "string" ? profile.display_name : null;
 }
 
-function normalizeCheckinStatuses(checkins: DailyCheckIn[], items: CheckInItem[]) {
+function normalizeCheckinStatuses(checkins: DailyCheckIn[], items: CheckInItem[], profiles: Pick<Profile, "id" | "gym_routine">[] = []) {
+  const effectiveItems = profiles.length ? applyGymRestDayExcuses(items, checkins, profiles) : items;
   const itemsByCheckin = new Map<string, CheckInItem[]>();
-  for (const item of items) {
+  for (const item of effectiveItems) {
     const current = itemsByCheckin.get(item.checkin_id);
     if (current) current.push(item);
     else itemsByCheckin.set(item.checkin_id, [item]);
@@ -100,6 +115,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     ]);
 
   const rawMonthCheckins = (monthCheckins ?? []) as DailyCheckIn[];
+  const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
   const todayCheckinIds = new Set(rawMonthCheckins.filter((checkin) => checkin.checkin_date === today).map((checkin) => checkin.id));
   const checkinIds = rawMonthCheckins.map((checkin) => checkin.id);
   const { data: items } = checkinIds.length
@@ -113,16 +129,17 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     }))
   );
 
-  const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
-  const normalizedMonthCheckins = normalizeCheckinStatuses(rawMonthCheckins, signedMonthItems);
+  const effectiveMonthItems = applyGymRestDayExcuses(signedMonthItems, rawMonthCheckins, signedProfiles);
+  const normalizedMonthCheckins = normalizeCheckinStatuses(rawMonthCheckins, effectiveMonthItems);
   const normalizedTodayCheckins = normalizedMonthCheckins.filter((checkin) => checkin.checkin_date === today);
 
   const people = signedProfiles.map((profile) => {
     const checkinsForUser = normalizedMonthCheckins.filter((item) => item.user_id === profile.id);
     const todayCheckin = normalizedTodayCheckins.find((item) => item.user_id === profile.id) ?? null;
+    const virtualTodayCheckin = createVirtualCheckin(profile.id, today);
     const todayItems = todayCheckin
-      ? signedMonthItems.filter((item) => item.checkin_id === todayCheckin.id)
-      : [];
+      ? effectiveMonthItems.filter((item) => item.checkin_id === todayCheckin.id)
+      : applyGymRestDayExcuses([], [virtualTodayCheckin], [profile]);
     const latestWeight = ((weights ?? []) as WeightEntry[]).find((item) => item.user_id === profile.id);
     const weekCheckins = checkinsForUser.filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd
@@ -146,7 +163,7 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     todayCategories,
     people,
     monthCheckins: normalizedMonthCheckins,
-    monthItems: signedMonthItems
+    monthItems: effectiveMonthItems
   };
 }
 
@@ -171,7 +188,9 @@ export async function fetchStreakBreakNotice(supabase: Client, profileId: string
     : { data: [] };
 
   const dayItems = ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category));
-  const normalizedCheckins = normalizeCheckinStatuses(rawCheckins, dayItems);
+  const { data: profile } = await supabase.from("profiles").select("id,gym_routine").eq("id", profileId).maybeSingle();
+  const effectiveItems = applyGymRestDayExcuses(dayItems, rawCheckins, profile ? [profile as Pick<Profile, "id" | "gym_routine">] : []);
+  const normalizedCheckins = normalizeCheckinStatuses(rawCheckins, effectiveItems);
   const priorStreak = getStreakEndingOn(
     normalizedCheckins.filter((checkin) => checkin.checkin_date < yesterday),
     dayBeforeYesterday
@@ -184,7 +203,7 @@ export async function fetchStreakBreakNotice(supabase: Client, profileId: string
   if (isStreakStatus(yesterdayStatus)) return null;
 
   const requiredCategoryIds = getCategoryIdsForDate(yesterday);
-  const yesterdayItems = yesterdayCheckin ? dayItems.filter((item) => item.checkin_id === yesterdayCheckin.id) : [];
+  const yesterdayItems = yesterdayCheckin ? effectiveItems.filter((item) => item.checkin_id === yesterdayCheckin.id) : [];
 
   return {
     date: yesterday,
@@ -199,22 +218,39 @@ export async function fetchTodayCompletionSummary(supabase: Client, profileId: s
   const categoryIds = getCategoryIdsForDate(today);
   const fallback = { completed: 0, required: categoryIds.length };
 
-  const { data: checkin } = await supabase
+  const [{ data: checkin }, { data: profile }] = await Promise.all([
+    supabase
     .from("daily_checkins")
     .select("id")
     .eq("user_id", profileId)
     .eq("checkin_date", today)
-    .maybeSingle();
+      .maybeSingle(),
+    supabase.from("profiles").select("id,gym_routine").eq("id", profileId).maybeSingle()
+  ]);
 
-  if (!checkin?.id) return fallback;
+  const virtualCheckin = createVirtualCheckin(profileId, today);
+
+  if (!checkin?.id) {
+    const effectiveItems = applyGymRestDayExcuses([], [virtualCheckin], profile ? [profile as Pick<Profile, "id" | "gym_routine">] : []);
+    return {
+      completed: getCompletionCount(effectiveItems, categoryIds),
+      required: categoryIds.length
+    };
+  }
 
   const { data: items } = await supabase
     .from("checkin_items")
     .select("status,category")
     .eq("checkin_id", String(checkin.id));
 
+  const effectiveItems = applyGymRestDayExcuses(
+    (items ?? []) as CheckInItem[],
+    [{ ...virtualCheckin, id: String(checkin.id) }],
+    profile ? [profile as Pick<Profile, "id" | "gym_routine">] : []
+  );
+
   return {
-    completed: getCompletionCount((items ?? []) as CheckInItem[], categoryIds),
+    completed: getCompletionCount(effectiveItems, categoryIds),
     required: categoryIds.length
   };
 }
@@ -270,11 +306,12 @@ export async function fetchTodayData(supabase: Client, profile: Profile) {
       signedUrl: await getSignedUrl(supabase, item.storage_path)
     }))
   );
+  const effectiveItems = applyGymRestDayExcuses(signedItems, [dailyCheckin], [profile]);
 
   return {
     profile,
     checkin: dailyCheckin,
-    items: signedItems,
+    items: effectiveItems,
     weightEntry: ((weightEntries ?? []) as WeightEntry[])[0] ?? null,
     cardioEntry: ((cardioEntries ?? []) as CardioEntry[])[0] ?? null,
     categories
@@ -301,15 +338,17 @@ export async function fetchAnalyticsData(supabase: Client) {
     ]);
 
   const filteredItems = ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category));
-  const normalizedCheckins = normalizeCheckinStatuses((checkins ?? []) as DailyCheckIn[], filteredItems);
+  const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
+  const effectiveItems = applyGymRestDayExcuses(filteredItems, (checkins ?? []) as DailyCheckIn[], signedProfiles);
+  const normalizedCheckins = normalizeCheckinStatuses((checkins ?? []) as DailyCheckIn[], effectiveItems);
 
   return {
-    profiles: await signProfiles(supabase, (profiles ?? []) as Profile[]),
+    profiles: signedProfiles,
     checkins: normalizedCheckins,
     weekCheckins: normalizedCheckins.filter(
       (item) => item.checkin_date >= weekStart && item.checkin_date <= weekEnd
     ),
-    items: filteredItems,
+    items: effectiveItems,
     weights: (weights ?? []) as WeightEntry[],
     cardio: (cardio ?? []) as CardioEntry[]
   };

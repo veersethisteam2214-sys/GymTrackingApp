@@ -146,7 +146,7 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
   const dayItems = items.filter((item) => item.checkin_id === checkin.id);
   const covered = categories.filter((category) => {
     const item = dayItems.find((entry) => entry.category === category.id);
-    return item?.status === "uploaded";
+    return item?.status === "uploaded" || item?.status === "excused";
   });
   const missed = categories.filter((category) => !covered.some((done) => done.id === category.id));
 
@@ -154,7 +154,8 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
     const category = categories.find((entry) => entry.id === categoryId);
     const item = dayItems.find((entry) => entry.category === categoryId);
     const status = item?.status ?? "missing";
-    return `${profile.display_name}'s ${category?.shortLabel ?? "task"} on ${formatDate(date)} is ${status}.`;
+    const detail = item?.status === "excused" && categoryId === "progress_photo" ? " because it is their gym rest day" : "";
+    return `${profile.display_name}'s ${category?.shortLabel ?? "task"} on ${formatDate(date)} is ${status}${detail}.`;
   }
 
   const missedText = missed.length ? missed.map((category) => category.shortLabel).join(", ") : "nothing";

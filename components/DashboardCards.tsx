@@ -19,6 +19,7 @@ import {
   X
 } from "lucide-react";
 import { getDenseRank, getRankBadge, rankPeople, type LeaderboardPerson } from "@/lib/leaderboard";
+import { GYM_REST_DAY_NOTE, getGymCategoryRestLabel } from "@/lib/rest-days";
 import { getCompletionCount } from "@/lib/status";
 import type {
   CategoryMeta,
@@ -408,15 +409,18 @@ function buildDataPoints(person: Person, categories: CategoryMeta[]): DataPoint[
   const latestWeight = person.latestWeight?.weight_value ?? person.profile.starting_weight;
   return categories.map((category) => {
     const item = person.todayItems.find((entry) => entry.category === category.id);
-    const complete = item?.status === "uploaded";
+    const complete = item?.status === "uploaded" || item?.status === "excused";
+    const restDayText = getGymCategoryRestLabel(category.id, item);
     const text =
-      category.id === "weight_scale_photo"
+      restDayText
+        ? GYM_REST_DAY_NOTE
+        : category.id === "weight_scale_photo"
         ? `Weight: ${complete && latestWeight ? `${latestWeight}kg` : "Not entered today"}`
         : item?.note;
     return {
       id: category.id,
       label: category.label,
-      helper: complete ? "Complete today" : "Missing today",
+      helper: item?.status === "excused" ? "Rest day - no photo required" : complete ? "Complete today" : "Missing today",
       complete,
       icon: categoryIcons[category.id],
       text,

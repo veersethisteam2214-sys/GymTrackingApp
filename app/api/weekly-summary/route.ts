@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ALL_CATEGORY_IDS, getCategoryIdsForDate } from "@/lib/categories";
+import { applyGymRestDayExcuses } from "@/lib/rest-days";
 import { calculateDailyStatus } from "@/lib/status";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
@@ -54,7 +55,11 @@ function buildRows(
   return profiles.map((profile) => {
     const userCheckins = checkins.filter((checkin) => checkin.user_id === profile.id);
     const userCheckinIds = new Set(userCheckins.map((checkin) => checkin.id));
-    const userItems = items.filter((item) => userCheckinIds.has(item.checkin_id) && ALL_CATEGORY_IDS.includes(item.category));
+    const userItems = applyGymRestDayExcuses(
+      items.filter((item) => userCheckinIds.has(item.checkin_id) && ALL_CATEGORY_IDS.includes(item.category)),
+      userCheckins,
+      [profile]
+    );
     const possibleTasks = userCheckins.reduce((sum, checkin) => sum + getCategoryIdsForDate(checkin.checkin_date).length, 0);
     const normalizedCheckins = userCheckins.map((checkin) => ({
       ...checkin,
@@ -70,7 +75,7 @@ function buildRows(
       completedDays: normalizedCheckins.filter((checkin) => checkin.overall_status === "complete").length,
       partialDays: normalizedCheckins.filter((checkin) => checkin.overall_status === "partial").length,
       excusedDays: normalizedCheckins.filter((checkin) => checkin.overall_status === "excused").length,
-      taskCount: userItems.filter((item) => item.status === "uploaded").length,
+      taskCount: userItems.filter((item) => item.status === "uploaded" || item.status === "excused").length,
       possibleTasks,
       latestWeight: latestByUser(weights, profile.id),
       latestCardio: latestByUser(cardio, profile.id)

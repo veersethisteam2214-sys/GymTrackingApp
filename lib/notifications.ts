@@ -8,6 +8,7 @@ type Supabase = NonNullable<ReturnType<typeof createAdminSupabase>>;
 const ANNOUNCEMENT_ID = "2026-06-10-notifications-update";
 const NEW_USER_ANNOUNCEMENT_ID = "new-user-overview-v1";
 const SUNDAY_PROGRESS_PREFIX = "sunday-progress-reminder";
+const REST_DAY_RULES_NOTICE_ID = "rest-day-gym-auto-credit-v1";
 const APP_TIME_ZONE = "Asia/Bangkok";
 
 function getBangkokDate() {
@@ -121,6 +122,42 @@ async function ensureTargetedSystemNotification(
 
   if (error && !isMissingTableError(error) && !isMissingTargetColumnError(error)) {
     console.error("Could not create targeted notification:", error.message);
+  }
+}
+
+async function ensureGlobalSystemNotification(
+  supabase: Supabase,
+  key: string,
+  title: string,
+  body: string
+) {
+  const { data: existing, error: existingError } = await supabase
+    .from("group_notifications")
+    .select("id")
+    .is("target_profile_id", null)
+    .contains("metadata", { notice_key: key })
+    .limit(1);
+
+  if (existingError) {
+    if (!isMissingTableError(existingError) && !isMissingTargetColumnError(existingError)) {
+      console.error("Could not check global notification:", existingError.message);
+    }
+    return;
+  }
+
+  if ((existing ?? []).length > 0) return;
+
+  const { error } = await supabase.from("group_notifications").insert({
+    actor_profile_id: null,
+    target_profile_id: null,
+    notification_type: "system",
+    title,
+    body,
+    metadata: { notice_key: key }
+  });
+
+  if (error && !isMissingTableError(error) && !isMissingTargetColumnError(error)) {
+    console.error("Could not create global notification:", error.message);
   }
 }
 
@@ -334,6 +371,12 @@ export async function fetchNotificationCenter(
   profileId: string
 ): Promise<{ notifications: GroupNotification[]; unreadCount: number }> {
   const profile = await getProfile(supabase, profileId);
+  await ensureGlobalSystemNotification(
+    supabase,
+    REST_DAY_RULES_NOTICE_ID,
+    "Rest day scoring updated",
+    "Gym attendance now auto-counts on your profile gym rest days. Weight, protein, cardio, Sunday progress pictures, and group challenges still need proof when active. Streaks continue as long as the required non-gym benchmarks are completed."
+  );
   if (profile) await ensurePersonalNotifications(supabase, profile);
 
   let { data: notifications, error } = await supabase

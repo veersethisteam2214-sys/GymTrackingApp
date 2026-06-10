@@ -14,6 +14,7 @@ import {
   Trash2,
   X
 } from "lucide-react";
+import { GYM_REST_DAY_NOTE } from "@/lib/rest-days";
 import { calculateDailyStatus, getCompletionCount } from "@/lib/status";
 import type { CardioEntry, CategoryMeta, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
@@ -350,6 +351,7 @@ function UploadPanel({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const isWeightEntry = category.id === "weight_scale_photo";
+  const isGymRestExcused = category.id === "progress_photo" && item?.status === "excused";
 
   useEffect(() => {
     if (!cameraActive || !videoRef.current || !streamRef.current) return;
@@ -477,6 +479,12 @@ function UploadPanel({
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : isGymRestExcused ? (
+              <div className="flex h-full w-full flex-col items-center justify-center px-4 text-center">
+                <ShieldCheck className="mx-auto size-10" style={{ color: "var(--brand)" }} aria-hidden />
+                <p className="mt-2 text-sm font-extrabold text-app">Gym rest day</p>
+                <p className="mt-1 text-xs font-bold text-muted">{GYM_REST_DAY_NOTE}</p>
+              </div>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center px-4 text-center">
                 <Camera className="mx-auto size-10 text-muted" aria-hidden />
