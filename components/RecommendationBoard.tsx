@@ -1,15 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ChevronDown, ImagePlus, Lightbulb, Link as LinkIcon, Loader2, Send } from "lucide-react";
+import { Check, ChevronDown, ImagePlus, Lightbulb, Link as LinkIcon, Loader2, Send, Users } from "lucide-react";
 import type { Profile, Recommendation } from "@/lib/types";
 
 export function RecommendationBoard({
   initialRecommendations,
-  currentProfile
+  currentProfile,
+  profiles
 }: {
   initialRecommendations: Recommendation[];
   currentProfile: Profile;
+  profiles: Profile[];
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [recommendations, setRecommendations] = useState(initialRecommendations);
@@ -19,6 +21,8 @@ export function RecommendationBoard({
   const [category, setCategory] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [note, setNote] = useState("");
+  const [audienceType, setAudienceType] = useState<"everyone" | "specific">("everyone");
+  const [targetProfileIds, setTargetProfileIds] = useState<string[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -34,6 +38,10 @@ export function RecommendationBoard({
     formData.set("category", category);
     formData.set("link_url", linkUrl);
     formData.set("note", note);
+    formData.set("audience_type", audienceType);
+    if (audienceType === "specific") {
+      targetProfileIds.forEach((profileId) => formData.append("target_profile_ids", profileId));
+    }
     if (photo) formData.set("photo", photo);
 
     const response = await fetch("/api/recommendations", {
@@ -60,6 +68,8 @@ export function RecommendationBoard({
     setCategory("");
     setLinkUrl("");
     setNote("");
+    setAudienceType("everyone");
+    setTargetProfileIds([]);
     setPhoto(null);
     setPreview(null);
     setMessage("Recommendation added.");
@@ -70,6 +80,12 @@ export function RecommendationBoard({
     if (!file) return;
     setPhoto(file);
     setPreview(URL.createObjectURL(file));
+  }
+
+  function toggleTarget(profileId: string) {
+    setTargetProfileIds((current) =>
+      current.includes(profileId) ? current.filter((id) => id !== profileId) : [...current, profileId]
+    );
   }
 
   return (
@@ -132,6 +148,56 @@ export function RecommendationBoard({
                 className="min-h-24 resize-none rounded-2xl border bg-transparent px-4 py-3 text-sm text-app outline-none placeholder:text-muted focus:ring-4"
                 style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
               />
+              <div className="rounded-3xl border p-3" style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}>
+                <div className="mb-3 flex items-center gap-2">
+                  <Users className="size-4" style={{ color: "var(--brand)" }} aria-hidden />
+                  <p className="text-sm font-extrabold text-app">Send recommendation to</p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <AudienceButton
+                    active={audienceType === "everyone"}
+                    label="Everyone"
+                    helper="All users see the notification."
+                    onClick={() => {
+                      setAudienceType("everyone");
+                      setTargetProfileIds([]);
+                    }}
+                  />
+                  <AudienceButton
+                    active={audienceType === "specific"}
+                    label="Specific users"
+                    helper="Only selected users get notified."
+                    onClick={() => setAudienceType("specific")}
+                  />
+                </div>
+                {audienceType === "specific" ? (
+                  <div className="mt-3 grid max-h-44 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                    {profiles.map((profile) => {
+                      const selected = targetProfileIds.includes(profile.id);
+                      return (
+                        <button
+                          key={profile.id}
+                          type="button"
+                          onClick={() => toggleTarget(profile.id)}
+                          className="app-button flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-left"
+                          style={{
+                            borderColor: selected ? "var(--brand)" : "var(--faint)",
+                            background: selected ? "color-mix(in srgb, var(--brand) 12%, var(--surface-strong))" : "var(--surface-soft)"
+                          }}
+                        >
+                          <span
+                            className="grid size-6 shrink-0 place-items-center rounded-lg"
+                            style={{ background: selected ? "var(--brand)" : "var(--surface-soft)", color: selected ? "var(--bg)" : "var(--muted)" }}
+                          >
+                            {selected ? <Check className="size-4" aria-hidden /> : null}
+                          </span>
+                          <span className="min-w-0 truncate text-sm font-bold text-app">{profile.display_name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="grid gap-2">
               <button
@@ -158,7 +224,7 @@ export function RecommendationBoard({
                 onChange={(event) => choosePhoto(event.target.files?.[0])}
               />
               <button
-                disabled={busy}
+                disabled={busy || (audienceType === "specific" && targetProfileIds.length === 0)}
                 className="app-button brand-gradient flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-black hover:scale-[1.01] disabled:opacity-55"
               >
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
@@ -194,6 +260,7 @@ export function RecommendationBoard({
                         <p className="mt-1 truncate text-xs font-extrabold uppercase tracking-[0.16em]" style={{ color: "var(--brand)" }}>
                           {recommendation.profile?.display_name ?? "Someone"}
                           {recommendation.category ? ` / ${recommendation.category}` : ""}
+                          {recommendation.audience_type === "specific" ? " / selected users" : " / everyone"}
                         </p>
                       </div>
                       <ChevronDown className={`size-4 shrink-0 text-muted transition ${expanded ? "rotate-180" : ""}`} aria-hidden />
@@ -227,5 +294,32 @@ export function RecommendationBoard({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function AudienceButton({
+  active,
+  label,
+  helper,
+  onClick
+}: {
+  active: boolean;
+  label: string;
+  helper: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="app-button rounded-2xl border p-3 text-left"
+      style={{
+        borderColor: active ? "var(--brand)" : "var(--faint)",
+        background: active ? "color-mix(in srgb, var(--brand) 12%, var(--surface-strong))" : "var(--surface-soft)"
+      }}
+    >
+      <span className="text-sm font-extrabold text-app">{label}</span>
+      <span className="mt-1 block text-xs font-bold text-muted">{helper}</span>
+    </button>
   );
 }

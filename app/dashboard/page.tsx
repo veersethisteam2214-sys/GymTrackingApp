@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const [data, challenges, recommendations] = await Promise.all([
     fetchDashboardData(session.supabase, session.profile.id),
     fetchChallenges(session.supabase),
-    fetchRecommendations(session.supabase)
+    fetchRecommendations(session.supabase, session.profile.id)
   ]);
 
   return (
@@ -31,7 +31,11 @@ export default async function DashboardPage() {
       />
       <StatsDataChat profiles={data.people.map((person) => person.profile)} checkins={data.monthCheckins} items={data.monthItems} />
       <ChallengePreview challenges={challenges} />
-      <RecommendationBoard initialRecommendations={recommendations} currentProfile={session.profile} />
+      <RecommendationBoard
+        initialRecommendations={recommendations}
+        currentProfile={session.profile}
+        profiles={data.people.map((person) => person.profile)}
+      />
     </AppShell>
   );
 }

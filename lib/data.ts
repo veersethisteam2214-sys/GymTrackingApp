@@ -13,6 +13,7 @@ import type {
 } from "@/lib/types";
 
 type Client = SupabaseClient<any>;
+const RECOMMENDATIONS_RESET_AT = "2026-06-10T07:40:14.000Z";
 
 export async function getSignedUrl(supabase: Client, storagePath?: string | null) {
   if (!storagePath) return null;
@@ -249,18 +250,26 @@ export async function fetchChallenges(supabase: Client) {
   return (data ?? []) as Challenge[];
 }
 
-export async function fetchRecommendations(supabase: Client) {
+export async function fetchRecommendations(supabase: Client, profileId?: string) {
   const [{ data: recommendations }, { data: profiles }] = await Promise.all([
-    supabase.from("recommendations").select("*").order("created_at", { ascending: false }).limit(8),
+    supabase.from("recommendations").select("*").gte("created_at", RECOMMENDATIONS_RESET_AT).order("created_at", { ascending: false }).limit(20),
     supabase.from("profiles").select("*")
   ]);
   const signedProfiles = await signProfiles(supabase, (profiles ?? []) as Profile[]);
 
   return Promise.all(
-    ((recommendations ?? []) as Recommendation[]).map(async (recommendation) => ({
+    ((recommendations ?? []) as Recommendation[])
+      .filter((recommendation) => {
+        if (!profileId) return true;
+        if (recommendation.audience_type !== "specific") return true;
+        if (recommendation.created_by_profile_id === profileId) return true;
+        return (recommendation.target_profile_ids ?? []).includes(profileId);
+      })
+      .slice(0, 8)
+      .map(async (recommendation) => ({
       ...recommendation,
       signedUrl: await getSignedUrl(supabase, recommendation.storage_path),
       profile: signedProfiles.find((profile) => profile.id === recommendation.created_by_profile_id) ?? null
-    }))
+      }))
   );
 }

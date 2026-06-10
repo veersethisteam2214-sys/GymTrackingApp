@@ -184,24 +184,54 @@ export async function createUploadNotification(
   if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
 }
 
-export async function createRecommendationNotification(supabase: Supabase, actorProfileId: string, title: string) {
+export async function createRecommendationNotification(
+  supabase: Supabase,
+  actorProfileId: string,
+  title: string,
+  targetProfileIds: string[] | null = null
+) {
   const actorName = await getProfileName(supabase, actorProfileId);
+  const isSpecific = Array.isArray(targetProfileIds) && targetProfileIds.length > 0;
+  const rows: {
+    actor_profile_id: string;
+    target_profile_id: string | null;
+    notification_type: "recommendation";
+    title: string;
+    body: string;
+    metadata: { recommendation_title: string; audience_type: "everyone" | "specific" };
+  }[] = isSpecific
+    ? targetProfileIds.map((targetProfileId) => ({
+        actor_profile_id: actorProfileId,
+        target_profile_id: targetProfileId,
+        notification_type: "recommendation",
+        title: `${actorName} sent you a recommendation`,
+        body: `${actorName} recommends: ${title}.`,
+        metadata: { recommendation_title: title, audience_type: "specific" }
+      }))
+    : [
+        {
+          actor_profile_id: actorProfileId,
+          target_profile_id: null,
+          notification_type: "recommendation",
+          title: `${actorName} added a recommendation`,
+          body: `${actorName} recommends: ${title}.`,
+          metadata: { recommendation_title: title, audience_type: "everyone" }
+        }
+      ];
+
   const { data, error } = await supabase
     .from("group_notifications")
-    .insert({
-      actor_profile_id: actorProfileId,
-      notification_type: "recommendation",
-      title: `${actorName} added a recommendation`,
-      body: `${actorName} recommends: ${title}.`,
-      metadata: { recommendation_title: title }
-    })
-    .select("id")
-    .single();
+    .insert(rows)
+    .select("id,target_profile_id");
 
   if (error && !isMissingTableError(error)) {
     console.error("Could not create recommendation notification:", error.message);
   }
-  if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
+  for (const notification of data ?? []) {
+    if (!notification.target_profile_id || notification.target_profile_id === actorProfileId) {
+      await markSingleNotificationRead(supabase, actorProfileId, String(notification.id));
+    }
+  }
 }
 
 export async function createChallengeNotification(

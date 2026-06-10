@@ -106,6 +106,8 @@ export type Recommendation = {
   note: string | null;
   link_url: string | null;
   storage_path: string | null;
+  audience_type?: "everyone" | "specific";
+  target_profile_ids?: string[] | null;
   signedUrl?: string | null;
   created_at: string;
   profile?: Pick<Profile, "display_name" | "avatarSignedUrl"> | null;
