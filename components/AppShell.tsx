@@ -2,10 +2,12 @@ import Link from "next/link";
 import { LockKeyhole, Settings, UserRound } from "lucide-react";
 import { HeaderClock } from "@/components/HeaderClock";
 import { NotificationBell } from "@/components/NotificationBell";
+import { StreakBreakModal } from "@/components/StreakBreakModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TodayReminder } from "@/components/TodayReminder";
 import { TopNavLinks } from "@/components/TopNavLinks";
 import { UpdateAnnouncementModal } from "@/components/UpdateAnnouncementModal";
+import { fetchStreakBreakNotice } from "@/lib/data";
 import { fetchNotificationCenter, getActiveAnnouncement } from "@/lib/notifications";
 import { createAdminSupabase } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
@@ -22,13 +24,14 @@ export async function AppShell({
   profile?: Profile | null;
 }) {
   const supabase = profile ? createAdminSupabase() : null;
-  const [{ notifications, unreadCount }, announcement] =
+  const [{ notifications, unreadCount }, announcement, streakBreakNotice] =
     profile && supabase
       ? await Promise.all([
           fetchNotificationCenter(supabase, profile.id),
-          getActiveAnnouncement(supabase, profile.id)
+          getActiveAnnouncement(supabase, profile.id),
+          fetchStreakBreakNotice(supabase, profile.id)
         ])
-      : [{ notifications: [], unreadCount: 0 }, null];
+      : [{ notifications: [], unreadCount: 0 }, null, null];
 
   return (
     <div className="min-h-screen pb-8">
@@ -73,6 +76,7 @@ export async function AppShell({
       </header>
       <UpdateAnnouncementModal announcement={announcement} />
       {profile ? <TodayReminder /> : null}
+      {profile ? <StreakBreakModal notice={streakBreakNotice} profileId={profile.id} /> : null}
       <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 py-6">
         {children}
       </main>

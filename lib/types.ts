@@ -133,3 +133,10 @@ export type FeatureAnnouncement = {
   active_on: string;
   created_at: string;
 };
+
+export type StreakBreakNotice = {
+  date: string;
+  completed: number;
+  required: number;
+  previousStreak: number;
+};

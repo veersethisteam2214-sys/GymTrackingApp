@@ -45,7 +45,7 @@ function getTodayString() {
   return `${year}-${month}-${day}`;
 }
 
-function shiftDate(dateString: string, amount: number) {
+export function shiftDate(dateString: string, amount: number) {
   const date = new Date(`${dateString}T12:00:00`);
   date.setDate(date.getDate() + amount);
   const year = date.getFullYear();
@@ -54,14 +54,13 @@ function shiftDate(dateString: string, amount: number) {
   return `${year}-${month}-${day}`;
 }
 
-function isStreakStatus(status: DailyStatus) {
+export function isStreakStatus(status: DailyStatus) {
   return status === "complete" || status === "excused";
 }
 
-export function getCurrentStreak(checkins: Pick<DailyCheckIn, "checkin_date" | "overall_status">[], anchorDate = getTodayString()) {
+export function getStreakEndingOn(checkins: Pick<DailyCheckIn, "checkin_date" | "overall_status">[], anchorDate: string) {
   const byDate = new Map(checkins.map((checkin) => [checkin.checkin_date, checkin.overall_status]));
-  const anchorStatus = byDate.get(anchorDate);
-  let cursor = anchorStatus && isStreakStatus(anchorStatus) ? anchorDate : shiftDate(anchorDate, -1);
+  let cursor = anchorDate;
   let streak = 0;
 
   while (true) {
@@ -72,6 +71,13 @@ export function getCurrentStreak(checkins: Pick<DailyCheckIn, "checkin_date" | "
   }
 
   return streak;
+}
+
+export function getCurrentStreak(checkins: Pick<DailyCheckIn, "checkin_date" | "overall_status">[], anchorDate = getTodayString()) {
+  const byDate = new Map(checkins.map((checkin) => [checkin.checkin_date, checkin.overall_status]));
+  const anchorStatus = byDate.get(anchorDate);
+  const cursor = anchorStatus && isStreakStatus(anchorStatus) ? anchorDate : shiftDate(anchorDate, -1);
+  return getStreakEndingOn(checkins, cursor);
 }
 
 export function getLongestStreak(checkins: Pick<DailyCheckIn, "overall_status">[]) {

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ALL_CATEGORY_IDS, getCategoriesForDate, getCategoryIdsForDate } from "@/lib/categories";
 import { getLocalDateString, getMonthRange, getWeekRange } from "@/lib/dates";
-import { calculateDailyStatus, getCurrentStreak, getStats } from "@/lib/status";
+import { calculateDailyStatus, getCompletionCount, getCurrentStreak, getStats, getStreakEndingOn, isStreakStatus, shiftDate } from "@/lib/status";
 import type {
   CardioEntry,
   Challenge,
@@ -9,6 +9,7 @@ import type {
   DailyCheckIn,
   Profile,
   Recommendation,
+  StreakBreakNotice,
   WeightEntry
 } from "@/lib/types";
 
@@ -145,6 +146,50 @@ export async function fetchDashboardData(supabase: Client, profileId: string) {
     people,
     monthCheckins: normalizedMonthCheckins,
     monthItems: signedMonthItems
+  };
+}
+
+export async function fetchStreakBreakNotice(supabase: Client, profileId: string): Promise<StreakBreakNotice | null> {
+  const today = getLocalDateString();
+  const yesterday = shiftDate(today, -1);
+  const dayBeforeYesterday = shiftDate(yesterday, -1);
+  const lookbackStart = shiftDate(today, -60);
+
+  const { data: checkins } = await supabase
+    .from("daily_checkins")
+    .select("*")
+    .eq("user_id", profileId)
+    .gte("checkin_date", lookbackStart)
+    .lte("checkin_date", yesterday)
+    .order("checkin_date", { ascending: true });
+
+  const rawCheckins = (checkins ?? []) as DailyCheckIn[];
+  const checkinIds = rawCheckins.map((checkin) => checkin.id);
+  const { data: items } = checkinIds.length
+    ? await supabase.from("checkin_items").select("*").in("checkin_id", checkinIds)
+    : { data: [] };
+
+  const dayItems = ((items ?? []) as CheckInItem[]).filter((item) => ALL_CATEGORY_IDS.includes(item.category));
+  const normalizedCheckins = normalizeCheckinStatuses(rawCheckins, dayItems);
+  const priorStreak = getStreakEndingOn(
+    normalizedCheckins.filter((checkin) => checkin.checkin_date < yesterday),
+    dayBeforeYesterday
+  );
+
+  if (priorStreak < 1) return null;
+
+  const yesterdayCheckin = normalizedCheckins.find((checkin) => checkin.checkin_date === yesterday) ?? null;
+  const yesterdayStatus = yesterdayCheckin?.overall_status ?? "missing";
+  if (isStreakStatus(yesterdayStatus)) return null;
+
+  const requiredCategoryIds = getCategoryIdsForDate(yesterday);
+  const yesterdayItems = yesterdayCheckin ? dayItems.filter((item) => item.checkin_id === yesterdayCheckin.id) : [];
+
+  return {
+    date: yesterday,
+    completed: getCompletionCount(yesterdayItems, requiredCategoryIds),
+    required: requiredCategoryIds.length,
+    previousStreak: priorStreak
   };
 }
 
