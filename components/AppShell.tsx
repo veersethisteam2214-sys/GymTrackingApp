@@ -42,7 +42,7 @@ export async function AppShell({
       <a href="#main-content" className="skip-link">
         Skip To Content
       </a>
-      <header className="sticky top-0 z-30 border-b backdrop-blur-2xl" style={{ borderColor: "var(--faint)", background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
+      <header className="header-hairline sticky top-0 z-30 border-b backdrop-blur-2xl" style={{ borderColor: "var(--faint)", background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">

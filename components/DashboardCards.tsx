@@ -116,7 +116,7 @@ export function DashboardCards({
             <p className="display-font text-sm font-extrabold uppercase tracking-[0.28em]" style={{ color: "var(--brand)" }}>
               Live command center
             </p>
-            <h2 className="display-font mt-2 text-6xl font-extrabold leading-none text-app sm:text-7xl">
+            <h2 className="display-font stat-hero mt-2 text-6xl font-extrabold leading-none sm:text-7xl">
               {totalCompleted}/{totalPossible}
             </h2>
             <p className="mt-2 max-w-xl text-sm font-extrabold leading-6 text-app">

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,21 +6,21 @@
 
 :root {
   color-scheme: dark;
-  --bg: #04060d;
-  --bg-grid: rgba(125, 165, 255, 0.05);
-  --surface: rgba(13, 20, 38, 0.72);
-  --surface-strong: rgba(15, 24, 44, 0.92);
-  --surface-soft: rgba(148, 178, 255, 0.07);
-  --text: #f2f5fc;
-  --muted: rgba(226, 233, 248, 0.62);
-  --faint: rgba(226, 233, 248, 0.1);
-  --brand: #93b8ff;
-  --brand-2: #2f5cff;
-  --accent: #7de3ff;
+  --bg: #070608;
+  --bg-grid: rgba(232, 201, 126, 0.05);
+  --surface: rgba(22, 20, 24, 0.74);
+  --surface-strong: rgba(26, 24, 29, 0.94);
+  --surface-soft: rgba(255, 240, 205, 0.06);
+  --text: #f8f4ea;
+  --muted: rgba(248, 244, 234, 0.6);
+  --faint: rgba(248, 244, 234, 0.11);
+  --brand: #e8c97e;
+  --brand-2: #a4762f;
+  --accent: #6fd6ff;
   --danger: #ff6a4f;
-  --shadow: 0 24px 70px rgba(2, 6, 18, 0.5);
-  --edge-light: rgba(255, 255, 255, 0.08);
-  --glow: 0 0 44px rgba(83, 124, 255, 0.22);
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  --edge-light: rgba(255, 248, 230, 0.09);
+  --glow: 0 0 44px rgba(232, 201, 126, 0.2);
 }
 
 :root[data-theme="light"] {
@@ -79,11 +79,12 @@ html {
 body {
   min-height: 100vh;
   background:
+    radial-gradient(130% 100% at 50% 0%, transparent 55%, rgba(0, 0, 0, 0.5) 100%),
     linear-gradient(var(--bg-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px),
-    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--brand-2) 14%, transparent) 0%, transparent 58%),
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--brand-2) 20%, transparent) 0%, transparent 58%),
     var(--bg);
-  background-size: 36px 36px, 36px 36px, auto, auto;
+  background-size: auto, 36px 36px, 36px 36px, auto, auto;
   color: var(--text);
   font-family: "Plus Jakarta Sans", "Manrope", "Segoe UI", sans-serif;
   font-feature-settings: "ss01" on, "cv11" on;
@@ -98,10 +99,20 @@ body::after {
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(34% 30% at 24% 28%, color-mix(in srgb, var(--brand-2) 26%, transparent) 0%, transparent 70%),
-    radial-gradient(30% 26% at 78% 18%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%),
-    radial-gradient(36% 32% at 62% 82%, color-mix(in srgb, #7a5cff 16%, transparent) 0%, transparent 70%);
-  animation: aurora-drift 38s ease-in-out infinite alternate;
+    radial-gradient(34% 30% at 22% 24%, color-mix(in srgb, var(--brand) 24%, transparent) 0%, transparent 70%),
+    radial-gradient(30% 26% at 80% 16%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%),
+    radial-gradient(38% 34% at 60% 85%, color-mix(in srgb, var(--brand-2) 22%, transparent) 0%, transparent 70%);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(130% 100% at 50% 0%, transparent 62%, rgba(9, 13, 22, 0.07) 100%),
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px),
+    radial-gradient(120% 90% at 50% 0%, rgba(36, 112, 255, 0.07) 0%, transparent 58%),
+    var(--bg);
+  background-size: auto, 36px 36px, 36px 36px, auto, auto;
 }
 
 :root[data-theme="light"] body::after {
@@ -146,8 +157,8 @@ select {
 }
 
 select option {
-  background: #0e1830;
-  color: #f2f5fc;
+  background: #1c1a20;
+  color: #f8f4ea;
 }
 
 :root[data-theme="light"] select option {
@@ -178,8 +189,8 @@ select option {
 }
 
 .display-font {
-  font-family: "Oswald", "Barlow Condensed", Impact, sans-serif;
-  letter-spacing: 0.015em;
+  font-family: "Bebas Neue", "Oswald", Impact, sans-serif;
+  letter-spacing: 0.045em;
 }
 
 /* Glass surfaces with a lit top edge and hairline gradient border */
@@ -215,7 +226,7 @@ select option {
 
 /* Brand wordmark — gradient ink with a slow sheen pass */
 .brand-wordmark {
-  background-image: linear-gradient(100deg, var(--brand) 20%, var(--accent) 48%, var(--brand) 76%);
+  background-image: linear-gradient(100deg, var(--brand) 20%, #fff3d0 48%, var(--brand) 76%);
   background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -275,7 +286,7 @@ select option {
 }
 
 .bg-ink {
-  background-color: #060f1f !important;
+  background-color: #100e13 !important;
 }
 
 :root[data-theme="light"] .bg-ink {
@@ -319,6 +330,25 @@ select option {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* Gradient hairline under the sticky header */
+.header-hairline {
+  border-image: linear-gradient(90deg, transparent 2%, color-mix(in srgb, var(--brand) 55%, transparent) 50%, transparent 98%) 1;
+}
+
+/* Hero stats — gilded gradient numerals */
+.stat-hero {
+  background-image: linear-gradient(180deg, #fffbef 0%, var(--brand) 58%, color-mix(in srgb, var(--brand-2) 80%, var(--brand)) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 8px 26px color-mix(in srgb, var(--brand) 28%, transparent));
+}
+
+:root[data-theme="light"] .stat-hero {
+  background-image: linear-gradient(180deg, #2c3344 0%, #090d16 70%);
+  filter: none;
 }
 
 /* Leaderboard CTA card — brand gradient in dark, whitish card with black text in light */

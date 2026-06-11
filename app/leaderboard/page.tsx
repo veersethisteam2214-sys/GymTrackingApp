@@ -27,7 +27,7 @@ export default async function LeaderboardPage() {
             <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
               Discipline rankings
             </p>
-            <h2 className="display-font mt-1 text-6xl font-extrabold leading-none text-app">Most consistent</h2>
+            <h2 className="display-font stat-hero mt-1 text-6xl font-extrabold leading-none">Most consistent</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
               Scoring is simple: max {maxDailyPoints} points per day, 1 point for each required photo or data entry completed.
               Rankings are ordered by total score, then streak, then today&apos;s uploads. If users have the same score, they share the same rank number.
