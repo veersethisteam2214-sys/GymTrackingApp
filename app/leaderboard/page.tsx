@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/AppShell";
+import { LeaderboardPodium, StreakFlame } from "@/components/LeaderboardPodium";
 import { SetupMissing } from "@/components/SetupMissing";
 import { requireAppProfile } from "@/lib/auth";
 import { fetchDashboardData } from "@/lib/data";
@@ -38,6 +39,25 @@ export default async function LeaderboardPage() {
           </div>
         </div>
       </section>
+
+      {ranked.length >= 3 ? (
+        <section className="app-surface mt-5 overflow-hidden rounded-[2rem] p-5 pt-6">
+          <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
+            The podium
+          </p>
+          <div className="mt-8">
+            <LeaderboardPodium
+              entries={ranked.slice(0, 3).map((person, index) => ({
+                id: person.profile.id,
+                name: person.profile.display_name,
+                avatarUrl: person.profile.avatarSignedUrl,
+                score: person.score,
+                rank: getDenseRank(ranked, index)
+              }))}
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-5 grid gap-3">
         {ranked.map((person, index) => {
@@ -83,7 +103,7 @@ export default async function LeaderboardPage() {
                 <Stat label="Complete" value={person.monthStats.complete} />
                 <Stat label="Partial" value={person.monthStats.partial} />
                 <Stat label="Excused" value={person.monthStats.excused} />
-                <Stat label="Streak" value={`${person.currentStreak}d`} />
+                <StreakStat streak={person.currentStreak} />
                 <Stat label="Today" value={`${person.todayTasks}/${maxDailyPoints}`} />
               </div>
             </article>
@@ -103,6 +123,18 @@ function Avatar({ name, src }: { name: string; src?: string | null }) {
       ) : (
         name.slice(0, 1).toUpperCase()
       )}
+    </div>
+  );
+}
+
+function StreakStat({ streak }: { streak: number }) {
+  return (
+    <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
+      <div className="flex items-center gap-1.5">
+        <p className="display-font text-2xl font-extrabold text-app">{streak}d</p>
+        <StreakFlame streak={streak} />
+      </div>
+      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">Streak</p>
     </div>
   );
 }

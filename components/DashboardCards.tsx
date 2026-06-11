@@ -350,9 +350,8 @@ function LeaderboardEntry() {
   return (
     <Link
       href="/leaderboard"
-      className="app-button group relative flex min-h-36 items-center justify-between gap-4 overflow-hidden rounded-3xl p-5 hover:-translate-y-0.5"
+      className="app-button leaderboard-cta group relative flex min-h-36 items-center justify-between gap-4 overflow-hidden rounded-3xl p-5 hover:-translate-y-0.5"
       style={{
-        background: "linear-gradient(135deg, var(--brand), var(--brand-2))",
         border: "1px solid color-mix(in srgb, var(--brand) 72%, transparent)",
         boxShadow: "0 24px 70px color-mix(in srgb, var(--brand) 28%, transparent)"
       }}

@@ -321,6 +321,137 @@ select option {
   }
 }
 
+/* Leaderboard CTA card — brand gradient in dark, whitish card with black text in light */
+.leaderboard-cta {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+}
+
+:root[data-theme="light"] .leaderboard-cta {
+  background: linear-gradient(150deg, #ffffff 0%, #e9eff9 100%) !important;
+  border-color: rgba(9, 13, 22, 0.12) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* Podium */
+.podium-col {
+  transform-origin: bottom center;
+  animation: podium-rise 800ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@keyframes podium-rise {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.podium-topper {
+  animation: podium-pop 600ms cubic-bezier(.34, 1.56, .64, 1) both;
+}
+
+@keyframes podium-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.podium-gold {
+  background: linear-gradient(180deg, #ffe9ad 0%, #f6c453 38%, #d9982a 100%);
+  box-shadow: 0 14px 44px rgba(246, 196, 83, 0.35);
+}
+
+.podium-silver {
+  background: linear-gradient(180deg, #f4f7fb 0%, #cbd5e1 42%, #98a5b6 100%);
+  box-shadow: 0 12px 36px rgba(203, 213, 225, 0.25);
+}
+
+.podium-bronze {
+  background: linear-gradient(180deg, #ecc3a0 0%, #c08457 45%, #96602f 100%);
+  box-shadow: 0 12px 36px rgba(192, 132, 87, 0.28);
+}
+
+.shine-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-sweep::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-18deg);
+  animation: shine-sweep 3.2s ease-in-out infinite;
+}
+
+@keyframes shine-sweep {
+  0% {
+    left: -60%;
+  }
+
+  60%,
+  100% {
+    left: 130%;
+  }
+}
+
+.crown-float {
+  animation: crown-float 2.6s ease-in-out infinite;
+}
+
+@keyframes crown-float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+
+  50% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+}
+
+/* Streak flames */
+.flame-flicker {
+  transform-origin: 50% 85%;
+  animation: flame-flicker 850ms ease-in-out infinite;
+}
+
+@keyframes flame-flicker {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(-2deg);
+    filter: brightness(1);
+  }
+
+  35% {
+    transform: scale(1.12, 1.05) rotate(2.5deg);
+    filter: brightness(1.18);
+  }
+
+  70% {
+    transform: scale(0.94, 1.08) rotate(-1.5deg);
+    filter: brightness(1.06);
+  }
+}
+
+.flame-glow {
+  filter: drop-shadow(0 0 9px rgba(255, 122, 56, 0.65));
+}
+
 .skip-link {
   position: fixed;
   left: 1rem;
@@ -352,8 +483,17 @@ select option {
   .app-button,
   .skip-link,
   .reveal-in,
-  .brand-wordmark {
+  .brand-wordmark,
+  .podium-col,
+  .podium-topper,
+  .crown-float,
+  .flame-flicker {
     transition: none;
     animation: none;
+  }
+
+  .shine-sweep::after {
+    animation: none;
+    content: none;
   }
 }
