@@ -14,7 +14,7 @@ import {
   Trash2,
   X
 } from "lucide-react";
-import { GYM_REST_DAY_NOTE } from "@/lib/rest-days";
+import { REST_DAY_AUTO_CREDIT_NOTE, REST_DAY_AUTO_CREDIT_CATEGORIES } from "@/lib/rest-days";
 import { calculateDailyStatus, getCompletionCount } from "@/lib/status";
 import type { CardioEntry, CategoryMeta, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
@@ -351,7 +351,7 @@ function UploadPanel({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const isWeightEntry = category.id === "weight_scale_photo";
-  const isGymRestExcused = category.id === "progress_photo" && item?.status === "excused";
+  const isRestDayAutoCredit = REST_DAY_AUTO_CREDIT_CATEGORIES.includes(category.id as (typeof REST_DAY_AUTO_CREDIT_CATEGORIES)[number]) && item?.status === "excused";
 
   useEffect(() => {
     if (!cameraActive || !videoRef.current || !streamRef.current) return;
@@ -479,11 +479,11 @@ function UploadPanel({
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            ) : isGymRestExcused ? (
+            ) : isRestDayAutoCredit ? (
               <div className="flex h-full w-full flex-col items-center justify-center px-4 text-center">
                 <ShieldCheck className="mx-auto size-10" style={{ color: "var(--brand)" }} aria-hidden />
-                <p className="mt-2 text-sm font-extrabold text-app">Gym rest day</p>
-                <p className="mt-1 text-xs font-bold text-muted">{GYM_REST_DAY_NOTE}</p>
+                <p className="mt-2 text-sm font-extrabold text-app">Rest day auto-credit</p>
+                <p className="mt-1 text-xs font-bold text-muted">{REST_DAY_AUTO_CREDIT_NOTE}</p>
               </div>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center px-4 text-center">

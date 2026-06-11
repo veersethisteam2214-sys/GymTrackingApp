@@ -154,7 +154,7 @@ function answerQuestion(question: string, profiles: Profile[], checkins: DailyCh
     const category = categories.find((entry) => entry.id === categoryId);
     const item = dayItems.find((entry) => entry.category === categoryId);
     const status = item?.status ?? "missing";
-    const detail = item?.status === "excused" && categoryId === "progress_photo" ? " because it is their gym rest day" : "";
+    const detail = item?.status === "excused" && (categoryId === "progress_photo" || categoryId === "treadmill_photo") ? " because it is their rest day" : "";
     return `${profile.display_name}'s ${category?.shortLabel ?? "task"} on ${formatDate(date)} is ${status}${detail}.`;
   }
 
