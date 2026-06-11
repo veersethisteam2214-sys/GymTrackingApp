@@ -9,7 +9,6 @@ import {
   Footprints,
   Gauge,
   Loader2,
-  Trophy,
   ShieldCheck,
   Trash2,
   X
@@ -25,7 +24,6 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   treadmill_photo: <Footprints className="size-5" />,
   weight_scale_photo: <Gauge className="size-5" />,
   protein_shake_photo: <Dna className="size-5" />,
-  group_challenge_ab_photo: <Trophy className="size-5" />,
   weekly_progress_photo: <Camera className="size-5" />
 };
 

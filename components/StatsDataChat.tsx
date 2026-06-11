@@ -28,8 +28,7 @@ const monthNames = [
 ];
 
 const categoryAliases = new Map(
-  [
-    ...getAllCategories().flatMap((category) => {
+  getAllCategories().flatMap((category) => {
     const aliases = [category.shortLabel.toLowerCase(), category.label.toLowerCase()];
     if (category.id === "progress_photo") aliases.push("gym attendance", "attendance", "gym");
     if (category.id === "treadmill_photo") aliases.push("cardio", "run", "running", "treadmill");
@@ -37,11 +36,7 @@ const categoryAliases = new Map(
     if (category.id === "protein_shake_photo") aliases.push("protein", "shake");
     if (category.id === "weekly_progress_photo") aliases.push("progress", "progress picture", "weekly progress", "body picture");
     return aliases.map((alias) => [alias, category.id] as const);
-    }),
-    ["group challenge", "group_challenge_ab_photo"] as const,
-    ["ab", "group_challenge_ab_photo"] as const,
-    ["challenge", "group_challenge_ab_photo"] as const
-  ]
+  })
 );
 
 function toIsoDate(date: Date) {

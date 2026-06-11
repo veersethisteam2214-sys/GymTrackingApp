@@ -8,7 +8,7 @@ type Supabase = NonNullable<ReturnType<typeof createAdminSupabase>>;
 const ANNOUNCEMENT_ID = "2026-06-10-notifications-update";
 const NEW_USER_ANNOUNCEMENT_ID = "new-user-overview-v1";
 const SUNDAY_PROGRESS_PREFIX = "sunday-progress-reminder";
-const REST_DAY_RULES_NOTICE_ID = "rest-day-gym-cardio-auto-credit-v2";
+const REST_DAY_RULES_NOTICE_ID = "rest-day-gym-cardio-auto-credit-v3";
 const APP_TIME_ZONE = "Asia/Bangkok";
 
 function getBangkokDate() {
@@ -375,7 +375,7 @@ export async function fetchNotificationCenter(
     supabase,
     REST_DAY_RULES_NOTICE_ID,
     "Rest day scoring updated",
-    "Gym attendance and cardio now auto-count on your profile rest days. Photos are optional for those two benchmarks on rest days. Weight, protein, Sunday progress pictures, and group challenges still need proof when active. Streaks continue as long as the required benchmarks are completed."
+    "Gym attendance and cardio now auto-count on your profile rest days. Photos are optional for those two benchmarks on rest days. Weight, protein, and Sunday progress pictures still need proof when active. Streaks continue as long as the required benchmarks are completed."
   );
   if (profile) await ensurePersonalNotifications(supabase, profile);
 

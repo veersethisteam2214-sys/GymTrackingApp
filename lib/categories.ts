@@ -33,25 +33,7 @@ export const CATEGORIES: CategoryMeta[] = [
 
 export const CATEGORY_IDS = CATEGORIES.map((category) => category.id);
 
-export const GROUP_CHALLENGE_CATEGORY_ID = "group_challenge_ab_photo" as const;
-export const GROUP_CHALLENGE_DATES = ["2026-06-11", "2026-06-13"];
 export const WEEKLY_PROGRESS_CATEGORY_ID = "weekly_progress_photo" as const;
-
-export function isGroupChallengeDate(dateString: string) {
-  return GROUP_CHALLENGE_DATES.includes(dateString);
-}
-
-export function getGroupChallengeCategory(createdByName?: string | null): CategoryMeta {
-  const creator = createdByName?.trim() || "user";
-
-  return {
-    id: GROUP_CHALLENGE_CATEGORY_ID,
-    label: `Group challenge (AB): created by ${creator}`,
-    shortLabel: "Group challenge",
-    helper: "Upload the extra AB group challenge proof for today.",
-    accent: "bg-sky"
-  };
-}
 
 export function isSunday(dateString: string) {
   return new Date(`${dateString}T12:00:00`).getDay() === 0;
@@ -67,11 +49,10 @@ export function getWeeklyProgressCategory(): CategoryMeta {
   };
 }
 
-export function getCategoriesForDate(dateString: string, challengeCreatorName?: string | null) {
+export function getCategoriesForDate(dateString: string) {
   return [
     ...CATEGORIES,
-    ...(isSunday(dateString) ? [getWeeklyProgressCategory()] : []),
-    ...(isGroupChallengeDate(dateString) ? [getGroupChallengeCategory(challengeCreatorName)] : [])
+    ...(isSunday(dateString) ? [getWeeklyProgressCategory()] : [])
   ];
 }
 
@@ -79,12 +60,12 @@ export function getCategoryIdsForDate(dateString: string) {
   return getCategoriesForDate(dateString).map((category) => category.id);
 }
 
-export function getAllCategories(challengeCreatorName?: string | null) {
-  return [...CATEGORIES, getWeeklyProgressCategory(), getGroupChallengeCategory(challengeCreatorName)];
+export function getAllCategories() {
+  return [...CATEGORIES, getWeeklyProgressCategory()];
 }
 
 export const ALL_CATEGORY_IDS = getAllCategories().map((category) => category.id);
 
-export function getCategoryById(categoryId: string, challengeCreatorName?: string | null) {
-  return getAllCategories(challengeCreatorName).find((category) => category.id === categoryId) ?? null;
+export function getCategoryById(categoryId: string) {
+  return getAllCategories().find((category) => category.id === categoryId) ?? null;
 }

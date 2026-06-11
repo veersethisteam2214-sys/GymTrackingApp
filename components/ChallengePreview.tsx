@@ -10,7 +10,7 @@ export function ChallengePreview({ challenges }: { challenges: Challenge[] }) {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
-            Group challenge
+            Challenges
           </p>
           <h2 className="mt-1 truncate text-2xl font-extrabold text-app">
             {active ? active.title : "No active challenge"}

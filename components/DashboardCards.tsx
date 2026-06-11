@@ -14,7 +14,6 @@ import {
   Flame,
   ImageIcon,
   Scale,
-  ShieldCheck,
   Trophy,
   X
 } from "lucide-react";
@@ -58,7 +57,6 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   treadmill_photo: <Footprints className="size-4" />,
   weight_scale_photo: <Gauge className="size-4" />,
   protein_shake_photo: <Dna className="size-4" />,
-  group_challenge_ab_photo: <ShieldCheck className="size-4" />,
   weekly_progress_photo: <Camera className="size-4" />
 };
 

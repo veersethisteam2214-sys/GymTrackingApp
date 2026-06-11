@@ -51,26 +51,6 @@ async function signProfiles(supabase: Client, profiles: Profile[]) {
   return Promise.all(profiles.map((profile) => signProfile(supabase, profile)));
 }
 
-async function fetchLatestChallengeCreatorName(supabase: Client) {
-  const { data: challenge } = await supabase
-    .from("challenges")
-    .select("created_by_profile_id")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const creatorId = challenge?.created_by_profile_id;
-  if (!creatorId) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", creatorId)
-    .maybeSingle();
-
-  return typeof profile?.display_name === "string" ? profile.display_name : null;
-}
-
 function normalizeCheckinStatuses(checkins: DailyCheckIn[], items: CheckInItem[], profiles: Pick<Profile, "id" | "gym_routine">[] = []) {
   const effectiveItems = profiles.length ? applyGymRestDayExcuses(items, checkins, profiles) : items;
   const itemsByCheckin = new Map<string, CheckInItem[]>();
@@ -93,8 +73,7 @@ function normalizeCheckinStatuses(checkins: DailyCheckIn[], items: CheckInItem[]
 
 export async function fetchDashboardData(supabase: Client, profileId: string) {
   const today = getLocalDateString();
-  const challengeCreatorName = await fetchLatestChallengeCreatorName(supabase);
-  const todayCategories = getCategoriesForDate(today, challengeCreatorName);
+  const todayCategories = getCategoriesForDate(today);
   const todayCategoryIds = todayCategories.map((category) => category.id);
   const { startDate: monthStart } = getMonthRange();
   const { startDate: weekStart, endDate: weekEnd } = getWeekRange();
@@ -290,8 +269,7 @@ export async function ensureTodayCheckin(supabase: Client, profileId: string) {
 
 export async function fetchTodayData(supabase: Client, profile: Profile) {
   const dailyCheckin = await ensureTodayCheckin(supabase, profile.id);
-  const challengeCreatorName = await fetchLatestChallengeCreatorName(supabase);
-  const categories = getCategoriesForDate(dailyCheckin.checkin_date, challengeCreatorName);
+  const categories = getCategoriesForDate(dailyCheckin.checkin_date);
   const categoryIds = categories.map((category) => category.id);
 
   const [{ data: items }, { data: weightEntries }, { data: cardioEntries }] = await Promise.all([

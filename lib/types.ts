@@ -3,7 +3,6 @@ export type CheckInCategory =
   | "treadmill_photo"
   | "weight_scale_photo"
   | "protein_shake_photo"
-  | "group_challenge_ab_photo"
   | "weekly_progress_photo";
 
 export type ItemStatus = "missing" | "uploaded" | "excused";
