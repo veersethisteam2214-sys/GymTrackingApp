@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { Activity, Check, Dumbbell, GlassWater, Timer, Users } from "lucide-react";
 import { CompletionBars, getProfileChartColor, WeightTrend } from "@/components/AnalyticsCharts";
-import { StatsDataChat } from "@/components/StatsDataChat";
 import type { CardioEntry, CheckInItem, DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
 export function AnalyticsClient({
@@ -78,7 +77,6 @@ export function AnalyticsClient({
           <h2 className="text-xl font-extrabold text-app">Weight trend</h2>
           <WeightTrend profiles={selectedProfiles} weights={filteredWeights} />
         </section>
-        <StatsDataChat profiles={profiles} checkins={checkins} items={items} />
       </div>
 
       <aside className="app-surface xl:sticky xl:top-32 h-fit rounded-[2rem] p-4">

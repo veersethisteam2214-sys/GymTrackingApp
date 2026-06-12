@@ -13,11 +13,10 @@ import {
   Gauge,
   Flame,
   ImageIcon,
-  Scale,
-  Trophy,
   X
 } from "lucide-react";
-import { getDenseRank, getRankBadge, rankPeople, type LeaderboardPerson } from "@/lib/leaderboard";
+import { LeaderboardPodium } from "@/components/LeaderboardPodium";
+import { getDenseRank, rankPeople } from "@/lib/leaderboard";
 import { REST_DAY_AUTO_CREDIT_NOTE, getRestDayAutoCreditLabel } from "@/lib/rest-days";
 import { getCompletionCount } from "@/lib/status";
 import type {
@@ -60,8 +59,6 @@ const categoryIcons: Record<CheckInCategory, React.ReactNode> = {
   weekly_progress_photo: <Camera className="size-4" />
 };
 
-const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 function formatBlockDate(dateString: string) {
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -91,8 +88,6 @@ export function DashboardCards({
   const todayCategoryIds = todayCategories.map((category) => category.id);
   const totalCompleted = people.reduce((sum, person) => sum + getCompletionCount(person.todayItems, todayCategoryIds), 0);
   const totalPossible = Math.max(people.length * todayCategories.length, 1);
-  const todayDate = new Date(`${today}T00:00:00`);
-  const weekday = weekdayNames[todayDate.getDay()] ?? "Today";
   const rankedPeople = rankPeople(people, monthCheckins, monthItems);
 
   if (people.length === 0) {
@@ -106,75 +101,222 @@ export function DashboardCards({
     );
   }
 
+  const myPerson = people.find((person) => person.profile.id === currentUserId) ?? null;
+  const myDone = myPerson ? getCompletionCount(myPerson.todayItems, todayCategoryIds) : 0;
+  const pct = Math.round((totalCompleted / totalPossible) * 100);
+  const fullyIn = people.filter(
+    (person) => getCompletionCount(person.todayItems, todayCategoryIds) >= todayCategories.length
+  ).length;
+
   return (
-    <div className="space-y-5">
-      <section className="reveal-in app-surface-strong overflow-hidden rounded-[22px]">
-        <div className="grid gap-4 p-5 lg:grid-cols-[1.15fr_.85fr] lg:p-6">
-          <div>
+    <div className="space-y-4">
+      <div className="a-up">
+        <h2 className="display-font text-5xl leading-none text-app">Roll call</h2>
+        <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted)" }}>
+          {formatBlockDate(today)}
+        </p>
+      </div>
+
+      {/* your day */}
+      {myPerson ? (
+        <section className="a-up app-surface rounded-[20px] p-[18px]" style={{ animationDelay: "60ms" }}>
+          <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted)" }}>
-              The room, today
+              Your day
             </p>
-            <h2 className="display-font mt-2 text-6xl leading-[0.85] tracking-[-0.02em] text-app sm:text-7xl">
+            <p className="display-font text-base italic" style={{ color: myDone >= todayCategories.length ? "var(--brand)" : "var(--text)" }}>
+              {myDone}
+              <span style={{ color: "var(--muted)" }}> / {todayCategories.length}</span>
+            </p>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {todayCategories.map((category) => {
+              const item = myPerson.todayItems.find((entry) => entry.category === category.id);
+              const on = item?.status === "uploaded" || item?.status === "excused";
+              const rested = item?.status === "excused";
+              return (
+                <div
+                  key={category.id}
+                  className="flex items-center gap-2.5 rounded-[13px] px-3 py-[11px]"
+                  style={{
+                    background: on ? "var(--accent-dim)" : "transparent",
+                    border: `1px solid ${on ? "var(--accent-edge)" : "var(--faint)"}`
+                  }}
+                  title={rested ? REST_DAY_AUTO_CREDIT_NOTE : undefined}
+                >
+                  <span
+                    className="grid size-5 shrink-0 place-items-center rounded-[7px]"
+                    style={{
+                      background: on ? "var(--accent)" : "transparent",
+                      border: `1px solid ${on ? "var(--accent)" : "var(--line-2)"}`
+                    }}
+                  >
+                    {on ? <Check className="size-3.5" style={{ color: "var(--bg)" }} strokeWidth={2.6} aria-hidden /> : null}
+                  </span>
+                  <span className="truncate text-[13px] font-semibold" style={{ color: on ? "var(--text)" : "var(--muted)" }}>
+                    {category.shortLabel}
+                    {rested ? <span style={{ color: "var(--muted)" }}> · rest</span> : null}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <Link
+            href="/today"
+            className="a-btn mt-3 flex w-full items-center justify-center gap-1.5 rounded-[13px] px-3 py-3 text-[13.5px] font-bold tracking-[0.02em] text-app"
+            style={{ border: "1px solid var(--line-2)" }}
+          >
+            Upload today&apos;s proof <ArrowRight className="size-4" style={{ color: "var(--brand)" }} aria-hidden />
+          </Link>
+        </section>
+      ) : null}
+
+      {/* the room, today */}
+      <section className="a-up app-surface relative overflow-hidden rounded-[22px] p-[22px]" style={{ animationDelay: "120ms" }}>
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-full w-36"
+          style={{ background: "radial-gradient(60% 80% at 100% 0%, var(--accent-dim), transparent 70%)" }}
+          aria-hidden
+        />
+        <p className="relative text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted)" }}>
+          The room, today
+        </p>
+        <div className="relative mt-1 flex items-end justify-between">
+          <p className="display-font text-7xl leading-[0.82] tracking-[-0.02em] text-app">
+            {pct}
+            <span className="text-3xl" style={{ color: "var(--brand)" }}>
+              %
+            </span>
+          </p>
+          <div className="text-right">
+            <p className="text-[22px] font-extrabold tabular-nums text-app">
               {totalCompleted}
-              <span style={{ color: "var(--brand)" }}>/{totalPossible}</span>
-            </h2>
-            <div className="mt-4 h-1 max-w-xl overflow-hidden rounded-full" style={{ background: "var(--faint)" }}>
-              <div
-                className="a-meter h-full rounded-full"
-                style={{ width: `${Math.round((totalCompleted / totalPossible) * 100)}%`, background: "linear-gradient(90deg, var(--accent), var(--brand))" }}
-              />
-            </div>
-            <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-muted">
-              Group goal: reach {totalPossible}/{totalPossible} for full group success.
+              <span className="font-semibold" style={{ color: "var(--muted)" }}>
+                /{totalPossible}
+              </span>
             </p>
-            <MiniLeaderboard rankedPeople={rankedPeople} />
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--muted)" }}>
+              proofs in
+            </p>
+            <p className="mt-2.5 text-[22px] font-extrabold tabular-nums" style={{ color: "var(--brand)" }}>
+              {fullyIn}
+              <span className="font-semibold" style={{ color: "var(--muted)" }}>
+                /{people.length}
+              </span>
+            </p>
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--muted)" }}>
+              fully in
+            </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <TodaySplit people={people} weekday={weekday} />
-            <LeaderboardEntry />
-          </div>
+        </div>
+        <div className="mt-4 h-1 overflow-hidden rounded-full" style={{ background: "var(--faint)" }}>
+          <div
+            className="a-meter h-full rounded-full"
+            style={{ width: `${pct}%`, background: "linear-gradient(90deg, var(--accent), var(--brand))" }}
+          />
         </div>
       </section>
 
-      <section className="app-surface rounded-[2rem] p-5">
-        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
-              Users
-            </p>
-            <h2 className="display-font text-4xl font-extrabold leading-none text-app sm:text-5xl">Check your friends progress and their Proof Pictures.</h2>
-            <p className="mt-2 text-sm font-extrabold text-muted">{formatBlockDate(today)}</p>
-          </div>
-          <p className="text-sm font-bold text-muted">Tap a username to open their data and proof images.</p>
+      {/* the podium */}
+      {rankedPeople.length >= 3 ? (
+        <section className="a-up app-surface overflow-hidden rounded-[22px] px-4 pb-5 pt-2" style={{ animationDelay: "180ms" }}>
+          <LeaderboardPodium
+            entries={rankedPeople.slice(0, 3).map((person, index) => ({
+              id: person.profile.id,
+              name: person.profile.display_name,
+              avatarUrl: person.profile.avatarSignedUrl,
+              score: person.score,
+              rank: getDenseRank(rankedPeople, index),
+              streak: person.currentStreak
+            }))}
+          />
+        </section>
+      ) : null}
+
+      {/* the roster */}
+      <div className="a-up pt-2" style={{ animationDelay: "220ms" }}>
+        <div className="atelier-rule">
+          <span className="text-[10px] font-bold uppercase tracking-[0.34em]" style={{ color: "var(--muted)" }}>
+            The thirteen
+          </span>
+          <span className="atelier-tick" />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          {people.map((person, index) => {
-            const userLabel = getUserLabel(person.profile);
-            return (
-              <button
-                key={person.profile.id}
-                onClick={() => setSelectedId(person.profile.id)}
-                className="app-button group reveal-in relative overflow-hidden rounded-[2rem] p-4 text-left hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4"
-                style={{
-                  animationDelay: `${index * 70}ms`,
-                  border: selectedId === person.profile.id ? "1px solid var(--brand)" : "1px solid var(--faint)",
-                  background: selectedId === person.profile.id ? "color-mix(in srgb, var(--brand) 13%, var(--surface-strong))" : "var(--surface)",
-                  boxShadow: selectedId === person.profile.id ? "0 22px 70px color-mix(in srgb, var(--brand) 22%, transparent)" : "var(--shadow)"
-                }}
-                title={`Click to see ${userLabel}'s image`}
+      </div>
+      <div className="grid gap-2.5 lg:grid-cols-2 xl:grid-cols-3">
+        {people.map((person, index) => {
+          const count = getCompletionCount(person.todayItems, todayCategoryIds);
+          const percent = Math.round((count / Math.max(todayCategories.length, 1)) * 100);
+          const isMe = person.profile.id === currentUserId;
+          const hotStreak = person.currentStreak >= 7;
+          return (
+            <button
+              key={person.profile.id}
+              onClick={() => setSelectedId(person.profile.id)}
+              className="a-card app-button flex w-full items-center gap-3.5 rounded-[16px] px-4 py-[13px] text-left"
+              style={{
+                animationDelay: `${260 + index * 52}ms`,
+                border: "1px solid transparent",
+                background: isMe
+                  ? "linear-gradient(120deg, var(--accent-dim), var(--surface)) padding-box, var(--card-edge) border-box"
+                  : "linear-gradient(var(--surface), var(--surface)) padding-box, var(--card-edge) border-box",
+                boxShadow: "var(--shadow)"
+              }}
+              title={`See ${getUserLabel(person.profile)}'s proof for today`}
+            >
+              <div
+                className="completion-ring relative grid size-12 shrink-0 place-items-center rounded-full"
+                data-full={count >= todayCategories.length}
+                style={{ "--ring-value": `${percent}%` } as React.CSSProperties}
               >
-                <span
-                  className="pointer-events-none absolute inset-x-3 top-3 z-10 translate-y-[-120%] rounded-2xl px-3 py-2 text-center text-xs font-extrabold opacity-0 shadow-soft transition group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
-                  style={{ background: "var(--text)", color: "var(--bg)" }}
+                <div
+                  className="absolute inset-[5px] overflow-hidden rounded-full"
+                  style={{ background: "linear-gradient(150deg, var(--surface-strong), var(--bg-2))", border: "1px solid var(--faint)" }}
                 >
-                  Click to see {userLabel}&apos;s image
+                  {person.profile.avatarSignedUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={person.profile.avatarSignedUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <span className="display-font absolute inset-0 grid place-items-center text-sm italic text-app">
+                      {person.profile.display_name.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="display-font truncate text-lg text-app">{person.profile.display_name}</span>
+                  {isMe ? (
+                    <span
+                      className="shrink-0 rounded-[5px] px-1.5 py-0.5 text-[9px] font-extrabold tracking-[0.12em]"
+                      style={{ color: "var(--accent)", border: "1px solid var(--accent-edge)" }}
+                    >
+                      YOU
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-px truncate text-xs" style={{ color: "var(--muted)" }}>
+                  {person.profile.goal_mode} · {count}/{todayCategories.length} proofs
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {hotStreak ? (
+                  <span className="a-flick" aria-hidden>
+                    <Flame className="size-3.5" style={{ color: "var(--brand)", fill: "var(--brand)" }} />
+                  </span>
+                ) : null}
+                <span className="display-font text-[22px] italic" style={{ color: hotStreak ? "var(--brand)" : "var(--text)" }}>
+                  {person.currentStreak}
                 </span>
-                <ProfileCard person={person} isMe={person.profile.id === currentUserId} categories={todayCategories} />
-              </button>
-            );
-          })}
-        </div>
-      </section>
+                <span className="text-[8.5px] font-bold uppercase leading-[1.05] tracking-[0.1em]" style={{ color: "var(--muted)" }}>
+                  day
+                  <br />
+                  streak
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
       {selectedPerson ? (
         <PersonDataDialog
@@ -187,31 +329,6 @@ export function DashboardCards({
 
       {openPoint ? <DataPointDialog detail={openPoint} onClose={() => setOpenPoint(null)} /> : null}
     </div>
-  );
-}
-
-function ProfileCard({ person, isMe, categories }: { person: Person; isMe: boolean; categories: CategoryMeta[] }) {
-  const categoryIds = categories.map((category) => category.id);
-  const count = getCompletionCount(person.todayItems, categoryIds);
-  const percent = Math.round((count / categories.length) * 100);
-
-  return (
-    <>
-      <div className="flex items-start justify-between gap-3">
-        <Avatar profile={person.profile} size="lg" />
-        <div className="completion-ring grid size-16 place-items-center rounded-full" data-full={count >= categories.length} style={{ "--ring-value": `${percent}%` } as React.CSSProperties}>
-          <span className="display-font text-xl font-extrabold text-app">{count}/{categories.length}</span>
-        </div>
-      </div>
-      <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
-        {isMe ? "You" : person.profile.goal_mode}
-      </p>
-      <h3 className="mt-1 truncate text-2xl font-extrabold text-app">{person.profile.display_name}</h3>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <MiniStat icon={<Flame className="size-4" />} label="Streak" value={`${person.currentStreak}d`} />
-        <MiniStat icon={<Scale className="size-4" />} label="Weight" value={person.latestWeight ? `${person.latestWeight.weight_value}kg` : "--"} />
-      </div>
-    </>
   );
 }
 
@@ -333,78 +450,6 @@ function DataPointDialog({
   );
 }
 
-function TodaySplit({ people, weekday }: { people: Person[]; weekday: string }) {
-  return (
-    <section className="rounded-3xl p-4" style={{ background: "var(--surface-soft)", border: "1px solid var(--faint)" }}>
-      <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
-        Today ({weekday})
-      </p>
-      <div className="mt-3 space-y-2">
-        {people.slice(0, 13).map((person) => (
-          <div key={person.profile.id} className="flex items-center justify-between gap-3">
-            <span className="truncate text-sm font-bold text-app">{person.profile.display_name}</span>
-            <span className="truncate text-xs font-extrabold text-muted">{getRoutineForDay(person.profile.gym_routine, weekday)}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function LeaderboardEntry() {
-  return (
-    <Link
-      href="/leaderboard"
-      className="app-button brand-gradient group relative flex min-h-36 items-center justify-between gap-4 overflow-hidden rounded-3xl p-5 hover:-translate-y-0.5"
-    >
-      <div className="absolute -right-8 -top-8 size-28 rounded-full bg-white/16" />
-      <div className="min-w-0">
-        <p className="display-font text-5xl font-extrabold uppercase leading-none text-black sm:text-6xl">
-          Leaderboard
-        </p>
-        <p className="display-font text-4xl font-extrabold uppercase leading-none text-black/80 sm:text-5xl">
-          Rankings
-        </p>
-      </div>
-      <span className="grid size-16 shrink-0 place-items-center rounded-3xl bg-black/14 text-black shadow-sm">
-        <Trophy className="size-8" aria-hidden />
-      </span>
-    </Link>
-  );
-}
-
-function MiniLeaderboard({ rankedPeople }: { rankedPeople: LeaderboardPerson<Person>[] }) {
-  return (
-    <div className="mt-4 max-w-xl rounded-3xl p-3" style={{ background: "var(--surface-soft)", border: "1px solid var(--faint)" }}>
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs font-extrabold uppercase tracking-[0.18em]" style={{ color: "var(--brand)" }}>
-          Rankings
-        </p>
-        <Link href="/leaderboard" className="app-button rounded-2xl px-3 py-2 text-xs font-extrabold" style={{ background: "var(--surface-soft)", color: "var(--text)" }}>
-          View all
-        </Link>
-      </div>
-      <div className="space-y-2">
-        {rankedPeople.slice(0, 3).map((person, index) => {
-          const rank = getDenseRank(rankedPeople, index);
-          const badge = getRankBadge(rank);
-          return (
-            <div key={person.profile.id} className="flex items-center justify-between gap-3 rounded-2xl px-3 py-2" style={{ background: "var(--surface-soft)" }}>
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="grid size-8 shrink-0 place-items-center rounded-xl text-xs font-black" style={{ background: badge.color, color: "#101010" }}>
-                  {rank <= 3 ? <Trophy className="size-4" aria-hidden /> : badge.symbol}
-                </span>
-                <span className="truncate text-sm font-extrabold text-app">{person.profile.display_name}</span>
-              </span>
-              <span className="display-font text-xl font-extrabold" style={{ color: "var(--brand)" }}>{person.score}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function buildDataPoints(person: Person, categories: CategoryMeta[]): DataPoint[] {
   const latestWeight = person.latestWeight?.weight_value ?? person.profile.starting_weight;
   return categories.map((category) => {
@@ -430,15 +475,6 @@ function buildDataPoints(person: Person, categories: CategoryMeta[]): DataPoint[
   });
 }
 
-function getRoutineForDay(routine: string | null, weekday: string) {
-  if (!routine) return "No routine";
-  const line = routine
-    .split(/\r?\n/)
-    .find((entry) => entry.trim().toLowerCase().startsWith(weekday.toLowerCase()));
-  const value = line?.split("-").slice(1).join("-").trim();
-  return value || "Rest";
-}
-
 function getUserLabel(profile: Profile) {
   return profile.username || profile.display_name;
 }
@@ -462,12 +498,3 @@ function Avatar({ profile, size }: { profile: Profile; size: "sm" | "lg" | "xl" 
   );
 }
 
-function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="rounded-2xl p-2" style={{ background: "var(--surface-soft)" }}>
-      <span className="grid size-7 place-items-center rounded-xl" style={{ color: "var(--brand)" }}>{icon}</span>
-      <p className="mt-1 text-[10px] font-extrabold uppercase text-muted">{label}</p>
-      <p className="truncate text-xs font-extrabold text-app">{value}</p>
-    </div>
-  );
-}
