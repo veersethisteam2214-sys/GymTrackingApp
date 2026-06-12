@@ -16,27 +16,28 @@ export function TopNavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="grid w-full grid-cols-5 gap-1 rounded-3xl p-1 lg:w-auto" style={{ background: "var(--surface-soft)" }}>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="app-button flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-extrabold leading-none sm:min-h-11 sm:flex-row sm:px-2 sm:text-xs xl:px-3"
-            style={{
-              background: active ? "linear-gradient(135deg, var(--brand), var(--brand-2))" : "transparent",
-              color: active ? "var(--bg)" : "var(--muted)"
-            }}
-          >
-            <span className="grid size-7 shrink-0 place-items-center rounded-xl" style={{ background: active ? "rgba(0,0,0,.1)" : "var(--surface-soft)" }}>
-              <Icon className="size-4" aria-hidden />
-            </span>
-            <span className="w-full truncate text-center sm:w-auto">{item.label}</span>
-          </Link>
-        );
-      })}
+    <nav className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-3" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="atelier-pill pointer-events-auto flex gap-1 rounded-full p-1.5">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`app-button flex min-h-11 items-center gap-1.5 rounded-full px-3 text-xs font-bold tracking-[0.02em] sm:px-4 ${active ? "brand-gradient" : ""}`}
+              style={
+                active
+                  ? undefined
+                  : { color: "rgba(244, 237, 227, 0.6)", background: "transparent", border: "1px solid transparent" }
+              }
+            >
+              <Icon className="size-4 shrink-0" aria-hidden />
+              <span className={active ? "" : "hidden min-[420px]:inline"}>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

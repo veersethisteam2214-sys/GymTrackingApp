@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LockKeyhole, Settings, UserRound } from "lucide-react";
+import { Settings, UserRound } from "lucide-react";
 import { FeedbackPromptModal } from "@/components/FeedbackPromptModal";
 import { HeaderClock } from "@/components/HeaderClock";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -42,47 +42,44 @@ export async function AppShell({
       <a href="#main-content" className="skip-link">
         Skip To Content
       </a>
-      <header className="header-hairline sticky top-0 z-30 border-b backdrop-blur-2xl" style={{ borderColor: "var(--faint)", background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div
-                className="brand-gradient brand-mark relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl text-black sm:size-12"
-                aria-hidden
-              >
-                <div className="absolute inset-0 bg-white/18" />
-                <LockKeyhole className="relative z-10 size-5 drop-shadow-sm sm:size-6" strokeWidth={3} />
-              </div>
-              <div className="min-w-0">
-                <p className="display-font brand-wordmark truncate text-2xl font-extrabold uppercase leading-none tracking-[0.16em] sm:text-3xl" style={{ color: "var(--brand)" }}>
-                  LOCKED IN
-                </p>
-                <h1 className="truncate text-xl font-extrabold text-app">{title}</h1>
-                {subtitle ? <p className="truncate text-xs text-muted">{subtitle}</p> : null}
-              </div>
+      <header className="atelier-chrome sticky top-0 z-30">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div
+              className="relative grid size-10 shrink-0 place-items-center rounded-xl sm:size-11"
+              style={{ background: "rgba(216, 195, 154, 0.12)", border: "1px solid rgba(216, 195, 154, 0.3)" }}
+              aria-hidden
+            >
+              <span className="display-font text-xl italic sm:text-2xl" style={{ color: "var(--brand)" }}>
+                L
+              </span>
             </div>
-            <div className="flex items-center gap-2 lg:hidden">
-              <ThemeToggle />
-              {profile ? <NotificationBell initialNotifications={notifications} initialUnreadCount={unreadCount} /> : null}
-              <ProfileButton profile={profile} />
+            <div className="min-w-0">
+              <p className="display-font truncate text-xl leading-tight tracking-[-0.01em] sm:text-2xl" style={{ color: "var(--chrome-ink)" }}>
+                Locked In
+              </p>
+              <p className="truncate text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--muted)" }}>
+                {title}
+                {subtitle ? <span className="hidden sm:inline"> · {subtitle}</span> : null}
+              </p>
             </div>
           </div>
-          <div className="flex w-full min-w-0 items-center gap-2 lg:w-auto">
-            <TopNavLinks />
-            <div className="hidden items-center gap-2 lg:flex">
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="hidden lg:block">
               <HeaderClock />
-              <ThemeToggle />
-              {profile ? <NotificationBell initialNotifications={notifications} initialUnreadCount={unreadCount} /> : null}
-              <ProfileButton profile={profile} />
             </div>
+            <ThemeToggle />
+            {profile ? <NotificationBell initialNotifications={notifications} initialUnreadCount={unreadCount} /> : null}
+            <ProfileButton profile={profile} />
           </div>
         </div>
       </header>
+      <TopNavLinks />
       <UpdateAnnouncementModal announcement={announcement} />
       {profile ? <TodayReminder completion={todayCompletion} /> : null}
       {profile ? <StreakBreakModal notice={streakBreakNotice} profileId={profile.id} /> : null}
       {profile ? <FeedbackPromptModal prompt={feedbackPrompt} /> : null}
-      <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 py-6">
+      <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 pb-32 pt-6">
         {children}
       </main>
     </div>

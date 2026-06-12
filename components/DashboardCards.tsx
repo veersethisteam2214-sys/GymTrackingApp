@@ -108,16 +108,23 @@ export function DashboardCards({
 
   return (
     <div className="space-y-5">
-      <section className="reveal-in overflow-hidden rounded-[2rem] border" style={{ borderColor: "var(--faint)", background: "var(--surface-strong)", boxShadow: "var(--shadow)" }}>
+      <section className="reveal-in app-surface-strong overflow-hidden rounded-[22px]">
         <div className="grid gap-4 p-5 lg:grid-cols-[1.15fr_.85fr] lg:p-6">
           <div>
-            <p className="display-font text-sm font-extrabold uppercase tracking-[0.28em]" style={{ color: "var(--brand)" }}>
-              Live command center
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted)" }}>
+              The room, today
             </p>
-            <h2 className="display-font stat-hero mt-2 text-6xl font-extrabold leading-none sm:text-7xl">
-              {totalCompleted}/{totalPossible}
+            <h2 className="display-font mt-2 text-6xl leading-[0.85] tracking-[-0.02em] text-app sm:text-7xl">
+              {totalCompleted}
+              <span style={{ color: "var(--brand)" }}>/{totalPossible}</span>
             </h2>
-            <p className="mt-2 max-w-xl text-sm font-extrabold leading-6 text-app">
+            <div className="mt-4 h-1 max-w-xl overflow-hidden rounded-full" style={{ background: "var(--faint)" }}>
+              <div
+                className="a-meter h-full rounded-full"
+                style={{ width: `${Math.round((totalCompleted / totalPossible) * 100)}%`, background: "linear-gradient(90deg, var(--accent), var(--brand))" }}
+              />
+            </div>
+            <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-muted">
               Group goal: reach {totalPossible}/{totalPossible} for full group success.
             </p>
             <MiniLeaderboard rankedPeople={rankedPeople} />
@@ -192,7 +199,7 @@ function ProfileCard({ person, isMe, categories }: { person: Person; isMe: boole
     <>
       <div className="flex items-start justify-between gap-3">
         <Avatar profile={person.profile} size="lg" />
-        <div className="completion-ring grid size-16 place-items-center rounded-full" style={{ "--ring-value": `${percent}%` } as React.CSSProperties}>
+        <div className="completion-ring grid size-16 place-items-center rounded-full" data-full={count >= categories.length} style={{ "--ring-value": `${percent}%` } as React.CSSProperties}>
           <span className="display-font text-xl font-extrabold text-app">{count}/{categories.length}</span>
         </div>
       </div>
@@ -348,11 +355,7 @@ function LeaderboardEntry() {
   return (
     <Link
       href="/leaderboard"
-      className="app-button leaderboard-cta group relative flex min-h-36 items-center justify-between gap-4 overflow-hidden rounded-3xl p-5 hover:-translate-y-0.5"
-      style={{
-        border: "1px solid color-mix(in srgb, var(--brand) 72%, transparent)",
-        boxShadow: "0 24px 70px color-mix(in srgb, var(--brand) 28%, transparent)"
-      }}
+      className="app-button brand-gradient group relative flex min-h-36 items-center justify-between gap-4 overflow-hidden rounded-3xl p-5 hover:-translate-y-0.5"
     >
       <div className="absolute -right-8 -top-8 size-28 rounded-full bg-white/16" />
       <div className="min-w-0">

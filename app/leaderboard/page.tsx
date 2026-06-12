@@ -4,8 +4,7 @@ import { SetupMissing } from "@/components/SetupMissing";
 import { requireAppProfile } from "@/lib/auth";
 import { fetchDashboardData } from "@/lib/data";
 import { formatDisplayDate } from "@/lib/dates";
-import { getDenseRank, getMaxDailyPoints, getRankBadge, rankPeople } from "@/lib/leaderboard";
-import { Trophy } from "lucide-react";
+import { getDenseRank, getMaxDailyPoints, rankPeople } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
 
@@ -20,90 +19,90 @@ export default async function LeaderboardPage() {
   const maxDailyPoints = getMaxDailyPoints(data.today);
 
   return (
-    <AppShell title="Leaderboard" subtitle={`Consistency rankings for ${formatDisplayDate(data.today)}`} profile={session.profile}>
-      <section className="app-surface-strong overflow-hidden rounded-[2rem] p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
-              Discipline rankings
-            </p>
-            <h2 className="display-font stat-hero mt-1 text-6xl font-extrabold leading-none">Most consistent</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Scoring is simple: max {maxDailyPoints} points per day, 1 point for each required photo or data entry completed.
-              Rankings are ordered by total score, then streak, then today&apos;s uploads. If users have the same score, they share the same rank number.
-            </p>
-          </div>
-          <div className="rounded-3xl p-4 text-right" style={{ background: "var(--surface-soft)" }}>
-            <p className="display-font text-4xl font-extrabold text-app">{ranked.length}</p>
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-muted">profiles</p>
-          </div>
-        </div>
-      </section>
+    <AppShell title="Standings" subtitle={formatDisplayDate(data.today)} profile={session.profile}>
+      <div className="a-up">
+        <h2 className="display-font text-5xl leading-none text-app">Standings</h2>
+        <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--muted)" }}>
+          Month to date · max {maxDailyPoints} points a day
+        </p>
+      </div>
 
       {ranked.length >= 3 ? (
-        <section className="app-surface mt-5 overflow-hidden rounded-[2rem] p-5 pt-6">
-          <p className="display-font text-sm font-extrabold uppercase tracking-[0.24em]" style={{ color: "var(--brand)" }}>
-            The podium
-          </p>
-          <div className="mt-8">
-            <LeaderboardPodium
-              entries={ranked.slice(0, 3).map((person, index) => ({
-                id: person.profile.id,
-                name: person.profile.display_name,
-                avatarUrl: person.profile.avatarSignedUrl,
-                score: person.score,
-                rank: getDenseRank(ranked, index)
-              }))}
-            />
-          </div>
+        <section className="app-surface a-up mt-4 overflow-hidden rounded-[22px] px-4 pb-5 pt-2" style={{ animationDelay: "80ms" }}>
+          <LeaderboardPodium
+            entries={ranked.slice(0, 3).map((person, index) => ({
+              id: person.profile.id,
+              name: person.profile.display_name,
+              avatarUrl: person.profile.avatarSignedUrl,
+              score: person.score,
+              rank: getDenseRank(ranked, index),
+              streak: person.currentStreak
+            }))}
+          />
         </section>
       ) : null}
 
-      <section className="mt-5 grid gap-3">
+      <div className="a-up mt-6" style={{ animationDelay: "140ms" }}>
+        <div className="atelier-rule">
+          <span className="text-[10px] font-bold uppercase tracking-[0.34em]" style={{ color: "var(--muted)" }}>
+            The full table
+          </span>
+          <span className="atelier-tick" />
+        </div>
+      </div>
+
+      <section className="mt-3 grid gap-2.5">
         {ranked.map((person, index) => {
           const percent = Math.round((person.score / maxScore) * 100);
           const isMe = person.profile.id === data.currentUserId;
           const rank = getDenseRank(ranked, index);
-          const rankBadge = getRankBadge(rank);
           return (
             <article
               key={person.profile.id}
-              className="reveal-in app-surface rounded-[2rem] p-4"
-              style={{ animationDelay: `${index * 60}ms` }}
+              className="a-card app-surface rounded-[16px] p-4"
+              style={{
+                animationDelay: `${200 + index * 48}ms`,
+                ...(isMe ? { background: "linear-gradient(120deg, var(--accent-dim), var(--surface)) padding-box, var(--card-edge) border-box" } : {})
+              }}
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className="display-font grid size-12 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold"
-                  style={{
-                    background: rank <= 3 ? rankBadge.color : "var(--surface-soft)",
-                    color: rank <= 3 ? "#101010" : "var(--text)"
-                  }}
-                  title={rankBadge.label}
-                >
-                  {rank <= 3 ? <Trophy className="size-6" aria-hidden /> : rankBadge.symbol}
-                </div>
+              <div className="flex items-center gap-3.5">
+                <span className="display-font w-6 shrink-0 text-lg italic" style={{ color: rank <= 3 ? "var(--brand)" : "var(--muted)" }}>
+                  {rank}
+                </span>
                 <Avatar name={person.profile.display_name} src={person.profile.avatarSignedUrl} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-lg font-extrabold text-app">{person.profile.display_name}</p>
-                      <p className="truncate text-xs font-bold text-muted">{isMe ? "You" : person.profile.goal_mode}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="display-font text-3xl font-extrabold" style={{ color: "var(--brand)" }}>{person.score}</p>
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">score</p>
+                    <p className="display-font truncate text-lg text-app">
+                      {person.profile.display_name}
+                      {isMe ? (
+                        <span className="ml-1.5 text-xs font-bold not-italic" style={{ color: "var(--accent)", fontFamily: "var(--body-font)" }}>
+                          · you
+                        </span>
+                      ) : null}
+                    </p>
+                    <div className="flex shrink-0 items-center gap-2.5">
+                      <span className="flex items-center gap-1">
+                        <StreakFlame streak={person.currentStreak} />
+                        <span className="text-xs font-extrabold" style={{ color: person.currentStreak >= 7 ? "var(--brand)" : "var(--muted)" }}>
+                          {person.currentStreak}d
+                        </span>
+                      </span>
+                      <span className="text-[17px] font-extrabold tabular-nums text-app">{person.score}</span>
                     </div>
                   </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-soft)" }}>
-                    <div className="h-full rounded-full brand-gradient" style={{ width: `${percent}%` }} />
+                  <div className="mt-2 h-[3px] overflow-hidden rounded-full" style={{ background: "var(--faint)" }}>
+                    <div
+                      className="a-meter h-full rounded-full"
+                      style={{ width: `${percent}%`, background: isMe ? "var(--accent)" : "var(--brand-2)", animationDelay: `${260 + index * 48}ms` }}
+                    />
                   </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              <div className="mt-3.5 grid grid-cols-2 gap-2 sm:grid-cols-5">
                 <Stat label="Complete" value={person.monthStats.complete} />
                 <Stat label="Partial" value={person.monthStats.partial} />
                 <Stat label="Excused" value={person.monthStats.excused} />
-                <StreakStat streak={person.currentStreak} />
+                <Stat label="Streak" value={`${person.currentStreak}d`} />
                 <Stat label="Today" value={`${person.todayTasks}/${maxDailyPoints}`} />
               </div>
             </article>
@@ -116,34 +115,27 @@ export default async function LeaderboardPage() {
 
 function Avatar({ name, src }: { name: string; src?: string | null }) {
   return (
-    <div className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-3xl brand-gradient font-black text-black">
+    <div
+      className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-full"
+      style={{ background: "linear-gradient(150deg, var(--surface-strong), var(--bg-2))", border: "1px solid var(--line-2)" }}
+    >
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        name.slice(0, 1).toUpperCase()
+        <span className="display-font text-base italic text-app">{name.slice(0, 1).toUpperCase()}</span>
       )}
-    </div>
-  );
-}
-
-function StreakStat({ streak }: { streak: number }) {
-  return (
-    <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
-      <div className="flex items-center gap-1.5">
-        <p className="display-font text-2xl font-extrabold text-app">{streak}d</p>
-        <StreakFlame streak={streak} />
-      </div>
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">Streak</p>
     </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl p-3" style={{ background: "var(--surface-soft)" }}>
-      <p className="display-font text-2xl font-extrabold text-app">{value}</p>
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">{label}</p>
+    <div className="rounded-xl p-2.5" style={{ background: "var(--surface-soft)" }}>
+      <p className="display-font text-lg italic text-app">{value}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--muted)" }}>
+        {label}
+      </p>
     </div>
   );
 }

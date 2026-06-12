@@ -3,7 +3,7 @@
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { DailyCheckIn, Profile, WeightEntry } from "@/lib/types";
 
-const palette = ["#e8c97e", "#6fd6ff", "#ffb020", "#ff6a4f", "#b9a7ff", "#5ff0c5", "#ff8ad8", "#9fd86b", "#77a8ff", "#d5e7ff", "#f6c453", "#6ee7b7", "#f0abfc"];
+const palette = ["#d8c39a", "#7ea0ef", "#b08a4e", "#d97a5e", "#b9a7ff", "#5ff0c5", "#ff8ad8", "#9fd86b", "#77a8ff", "#d5e7ff", "#f6c453", "#6ee7b7", "#f0abfc"];
 
 export function getProfileChartColor(profileId: string) {
   let hash = 0;
@@ -28,13 +28,13 @@ export function CompletionBars({ profiles, checkins }: { profiles: Profile[]; ch
     <div className="h-64 w-full">
       <ResponsiveContainer>
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(232,201,126,.16)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(216,195,154,.14)" />
           <XAxis dataKey="name" tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip />
-          <Bar dataKey="Complete" fill="#e8c97e" radius={[8, 8, 0, 0]} />
-          <Bar dataKey="Partial" fill="#ff9430" radius={[8, 8, 0, 0]} />
-          <Bar dataKey="Excused" fill="#6fd6ff" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="Complete" fill="#d8c39a" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="Partial" fill="#7ea0ef" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="Excused" fill="#a59c8c" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -60,7 +60,7 @@ export function WeightTrend({ profiles, weights }: { profiles: Profile[]; weight
     <div className="h-64 w-full">
       <ResponsiveContainer>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(232,201,126,.16)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(216,195,154,.14)" />
           <XAxis dataKey="date" tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <YAxis tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip />
