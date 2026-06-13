@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Settings, UserRound } from "lucide-react";
+import { ExcuseVoteModal } from "@/components/ExcuseVoteModal";
 import { FeedbackPromptModal } from "@/components/FeedbackPromptModal";
 import { HeaderClock } from "@/components/HeaderClock";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -79,6 +80,7 @@ export async function AppShell({
       {profile ? <TodayReminder completion={todayCompletion} /> : null}
       {profile ? <StreakBreakModal notice={streakBreakNotice} profileId={profile.id} /> : null}
       {profile ? <FeedbackPromptModal prompt={feedbackPrompt} /> : null}
+      {profile ? <ExcuseVoteModal /> : null}
       <main id="main-content" className="mx-auto max-w-7xl scroll-mt-28 px-4 pb-32 pt-6">
         {children}
       </main>

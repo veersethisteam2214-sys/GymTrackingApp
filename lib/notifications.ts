@@ -1,12 +1,14 @@
 import { getCategoryById } from "@/lib/categories";
 import { getSignedUrl } from "@/lib/data";
+import { finalizeExpiredExcuseRequests, getExcuseCategoryLabel } from "@/lib/excuses";
 import { createAdminSupabase } from "@/lib/supabase/server";
-import type { CheckInCategory, FeatureAnnouncement, GroupNotification, Profile } from "@/lib/types";
+import type { CheckInCategory, ExcuseRequest, FeatureAnnouncement, GroupNotification, Profile } from "@/lib/types";
 
 type Supabase = NonNullable<ReturnType<typeof createAdminSupabase>>;
 
 const ANNOUNCEMENT_ID = "2026-06-10-notifications-update";
 const NEW_USER_ANNOUNCEMENT_ID = "new-user-overview-v1";
+const EXCUSE_VOTING_ANNOUNCEMENT_ID = "excuse-voting-v1";
 const SUNDAY_PROGRESS_PREFIX = "sunday-progress-reminder";
 const REST_DAY_RULES_NOTICE_ID = "rest-day-gym-cardio-auto-credit-v3";
 const APP_TIME_ZONE = "Asia/Bangkok";
@@ -78,6 +80,25 @@ async function upsertSundayAnnouncement(supabase: Supabase, dateString: string) 
         title: "Sunday progress picture",
         body: "Today has an extra benchmark.\n\n- Complete gym attendance, cardio, weight, and protein as usual.\n- Also take your weekly progress picture.\n- Sunday is 5/5 instead of 4/4.",
         active_on: dateString
+      },
+      { onConflict: "id" }
+    )
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return data as FeatureAnnouncement;
+}
+
+async function upsertExcuseVotingAnnouncement(supabase: Supabase) {
+  const { data, error } = await supabase
+    .from("feature_announcements")
+    .upsert(
+      {
+        id: EXCUSE_VOTING_ANNOUNCEMENT_ID,
+        title: "Excuse voting is live",
+        body: "Excuses are now group-approved.\n\n- If you press Excuse, you must give a reason.\n- Everyone else gets a vote popup after about 10 seconds in the app.\n- Voting stays open until 3am Thai time.\n- If Allow votes are higher than Deny votes, that benchmark becomes excused and counts as 1 point.\n- If Deny votes are equal or higher, it stays missing.\n- Sick day excuse requests cover gym and cardio only. Weight and protein are still required.",
+        active_on: getBangkokDate()
       },
       { onConflict: "id" }
     )
@@ -307,6 +328,33 @@ export async function createChallengeNotification(
   if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
 }
 
+export async function createExcuseRequestNotification(supabase: Supabase, actorProfileId: string, request: ExcuseRequest) {
+  const actorName = await getProfileName(supabase, actorProfileId);
+  const label = getExcuseCategoryLabel(request);
+  const { data, error } = await supabase
+    .from("group_notifications")
+    .insert({
+      actor_profile_id: actorProfileId,
+      notification_type: "system",
+      title: `${actorName} requested an excuse`,
+      body: `${actorName} requested an excuse for ${label}: ${request.reason}`,
+      metadata: {
+        notice_key: "excuse-request",
+        excuse_request_id: request.id,
+        checkin_date: request.checkin_date,
+        request_type: request.request_type,
+        category: request.category
+      }
+    })
+    .select("id")
+    .single();
+
+  if (error && !isMissingTableError(error)) {
+    console.error("Could not create excuse notification:", error.message);
+  }
+  if (data?.id) await markSingleNotificationRead(supabase, actorProfileId, String(data.id));
+}
+
 export async function createProfileJoinedNotification(supabase: Supabase, actorProfileId: string, displayName: string) {
   const { data, error } = await supabase
     .from("group_notifications")
@@ -370,7 +418,14 @@ export async function fetchNotificationCenter(
   supabase: Supabase,
   profileId: string
 ): Promise<{ notifications: GroupNotification[]; unreadCount: number }> {
+  await finalizeExpiredExcuseRequests(supabase);
   const profile = await getProfile(supabase, profileId);
+  await ensureGlobalSystemNotification(
+    supabase,
+    EXCUSE_VOTING_ANNOUNCEMENT_ID,
+    "Excuse voting is live",
+    "Excuses now need a reason and group votes. Vote popups appear in the app after about 10 seconds. Voting closes at 3am Thai time. More Allow than Deny gives the point; otherwise it stays missing. Sick day excuses only cover gym and cardio."
+  );
   await ensureGlobalSystemNotification(
     supabase,
     REST_DAY_RULES_NOTICE_ID,
@@ -457,6 +512,11 @@ export async function getActiveAnnouncement(supabase: Supabase, profileId: strin
     if (sundayAnnouncement && !(await hasAnnouncementView(supabase, profileId, sundayAnnouncement.id))) {
       return sundayAnnouncement;
     }
+  }
+
+  const excuseAnnouncement = await upsertExcuseVotingAnnouncement(supabase);
+  if (excuseAnnouncement && !(await hasAnnouncementView(supabase, profileId, EXCUSE_VOTING_ANNOUNCEMENT_ID))) {
+    return excuseAnnouncement;
   }
 
   if (today !== "2026-06-10") return null;

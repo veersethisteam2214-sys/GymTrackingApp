@@ -8,13 +8,15 @@ import {
   Dna,
   Footprints,
   Gauge,
+  HeartPulse,
   Loader2,
+  ShieldQuestion,
   ShieldCheck,
   Trash2,
   X
 } from "lucide-react";
 import { REST_DAY_AUTO_CREDIT_NOTE, REST_DAY_AUTO_CREDIT_CATEGORIES } from "@/lib/rest-days";
-import { calculateDailyStatus, getCompletionCount } from "@/lib/status";
+import { getCompletionCount } from "@/lib/status";
 import type { CardioEntry, CategoryMeta, CheckInCategory, CheckInItem, DailyCheckIn, WeightEntry } from "@/lib/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -41,13 +43,13 @@ export function TodayClient({
   categories: CategoryMeta[];
 }) {
   const [items, setItems] = useState(initialItems);
-  const [restDay, setRestDay] = useState(checkin.is_rest_day);
-  const [reason, setReason] = useState(checkin.rest_day_reason ?? "");
   const [weight, setWeight] = useState(initialWeight?.weight_value?.toString() ?? "");
   const [minutes, setMinutes] = useState(initialCardio?.treadmill_minutes?.toString() ?? "");
   const [distance, setDistance] = useState(initialCardio?.treadmill_distance?.toString() ?? "");
   const [toast, setToast] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [excuseDraft, setExcuseDraft] = useState<{ requestType: "benchmark" | "sick_day"; category?: CheckInCategory } | null>(null);
+  const [excuseReason, setExcuseReason] = useState("");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CheckInCategory>(
     items.find((item) => item.status === "missing")?.category ?? categories[0].id
@@ -100,23 +102,44 @@ export function TodayClient({
     setBusyKey(null);
   }
 
-  async function markExcused(category: CheckInItem["category"]) {
-    setBusyKey(category);
-    const response = await fetch("/api/today/item", {
-      method: "PATCH",
+  function openBenchmarkExcuse(category: CheckInItem["category"]) {
+    setExcuseReason("");
+    setExcuseDraft({ requestType: "benchmark", category });
+  }
+
+  function openSickDayExcuse() {
+    setExcuseReason("");
+    setExcuseDraft({ requestType: "sick_day" });
+  }
+
+  async function submitExcuseRequest() {
+    if (!excuseDraft) return;
+    if (excuseReason.trim().length < 3) {
+      setToast("Add a reason for the excuse request.");
+      return;
+    }
+
+    const busyValue = excuseDraft.requestType === "sick_day" ? "sick_day" : String(excuseDraft.category);
+    setBusyKey(busyValue);
+    const response = await fetch("/api/excuses", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category, action: "excuse" })
+      body: JSON.stringify({
+        request_type: excuseDraft.requestType,
+        category: excuseDraft.category,
+        reason: excuseReason
+      })
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setToast(payload.error ?? "Could not update item.");
+      setToast(payload.error ?? "Could not create excuse request.");
       setBusyKey(null);
       return;
     }
-    const nextItems = items.map((item) => (item.category === category ? (payload.item as CheckInItem) : item));
-    setItems(nextItems);
-    setToast("Marked excused.");
-    setMobilePanelOpen(false);
+
+    setToast("Excuse request sent for group vote.");
+    setExcuseDraft(null);
+    setExcuseReason("");
     setBusyKey(null);
   }
 
@@ -140,19 +163,6 @@ export function TodayClient({
     setBusyKey(null);
   }
 
-  async function setRestDayState(next: boolean, nextReason = reason) {
-    setRestDay(next);
-    await fetch("/api/today/rest", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        is_rest_day: next,
-        rest_day_reason: next ? nextReason : null,
-        overall_status: calculateDailyStatus(items, next, categoryIds)
-      })
-    });
-  }
-
   return (
     <div className="space-y-4">
       <section className="app-surface-strong overflow-hidden rounded-[2rem]">
@@ -166,30 +176,23 @@ export function TodayClient({
               </h2>
             </div>
             <button
-              onClick={() => setRestDayState(!restDay)}
+              onClick={openSickDayExcuse}
               className="app-button flex min-h-12 items-center gap-2 rounded-2xl px-4 text-sm font-extrabold"
               style={{
-                background: restDay ? "linear-gradient(135deg, var(--brand), var(--brand-2))" : "var(--surface-soft)",
-                color: restDay ? "var(--bg)" : "var(--text)"
+                background: "var(--surface-soft)",
+                color: "var(--text)"
               }}
             >
-              <ShieldCheck className="size-4" aria-hidden />
-              Rest day
+              <HeartPulse className="size-4" aria-hidden />
+              Sick day
             </button>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-soft)" }}>
             <div className="h-full rounded-full brand-gradient" style={{ width: `${(completionCount / categories.length) * 100}%` }} />
           </div>
-          {restDay ? (
-            <input
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              onBlur={() => setRestDayState(true, reason)}
-              placeholder="Optional reason"
-              className="mt-3 min-h-11 w-full rounded-2xl border px-4 text-sm text-app outline-none placeholder:text-muted"
-              style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
-            />
-          ) : null}
+          <p className="mt-3 text-xs font-bold leading-5 text-muted">
+            Sick day requests only cover gym and cardio. Weight and protein still need proof.
+          </p>
         </div>
         <div className="grid gap-px" style={{ background: "var(--faint)", gridTemplateColumns: `repeat(${categories.length}, minmax(0, 1fr))` }}>
           {categories.map((category) => {
@@ -232,7 +235,7 @@ export function TodayClient({
           onMinutes={setMinutes}
           onDistance={setDistance}
           onUpload={upload}
-          onExcuse={markExcused}
+          onExcuse={openBenchmarkExcuse}
           onDelete={remove}
         />
       </div>
@@ -291,7 +294,7 @@ export function TodayClient({
               onMinutes={setMinutes}
               onDistance={setDistance}
               onUpload={upload}
-              onExcuse={markExcused}
+              onExcuse={openBenchmarkExcuse}
               onDelete={remove}
             />
           </section>
@@ -307,6 +310,59 @@ export function TodayClient({
         >
           {toast}
         </button>
+      ) : null}
+
+      {excuseDraft ? (
+        <div className="fixed inset-0 z-[70] flex items-end bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
+          <section
+            className="reveal-in w-full max-w-lg rounded-[2rem] p-5"
+            style={{ background: "var(--surface-strong)", border: "1px solid var(--faint)", boxShadow: "var(--shadow)" }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="brand-gradient grid size-12 shrink-0 place-items-center rounded-2xl text-black">
+                  <ShieldQuestion className="size-6" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <p className="display-font text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: "var(--brand)" }}>
+                    Excuse request
+                  </p>
+                  <h2 className="display-font text-3xl font-extrabold text-app">
+                    {excuseDraft.requestType === "sick_day"
+                      ? "Sick day: gym + cardio"
+                      : categories.find((category) => category.id === excuseDraft.category)?.label ?? "Benchmark"}
+                  </h2>
+                </div>
+              </div>
+              <button
+                onClick={() => setExcuseDraft(null)}
+                className="app-button grid size-11 shrink-0 place-items-center rounded-2xl"
+                style={{ background: "var(--surface-soft)", color: "var(--text)" }}
+                aria-label="Close excuse request"
+              >
+                <X className="size-5" aria-hidden />
+              </button>
+            </div>
+            <p className="mt-4 rounded-3xl p-4 text-sm font-bold leading-6 text-muted" style={{ background: "var(--surface-soft)" }}>
+              Give a clear reason. Everyone else can vote until 3am Thai time. More Allow votes than Deny votes gives the point.
+              {excuseDraft.requestType === "sick_day" ? " This only covers gym and cardio." : ""}
+            </p>
+            <textarea
+              value={excuseReason}
+              onChange={(event) => setExcuseReason(event.target.value)}
+              placeholder="Reason required"
+              className="mt-4 min-h-28 w-full resize-none rounded-2xl border px-4 py-3 text-sm text-app outline-none placeholder:text-muted focus:ring-4"
+              style={{ borderColor: "var(--faint)", background: "var(--surface-soft)" }}
+            />
+            <button
+              onClick={submitExcuseRequest}
+              disabled={!excuseReason.trim() || Boolean(busyKey)}
+              className="app-button brand-gradient mt-4 min-h-12 w-full rounded-2xl px-4 text-sm font-extrabold text-black disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              Send for vote
+            </button>
+          </section>
+        </div>
       ) : null}
     </div>
   );
@@ -561,7 +617,7 @@ function UploadPanel({
           style={{ borderColor: "var(--faint)", background: "var(--surface-soft)", color: "var(--text)" }}
         >
           <Check className="size-4" />
-          Excuse
+          Request
         </button>
         <button
           onClick={() => onDelete(category.id)}

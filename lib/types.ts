@@ -125,6 +125,31 @@ export type GroupNotification = {
   read: boolean;
 };
 
+export type ExcuseRequest = {
+  id: string;
+  requester_profile_id: string;
+  checkin_id: string;
+  checkin_date: string;
+  request_type: "benchmark" | "sick_day";
+  category: CheckInCategory | null;
+  reason: string;
+  status: "pending" | "approved" | "denied";
+  deadline_at: string;
+  allow_votes: number;
+  deny_votes: number;
+  decided_at: string | null;
+  created_at: string;
+  updated_at: string;
+  requester?: Pick<Profile, "display_name" | "avatarSignedUrl"> | null;
+};
+
+export type ExcuseVote = {
+  request_id: string;
+  voter_profile_id: string;
+  vote: "allow" | "deny";
+  created_at: string;
+};
+
 export type FeedbackPrompt = {
   id: string;
   profile_id: string;

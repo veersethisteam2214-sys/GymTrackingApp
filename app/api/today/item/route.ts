@@ -12,7 +12,7 @@ export async function PATCH(request: Request) {
   const action = String(payload.action ?? "");
 
   const activeCategoryIds = getCategoryIdsForDate(context.checkin.checkin_date);
-  if (!isValidCategory(category) || !activeCategoryIds.includes(category) || !["excuse", "clear"].includes(action)) {
+  if (!isValidCategory(category) || !activeCategoryIds.includes(category) || action !== "clear") {
     return NextResponse.json({ error: "Invalid item update." }, { status: 400 });
   }
 
@@ -31,18 +31,15 @@ export async function PATCH(request: Request) {
     await context.supabase.from("weight_entries").delete().eq("checkin_id", context.checkin.id);
   }
 
-  const update =
-    action === "excuse"
-      ? { status: "excused", updated_at: new Date().toISOString() }
-      : {
-          status: "missing",
-          storage_path: null,
-          original_filename: null,
-          mime_type: null,
-          file_size_bytes: null,
-          uploaded_at: null,
-          updated_at: new Date().toISOString()
-        };
+  const update = {
+    status: "missing",
+    storage_path: null,
+    original_filename: null,
+    mime_type: null,
+    file_size_bytes: null,
+    uploaded_at: null,
+    updated_at: new Date().toISOString()
+  };
 
   const { data, error } = await context.supabase
     .from("checkin_items")
