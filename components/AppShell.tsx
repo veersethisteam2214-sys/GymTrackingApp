@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Settings, UserRound } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { ExcuseVoteModal } from "@/components/ExcuseVoteModal";
 import { FeedbackPromptModal } from "@/components/FeedbackPromptModal";
 import { HeaderClock } from "@/components/HeaderClock";
@@ -45,7 +46,10 @@ export async function AppShell({
       </a>
       <header className="atelier-chrome sticky top-0 z-30">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <BrandLogo title={title} subtitle={subtitle} />
+          </div>
+          <div className="hidden min-w-0 flex-1 items-center gap-3">
             <div
               className="relative grid size-10 shrink-0 place-items-center rounded-xl sm:size-11"
               style={{ background: "rgba(216, 195, 154, 0.12)", border: "1px solid rgba(216, 195, 154, 0.3)" }}

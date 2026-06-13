@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/BrandLogo";
 import { ProfileLoginForm } from "@/components/ProfileLoginForm";
 
 export default async function LoginPage() {
@@ -5,7 +6,8 @@ export default async function LoginPage() {
     <main className="a-enter flex min-h-screen flex-col items-center justify-center px-6 py-10">
       <div className="flex w-full max-w-md flex-col items-center gap-7">
         <div className="flex flex-col items-center gap-4">
-          <div className="app-surface grid size-12 place-items-center rounded-[13px]" style={{ borderColor: "var(--line-2)" }}>
+          <BrandMark className="size-20" />
+          <div className="hidden app-surface size-12 place-items-center rounded-[13px]" style={{ borderColor: "var(--line-2)" }}>
             <span className="display-font text-2xl italic" style={{ color: "var(--brand)" }}>
               L
             </span>
